@@ -87,7 +87,9 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
     ..registerLazySingleton<PortfolioRepository>(() => PortfolioRepositoryImpl(sl()))
     ..registerFactory(() => PortfolioBloc(GetPortfolio(sl())))
     // Assistant
-    ..registerLazySingleton<AssistantRemoteDataSource>(AssistantFixtureDataSource.new)
+    ..registerLazySingleton<AssistantRemoteDataSource>(
+      () => useFixtures ? AssistantFixtureDataSource() : AssistantApiDataSource(sl()),
+    )
     ..registerLazySingleton<AssistantRepository>(() => AssistantRepositoryImpl(sl()))
     ..registerFactory(() => ChatBloc(sendMessage: SendChatMessage(sl())))
     // Net worth
