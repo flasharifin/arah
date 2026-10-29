@@ -6,10 +6,14 @@ import 'package:arah/features/auth/domain/entities/user.dart';
 import 'package:arah/features/auth/domain/repositories/auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  const AuthRepositoryImpl(this._remote, this._tokens);
+  const AuthRepositoryImpl(this._remote, this._tokens, {Future<void> Function()? beforeSignOut})
+    : _beforeSignOut = beforeSignOut;
 
   final AuthRemoteDataSource _remote;
   final TokenStorage _tokens;
+
+  /// Dijalankan selagi token masih ada, mis. melepas perangkat dari push notification.
+  final Future<void> Function()? _beforeSignOut;
 
   @override
   Future<Result<User?>> currentUser() async {
@@ -26,7 +30,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> signOut() async {
-    // Token lokal tetap dihapus walau revoke gagal (mis. offline).
+    // Token lokal tetap dihapus walau langkah sebelumnya gagal (mis. offline).
+    final beforeSignOut = _beforeSignOut;
+    if (beforeSignOut != null) await guard(beforeSignOut);
     await guard(_remote.revoke);
     await _tokens.clear();
   }

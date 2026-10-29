@@ -41,10 +41,18 @@ void configureDependencies() {
     // Core
     ..registerLazySingleton(() => const TokenStorage(FlutterSecureStorage()))
     ..registerLazySingleton(() => ApiClient(baseUrl: _baseUrl, tokenStorage: sl()))
-    ..registerLazySingleton(PushNotificationService.new)
+    ..registerLazySingleton(() => PushNotificationService(api: _useFixtures ? null : sl()))
     // Auth
-    ..registerLazySingleton<AuthRemoteDataSource>(AuthFixtureDataSource.new)
-    ..registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl(), sl()))
+    ..registerLazySingleton<AuthRemoteDataSource>(
+      () => _useFixtures ? AuthFixtureDataSource() : AuthApiDataSource(sl(), sl()),
+    )
+    ..registerLazySingleton<AuthRepository>(
+      () => AuthRepositoryImpl(
+        sl(),
+        sl(),
+        beforeSignOut: () => sl<PushNotificationService>().unregisterDevice(),
+      ),
+    )
     ..registerFactory(
       () => AuthBloc(getCurrentUser: GetCurrentUser(sl()), signIn: SignIn(sl()), signOut: SignOut(sl())),
     )

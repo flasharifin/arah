@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:arah/core/network/api_client.dart';
 import 'package:arah/core/theme/app_colors.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -19,7 +21,13 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 /// Payload: blok `notification` (title/body) atau data-only `data.title`/`data.body`.
 /// `data.route` (mis. `/portfolio/bbca`) dibuka saat notifikasi di-tap.
 class PushNotificationService {
+  /// [api] null = mode fixture: perangkat tidak didaftarkan ke backend.
+  PushNotificationService({ApiClient? api}) : _api = api;
+
+  final ApiClient? _api;
   final _local = FlutterLocalNotificationsPlugin();
+  StreamSubscription<String>? _registered;
+  String? _fid;
 
   // Single-subscription: rute yang masuk sebelum app mendengarkan ditahan, tidak hilang.
   final _routes = StreamController<String>();
@@ -49,15 +57,50 @@ class PushNotificationService {
     FirebaseMessaging.onMessage.listen((m) => _show(_local, m));
   }
 
-  /// Minta izin notifikasi lalu daftarkan perangkat ke FCM.
-  // shortcut: token dari `onRegistered` belum dikirim ke backend karena endpoint registrasi device belum ada; dengarkan stream itu saat endpoint tersedia.
+  /// Minta izin notifikasi lalu daftarkan perangkat ke FCM dan backend (`PUT /api/mobile/devices`).
+  /// Dipanggil setelah login; FID baru dari FCM (registrasi ulang) ikut dikirim lewat `onRegistered`.
   Future<void> requestPermissionAndRegister() async {
     final settings = await _fcm.requestPermission();
     if (settings.authorizationStatus == AuthorizationStatus.denied) return;
+    _registered ??= _fcm.onRegistered.listen(_sendToBackend);
     try {
       await _fcm.register();
     } catch (_) {
       // Registrasi bisa gagal (mis. APNs belum siap di iOS); notifikasi tidak boleh membuat app gagal.
+    }
+  }
+
+  /// Dipanggil sebelum logout, selagi token masih ada.
+  /// `unregister()` mematikan FID di FCM: walau DELETE gagal atau FID tidak diketahui (registrasi lama
+  /// tidak selalu memancarkan `onRegistered` lagi), backend menghapusnya saat kirim berikutnya ditolak.
+  Future<void> unregisterDevice() async {
+    await _registered?.cancel();
+    _registered = null;
+    final fid = _fid;
+    _fid = null;
+    final api = _api;
+    if (fid != null && api != null) {
+      try {
+        await api.delete('/api/mobile/devices', body: {'token': fid});
+      } catch (_) {}
+    }
+    try {
+      await _fcm.unregister();
+    } catch (_) {}
+  }
+
+  Future<void> _sendToBackend(String fid) async {
+    _fid = fid;
+    final api = _api;
+    if (api == null) return;
+    try {
+      // Backend menyimpan FID di field `token` (lihat PushDevice di backend).
+      await api.put(
+        '/api/mobile/devices',
+        body: {'token': fid, 'platform': Platform.isIOS ? 'ios' : 'android'},
+      );
+    } catch (_) {
+      // shortcut: gagal (mis. offline) baru dicoba lagi saat FCM memancarkan onRegistered lagi (login ulang pasti, buka app belum tentu); simpan FID & kirim ulang di app start kalau push sering tidak sampai.
     }
   }
 
