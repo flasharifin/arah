@@ -9,19 +9,26 @@ part 'auth_event.dart';
 part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  AuthBloc({required GetCurrentUser getCurrentUser, required SignIn signIn, required SignOut signOut})
-    : _getCurrentUser = getCurrentUser,
-      _signIn = signIn,
-      _signOut = signOut,
-      super(const AuthState()) {
+  AuthBloc({
+    required GetCurrentUser getCurrentUser,
+    required SignIn signIn,
+    required SignOut signOut,
+    required DeleteAccount deleteAccount,
+  }) : _getCurrentUser = getCurrentUser,
+       _signIn = signIn,
+       _signOut = signOut,
+       _deleteAccount = deleteAccount,
+       super(const AuthState()) {
     on<AuthStarted>(_onStarted);
     on<AuthLoginRequested>(_onLogin);
     on<AuthLogoutRequested>(_onLogout);
+    on<AuthDeleteAccountRequested>(_onDeleteAccount);
   }
 
   final GetCurrentUser _getCurrentUser;
   final SignIn _signIn;
   final SignOut _signOut;
+  final DeleteAccount _deleteAccount;
 
   Future<void> _onStarted(AuthStarted event, Emitter<AuthState> emit) async {
     final result = await _getCurrentUser(const NoParams());
@@ -50,5 +57,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onLogout(AuthLogoutRequested event, Emitter<AuthState> emit) async {
     await _signOut(const NoParams());
     emit(const AuthState(status: AuthStatus.unauthenticated));
+  }
+
+  Future<void> _onDeleteAccount(AuthDeleteAccountRequested event, Emitter<AuthState> emit) async {
+    if (state.isSubmitting) return;
+    emit(state.copyWith(isSubmitting: true, clearFailure: true));
+    final result = await _deleteAccount(event.password);
+    emit(
+      result.fold(
+        (failure) => state.copyWith(isSubmitting: false, failure: failure),
+        (_) => const AuthState(status: AuthStatus.unauthenticated),
+      ),
+    );
   }
 }

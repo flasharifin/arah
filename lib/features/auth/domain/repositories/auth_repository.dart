@@ -9,4 +9,7 @@ abstract interface class AuthRepository {
 
   /// Mencabut token dan membersihkan data akun lokal.
   Future<void> signOut();
+
+  /// Hapus akun + semua data di server (konfirmasi password), lalu bersihkan data lokal.
+  Future<Result<void>> deleteAccount({required String password});
 }

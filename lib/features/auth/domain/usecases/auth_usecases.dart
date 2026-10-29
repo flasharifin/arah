@@ -36,3 +36,12 @@ class SignOut implements UseCase<void, NoParams> {
     return const Success(null);
   }
 }
+
+/// Parameter: password untuk konfirmasi.
+class DeleteAccount implements UseCase<void, String> {
+  const DeleteAccount(this._repository);
+  final AuthRepository _repository;
+
+  @override
+  Future<Result<void>> call(String password) => _repository.deleteAccount(password: password);
+}

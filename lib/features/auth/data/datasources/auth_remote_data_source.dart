@@ -11,6 +11,9 @@ abstract interface class AuthRemoteDataSource {
   Future<AuthSession> signIn({required String email, required String password});
   Future<UserModel> me();
   Future<void> revoke();
+
+  /// Hapus akun + semua datanya di server. Password salah → [ApiException] validation (400).
+  Future<void> deleteAccount({required String password});
 }
 
 class AuthApiDataSource implements AuthRemoteDataSource {
@@ -44,6 +47,10 @@ class AuthApiDataSource implements AuthRemoteDataSource {
     if (refreshToken == null) return;
     await _api.post('/api/mobile/auth/logout', body: {'refreshToken': refreshToken});
   }
+
+  @override
+  Future<void> deleteAccount({required String password}) =>
+      _api.delete('/api/account', body: {'password': password});
 }
 
 class AuthFixtureDataSource implements AuthRemoteDataSource {
@@ -63,4 +70,10 @@ class AuthFixtureDataSource implements AuthRemoteDataSource {
 
   @override
   Future<void> revoke() async {}
+
+  @override
+  Future<void> deleteAccount({required String password}) async {
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    if (password.length < 8) throw const ApiException(FailureCode.validation, 'Password salah');
+  }
 }

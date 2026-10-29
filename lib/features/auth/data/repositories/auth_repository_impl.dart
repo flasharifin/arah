@@ -36,4 +36,14 @@ class AuthRepositoryImpl implements AuthRepository {
     await guard(_remote.revoke);
     await _tokens.clear();
   }
+
+  @override
+  Future<Result<void>> deleteAccount({required String password}) => guard(() async {
+    await _remote.deleteAccount(password: password);
+    // Sesi & perangkat sudah ikut terhapus di server. Token dihapus DULU: kalau tidak, pelepasan
+    // push di bawah dapat 401 lalu ApiClient mencoba refresh sesi yang sudah tidak ada.
+    await _tokens.clear();
+    final beforeSignOut = _beforeSignOut;
+    if (beforeSignOut != null) await guard(beforeSignOut); // matikan FID lokal untuk akun berikutnya
+  });
 }

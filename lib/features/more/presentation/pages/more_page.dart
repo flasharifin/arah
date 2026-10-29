@@ -1,4 +1,5 @@
 import 'package:arah/core/state/privacy_cubit.dart';
+import 'package:arah/core/theme/app_colors.dart';
 import 'package:arah/core/theme/app_spacing.dart';
 import 'package:arah/core/widgets/widgets.dart';
 import 'package:arah/features/auth/presentation/bloc/auth_bloc.dart';
@@ -105,6 +106,14 @@ class MorePage extends StatelessWidget {
                       destructive: true,
                       onTap: () => _confirmLogout(context),
                     ),
+                    MenuTile(
+                      icon: Icons.delete_forever_outlined,
+                      title: 'Hapus akun',
+                      subtitle: 'Hapus akun dan semua data secara permanen',
+                      destructive: true,
+                      onTap: () =>
+                          showDialog<void>(context: context, builder: (_) => const _DeleteAccountDialog()),
+                    ),
                   ],
                 ),
               ],
@@ -130,5 +139,87 @@ class MorePage extends StatelessWidget {
     if (confirmed == true && context.mounted) {
       context.read<AuthBloc>().add(const AuthLogoutRequested());
     }
+  }
+}
+
+/// Konfirmasi hapus akun dengan password (syarat App Store / Play Store: hapus akun dari dalam app).
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog();
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _password = TextEditingController();
+
+  // AuthState.failure juga dipakai halaman masuk; tampilkan hanya error dari percobaan di dialog ini.
+  bool _submitted = false;
+
+  @override
+  void dispose() {
+    _password.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _submitted = true);
+    context.read<AuthBloc>().add(AuthDeleteAccountRequested(_password.text));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<AuthBloc, AuthState>(
+      listenWhen: (previous, current) => current.status == AuthStatus.unauthenticated,
+      listener: (context, _) => Navigator.of(context).pop(), // router lalu mengarahkan ke layar masuk
+      builder: (context, state) => AlertDialog(
+        scrollable: true,
+        title: const Text('Hapus akun permanen?'),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Semua datamu — portofolio, riwayat jual & DCA, dividen, aset, utang, target, jurnal, '
+                'dan watchlist — dihapus dari server dan tidak bisa dikembalikan.',
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              PasswordField(
+                controller: _password,
+                label: 'Password untuk konfirmasi',
+                validator: (v) => (v ?? '').isEmpty ? 'Password wajib diisi' : null,
+              ),
+              if (_submitted && state.failure != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.md),
+                  child: Text(
+                    state.failure!.message,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.negative),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: state.isSubmitting ? null : () => Navigator.of(context).pop(),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: state.isSubmitting ? null : _submit,
+            style: TextButton.styleFrom(foregroundColor: AppColors.negative),
+            child: state.isSubmitting
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, semanticsLabel: 'Menghapus akun'),
+                  )
+                : const Text('Hapus permanen'),
+          ),
+        ],
+      ),
+    );
   }
 }

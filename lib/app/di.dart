@@ -60,7 +60,12 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
       ),
     )
     ..registerFactory(
-      () => AuthBloc(getCurrentUser: GetCurrentUser(sl()), signIn: SignIn(sl()), signOut: SignOut(sl())),
+      () => AuthBloc(
+        getCurrentUser: GetCurrentUser(sl()),
+        signIn: SignIn(sl()),
+        signOut: SignOut(sl()),
+        deleteAccount: DeleteAccount(sl()),
+      ),
     )
     // Dashboard
     ..registerLazySingleton<DashboardRemoteDataSource>(

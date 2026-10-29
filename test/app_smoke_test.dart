@@ -71,4 +71,42 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Watchlist'), findsOneWidget);
   });
+
+  testWidgets('hapus akun: password salah ditolak, password benar kembali ke layar masuk (fixture)', (
+    tester,
+  ) async {
+    FlutterSecureStorage.setMockInitialValues({}); // token dari tes sebelumnya membuat app langsung login
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const ArahApp());
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).at(0), 'demo@arah.id');
+    await tester.enterText(find.byType(TextFormField).at(1), 'password123');
+    await tester.tap(find.text('Masuk'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Lainnya'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Hapus akun'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Hapus akun'));
+    await tester.pumpAndSettle();
+    expect(find.text('Hapus akun permanen?'), findsOneWidget);
+
+    // Fixture: password < 8 karakter dianggap salah.
+    final dialogField = find.descendant(of: find.byType(AlertDialog), matching: find.byType(TextFormField));
+    await tester.enterText(dialogField, 'salah');
+    await tester.tap(find.text('Hapus permanen'));
+    await tester.pumpAndSettle();
+    expect(find.text('Password salah'), findsOneWidget);
+    expect(find.text('Hapus akun permanen?'), findsOneWidget);
+
+    await tester.enterText(dialogField, 'password123');
+    await tester.tap(find.text('Hapus permanen'));
+    await tester.pumpAndSettle();
+    expect(find.text('Hapus akun permanen?'), findsNothing);
+    expect(find.text('Masuk'), findsOneWidget);
+  });
 }

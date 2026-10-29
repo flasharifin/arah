@@ -24,3 +24,12 @@ final class AuthLoginRequested extends AuthEvent {
 final class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
 }
+
+final class AuthDeleteAccountRequested extends AuthEvent {
+  const AuthDeleteAccountRequested(this.password);
+
+  final String password;
+
+  @override
+  List<Object?> get props => [password];
+}
