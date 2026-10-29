@@ -1,5 +1,6 @@
 import 'package:arah/core/network/api_client.dart';
 import 'package:arah/core/notifications/push_notification_service.dart';
+import 'package:arah/core/security/biometric_lock.dart';
 import 'package:arah/core/storage/token_storage.dart';
 import 'package:arah/features/assistant/data/datasources/assistant_remote_data_source.dart';
 import 'package:arah/features/assistant/data/repositories/assistant_repository_impl.dart';
@@ -11,6 +12,7 @@ import 'package:arah/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:arah/features/auth/domain/repositories/auth_repository.dart';
 import 'package:arah/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:arah/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:arah/features/auth/presentation/bloc/password_reset_cubit.dart';
 import 'package:arah/features/dashboard/data/datasources/dashboard_remote_data_source.dart';
 import 'package:arah/features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import 'package:arah/features/dashboard/domain/repositories/dashboard_repository.dart';
@@ -48,6 +50,7 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
     ..registerLazySingleton(() => const TokenStorage(FlutterSecureStorage()))
     ..registerLazySingleton(() => ApiClient(baseUrl: _baseUrl, tokenStorage: sl()))
     ..registerLazySingleton(() => PushNotificationService(api: useFixtures ? null : sl()))
+    ..registerLazySingleton(() => BiometricLock(const FlutterSecureStorage()))
     // Auth
     ..registerLazySingleton<AuthRemoteDataSource>(
       () => useFixtures ? AuthFixtureDataSource() : AuthApiDataSource(sl(), sl()),
@@ -65,7 +68,11 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
         signIn: SignIn(sl()),
         signOut: SignOut(sl()),
         deleteAccount: DeleteAccount(sl()),
+        biometricLock: sl(),
       ),
+    )
+    ..registerFactory(
+      () => PasswordResetCubit(requestReset: RequestPasswordReset(sl()), resetPassword: ResetPassword(sl())),
     )
     // Dashboard
     ..registerLazySingleton<DashboardRemoteDataSource>(

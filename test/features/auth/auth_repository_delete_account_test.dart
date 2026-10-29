@@ -25,6 +25,11 @@ class _Remote implements AuthRemoteDataSource {
   Future<void> revoke() => throw UnimplementedError();
   @override
   Future<AuthSession> signIn({required String email, required String password}) => throw UnimplementedError();
+  @override
+  Future<void> requestPasswordReset({required String email}) => throw UnimplementedError();
+  @override
+  Future<void> resetPassword({required String email, required String code, required String newPassword}) =>
+      throw UnimplementedError();
 }
 
 void main() {

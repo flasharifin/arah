@@ -14,6 +14,12 @@ abstract interface class AuthRemoteDataSource {
 
   /// Hapus akun + semua datanya di server. Password salah → [ApiException] validation (400).
   Future<void> deleteAccount({required String password});
+
+  /// Kirim kode reset 6 digit ke email. Server selalu sukses (tidak membocorkan email terdaftar).
+  Future<void> requestPasswordReset({required String email});
+
+  /// Ganti password dengan kode dari email. Kode salah/kedaluwarsa → validation (400).
+  Future<void> resetPassword({required String email, required String code, required String newPassword});
 }
 
 class AuthApiDataSource implements AuthRemoteDataSource {
@@ -51,6 +57,14 @@ class AuthApiDataSource implements AuthRemoteDataSource {
   @override
   Future<void> deleteAccount({required String password}) =>
       _api.delete('/api/account', body: {'password': password});
+
+  @override
+  Future<void> requestPasswordReset({required String email}) =>
+      _api.post('/api/auth/password/forgot', body: {'email': email});
+
+  @override
+  Future<void> resetPassword({required String email, required String code, required String newPassword}) =>
+      _api.post('/api/auth/password/reset', body: {'email': email, 'code': code, 'newPassword': newPassword});
 }
 
 class AuthFixtureDataSource implements AuthRemoteDataSource {
@@ -75,5 +89,22 @@ class AuthFixtureDataSource implements AuthRemoteDataSource {
   Future<void> deleteAccount({required String password}) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
     if (password.length < 8) throw const ApiException(FailureCode.validation, 'Password salah');
+  }
+
+  @override
+  Future<void> requestPasswordReset({required String email}) =>
+      Future<void>.delayed(const Duration(milliseconds: 600));
+
+  /// Fixture: kode yang benar `123456`.
+  @override
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    if (code != '123456') {
+      throw const ApiException(FailureCode.validation, 'Kode salah atau sudah kedaluwarsa');
+    }
   }
 }

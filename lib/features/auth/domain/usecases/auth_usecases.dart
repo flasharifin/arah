@@ -45,3 +45,31 @@ class DeleteAccount implements UseCase<void, String> {
   @override
   Future<Result<void>> call(String password) => _repository.deleteAccount(password: password);
 }
+
+/// Parameter: email akun.
+class RequestPasswordReset implements UseCase<void, String> {
+  const RequestPasswordReset(this._repository);
+  final AuthRepository _repository;
+
+  @override
+  Future<Result<void>> call(String email) => _repository.requestPasswordReset(email: email.trim());
+}
+
+class ResetPasswordParams {
+  const ResetPasswordParams({required this.email, required this.code, required this.newPassword});
+  final String email;
+  final String code;
+  final String newPassword;
+}
+
+class ResetPassword implements UseCase<void, ResetPasswordParams> {
+  const ResetPassword(this._repository);
+  final AuthRepository _repository;
+
+  @override
+  Future<Result<void>> call(ResetPasswordParams params) => _repository.resetPassword(
+    email: params.email.trim(),
+    code: params.code.trim(),
+    newPassword: params.newPassword,
+  );
+}

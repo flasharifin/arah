@@ -21,8 +21,19 @@ final class AuthLoginRequested extends AuthEvent {
   List<Object?> get props => [email, password];
 }
 
+/// Buka sesi tersimpan dengan sidik jari (status [AuthStatus.locked]).
+final class AuthUnlockRequested extends AuthEvent {
+  const AuthUnlockRequested();
+}
+
+/// Jika kunci sidik jari aktif, sesi hanya dikunci; [sessionExpired] (token ditolak server) selalu keluar penuh.
 final class AuthLogoutRequested extends AuthEvent {
-  const AuthLogoutRequested();
+  const AuthLogoutRequested({this.sessionExpired = false});
+
+  final bool sessionExpired;
+
+  @override
+  List<Object?> get props => [sessionExpired];
 }
 
 final class AuthDeleteAccountRequested extends AuthEvent {

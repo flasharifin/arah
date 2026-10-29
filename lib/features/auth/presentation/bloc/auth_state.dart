@@ -1,6 +1,7 @@
 part of 'auth_bloc.dart';
 
-enum AuthStatus { unknown, authenticated, unauthenticated }
+/// [locked]: sesi tersimpan, menunggu sidik jari (atau password) di layar masuk sebelum data ditampilkan.
+enum AuthStatus { unknown, locked, authenticated, unauthenticated }
 
 class AuthState extends Equatable {
   const AuthState({this.status = AuthStatus.unknown, this.user, this.isSubmitting = false, this.failure});

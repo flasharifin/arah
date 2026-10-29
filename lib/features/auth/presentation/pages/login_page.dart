@@ -1,11 +1,14 @@
+import 'package:arah/core/security/biometric_lock.dart';
 import 'package:arah/core/theme/app_colors.dart';
 import 'package:arah/core/theme/app_spacing.dart';
 import 'package:arah/core/widgets/widgets.dart';
 import 'package:arah/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 /// S01 — Masuk. Daftar akun belum disambungkan ke backend mobile.
+/// Tombol sidik jari (Android) / Face ID (iOS) selalu tampil; aktif jika sesi tersimpan terkunci.
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -19,6 +22,13 @@ class _LoginPageState extends State<LoginPage> {
   final _password = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    final auth = context.read<AuthBloc>().state;
+    if (auth.status == AuthStatus.locked) _email.text = auth.user?.email ?? '';
+  }
+
+  @override
   void dispose() {
     _email.dispose();
     _password.dispose();
@@ -28,6 +38,23 @@ class _LoginPageState extends State<LoginPage> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     context.read<AuthBloc>().add(AuthLoginRequested(email: _email.text, password: _password.text));
+  }
+
+  void _biometricLogin(AuthState state) {
+    if (state.status == AuthStatus.locked) {
+      context.read<AuthBloc>().add(const AuthUnlockRequested());
+      return;
+    }
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            'Masuk dengan ${BiometricLock.name} belum diaktifkan. Masuk dengan password, '
+            'lalu aktifkan di Lainnya → Kunci dengan ${BiometricLock.name}.',
+          ),
+        ),
+      );
   }
 
   @override
@@ -70,7 +97,13 @@ class _LoginPageState extends State<LoginPage> {
                       controller: _password,
                       validator: (v) => (v ?? '').isEmpty ? 'Password wajib diisi' : null,
                     ),
-                    const SizedBox(height: AppSpacing.lg),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => context.go('/forgot-password'),
+                        child: const Text('Lupa password?'),
+                      ),
+                    ),
                     BlocBuilder<AuthBloc, AuthState>(
                       builder: (context, state) => Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -83,7 +116,31 @@ class _LoginPageState extends State<LoginPage> {
                                 style: text.bodySmall?.copyWith(color: AppColors.negative),
                               ),
                             ),
-                          PrimaryButton(label: 'Masuk', busy: state.isSubmitting, onPressed: _submit),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: PrimaryButton(
+                                  label: 'Masuk',
+                                  busy: state.isSubmitting,
+                                  onPressed: _submit,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              OutlinedButton(
+                                onPressed: state.isSubmitting ? null : () => _biometricLogin(state),
+                                // Tema memberi lebar minimum tak hingga; tombol ikon ini persegi setinggi tombol Masuk.
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size.square(AppSpacing.primaryButtonHeight),
+                                  padding: EdgeInsets.zero,
+                                ),
+                                child: Icon(
+                                  BiometricLock.icon,
+                                  size: 28,
+                                  semanticLabel: 'Masuk dengan ${BiometricLock.name}',
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),

@@ -109,4 +109,42 @@ void main() {
     expect(find.text('Hapus akun permanen?'), findsNothing);
     expect(find.text('Masuk'), findsOneWidget);
   });
+
+  testWidgets('lupa password: kirim kode, kode salah ditolak, kode benar lalu masuk lagi (fixture)', (
+    tester,
+  ) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const ArahApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Lupa password?'));
+    await tester.pumpAndSettle();
+    expect(find.text('Lupa password'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextFormField).first, 'demo@arah.id');
+    await tester.tap(find.text('Kirim kode'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('demo@arah.id'), findsOneWidget);
+
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), '000000');
+    await tester.enterText(fields.at(1), 'baru-123');
+    await tester.enterText(fields.at(2), 'baru-123');
+    await tester.tap(find.text('Simpan password baru'));
+    await tester.pumpAndSettle();
+    expect(find.text('Kode salah atau sudah kedaluwarsa'), findsOneWidget);
+
+    // Fixture: kode yang benar 123456.
+    await tester.enterText(fields.at(0), '123456');
+    await tester.tap(find.text('Simpan password baru'));
+    await tester.pumpAndSettle();
+    expect(find.text('Password sudah diganti'), findsOneWidget);
+
+    await tester.tap(find.text('Masuk'));
+    await tester.pumpAndSettle();
+    expect(find.text('Lupa password?'), findsOneWidget);
+  });
 }

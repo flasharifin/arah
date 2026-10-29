@@ -1,5 +1,6 @@
 package com.arkadigitalsolution.arah
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// local_auth butuh FragmentActivity untuk menampilkan prompt biometrik.
+class MainActivity : FlutterFragmentActivity()

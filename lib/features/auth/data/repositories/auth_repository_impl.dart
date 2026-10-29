@@ -46,4 +46,15 @@ class AuthRepositoryImpl implements AuthRepository {
     final beforeSignOut = _beforeSignOut;
     if (beforeSignOut != null) await guard(beforeSignOut); // matikan FID lokal untuk akun berikutnya
   });
+
+  @override
+  Future<Result<void>> requestPasswordReset({required String email}) =>
+      guard(() => _remote.requestPasswordReset(email: email));
+
+  @override
+  Future<Result<void>> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) => guard(() => _remote.resetPassword(email: email, code: code, newPassword: newPassword));
 }

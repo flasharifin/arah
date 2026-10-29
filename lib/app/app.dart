@@ -31,7 +31,9 @@ class _ArahAppState extends State<ArahApp> {
     // Rute dari notifikasi yang di-tap; redirect auth tetap berlaku jika belum login.
     _routes = _push.openedRoutes.listen(_router.go);
     // Refresh token ditolak server (dicabut/kedaluwarsa) → kembali ke layar masuk.
-    _sessionExpired = sl<ApiClient>().sessionExpired.listen((_) => _auth.add(const AuthLogoutRequested()));
+    _sessionExpired = sl<ApiClient>().sessionExpired.listen(
+      (_) => _auth.add(const AuthLogoutRequested(sessionExpired: true)),
+    );
   }
 
   @override

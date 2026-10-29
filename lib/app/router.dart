@@ -6,6 +6,8 @@ import 'package:arah/features/assistant/domain/entities/chat_message.dart';
 import 'package:arah/features/assistant/presentation/bloc/chat_bloc.dart';
 import 'package:arah/features/assistant/presentation/pages/chat_page.dart';
 import 'package:arah/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:arah/features/auth/presentation/bloc/password_reset_cubit.dart';
+import 'package:arah/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:arah/features/auth/presentation/pages/login_page.dart';
 import 'package:arah/features/auth/presentation/pages/splash_page.dart';
 import 'package:arah/features/dashboard/presentation/bloc/dashboard_cubit.dart';
@@ -21,6 +23,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Bisa dibuka tanpa login.
+const _publicRoutes = {'/login', '/forgot-password'};
+
 GoRouter createRouter(AuthBloc auth) {
   return GoRouter(
     initialLocation: '/home',
@@ -29,13 +34,20 @@ GoRouter createRouter(AuthBloc auth) {
       final location = state.matchedLocation;
       return switch (auth.state.status) {
         AuthStatus.unknown => location == '/splash' ? null : '/splash',
-        AuthStatus.unauthenticated => location == '/login' ? null : '/login',
-        AuthStatus.authenticated => location == '/login' || location == '/splash' ? '/home' : null,
+        // Terkunci: layar masuk menampilkan tombol sidik jari, password tetap bisa dipakai.
+        AuthStatus.unauthenticated || AuthStatus.locked => _publicRoutes.contains(location) ? null : '/login',
+        AuthStatus.authenticated =>
+          _publicRoutes.contains(location) || location == '/splash' ? '/home' : null,
       };
     },
     routes: [
       GoRoute(path: '/splash', builder: (_, _) => const SplashPage()),
       GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (_, _) =>
+            BlocProvider(create: (_) => sl<PasswordResetCubit>(), child: const ForgotPasswordPage()),
+      ),
       StatefulShellRoute.indexedStack(
         // Bloc fitur hidup selama sesi login: state & filter bertahan saat pindah tab,
         // dan dibuang saat logout agar data akun lama tidak terlihat akun berikutnya.

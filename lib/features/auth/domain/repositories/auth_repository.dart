@@ -12,4 +12,12 @@ abstract interface class AuthRepository {
 
   /// Hapus akun + semua data di server (konfirmasi password), lalu bersihkan data lokal.
   Future<Result<void>> deleteAccount({required String password});
+
+  Future<Result<void>> requestPasswordReset({required String email});
+
+  Future<Result<void>> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  });
 }

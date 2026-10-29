@@ -1,3 +1,5 @@
+import 'package:arah/app/di.dart';
+import 'package:arah/core/security/biometric_lock.dart';
 import 'package:arah/core/state/privacy_cubit.dart';
 import 'package:arah/core/theme/app_colors.dart';
 import 'package:arah/core/theme/app_spacing.dart';
@@ -100,6 +102,7 @@ class MorePage extends StatelessWidget {
                         onChanged: (_) => context.read<PrivacyCubit>().toggle(),
                       ),
                     ),
+                    const _BiometricLockTile(),
                     MenuTile(
                       icon: Icons.logout,
                       title: 'Keluar',
@@ -125,11 +128,18 @@ class MorePage extends StatelessWidget {
   }
 
   Future<void> _confirmLogout(BuildContext context) async {
+    final lockOnly = await sl<BiometricLock>().isEnabled();
+    if (!context.mounted) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Keluar dari akun?'),
-        content: const Text('Data akun di perangkat ini akan dibersihkan.'),
+        content: Text(
+          lockOnly
+              ? 'Masuk lagi cukup dengan ${BiometricLock.name}. Untuk menghapus data akun dari perangkat '
+                    'ini, matikan "Kunci dengan ${BiometricLock.name}" dulu.'
+              : 'Data akun di perangkat ini akan dibersihkan.',
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
           TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Keluar')),
@@ -139,6 +149,56 @@ class MorePage extends StatelessWidget {
     if (confirmed == true && context.mounted) {
       context.read<AuthBloc>().add(const AuthLogoutRequested());
     }
+  }
+}
+
+/// Aktif/nonaktif kunci sidik jari; setiap perubahan dikonfirmasi biometrik dulu.
+class _BiometricLockTile extends StatefulWidget {
+  const _BiometricLockTile();
+
+  @override
+  State<_BiometricLockTile> createState() => _BiometricLockTileState();
+}
+
+class _BiometricLockTileState extends State<_BiometricLockTile> {
+  final _lock = sl<BiometricLock>();
+  bool _available = false;
+  bool _enabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final available = await _lock.isAvailable();
+    final enabled = await _lock.isEnabled();
+    if (!mounted) return;
+    setState(() {
+      _available = available;
+      _enabled = enabled;
+    });
+  }
+
+  Future<void> _toggle(bool value) async {
+    if (!await _lock.authenticate()) return;
+    await _lock.setEnabled(value);
+    if (mounted) setState(() => _enabled = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      title: Text('Kunci dengan ${BiometricLock.name}'),
+      subtitle: Text(
+        _available
+            ? 'Masuk dengan ${BiometricLock.name}, juga setelah keluar'
+            : 'Daftarkan ${BiometricLock.name} di pengaturan perangkat dulu',
+      ),
+      value: _enabled,
+      onChanged: _available ? _toggle : null,
+    );
   }
 }
 
