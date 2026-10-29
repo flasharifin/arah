@@ -55,8 +55,8 @@ class WealthGoal extends Equatable {
   List<Object?> get props => [name, target, deadline, monthlyContribution, expectedReturnPercent];
 }
 
-/// Nilai aset & utang dalam rupiah setelah dikonversi server.
-// shortcut: total dihitung di client dengan asumsi semua item sudah IDR; pindahkan ke server bila ada item non-IDR.
+/// Nilai aset & utang dalam rupiah setelah dikonversi server (`valueIDR` di `/api/summary`),
+/// jadi total di sini = penjumlahan item IDR, sama dengan `totalAssetsAll` server.
 class NetWorth extends Equatable {
   const NetWorth({required this.assets, required this.liabilities, this.goal, this.asOf});
 

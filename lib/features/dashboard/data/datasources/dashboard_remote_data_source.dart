@@ -1,10 +1,47 @@
 import 'package:arah/core/domain/money.dart';
+import 'package:arah/core/network/api_client.dart';
 import 'package:arah/features/dashboard/domain/entities/dashboard_summary.dart';
 
-/// Ringkasan beranda. Backend belum punya satu endpoint agregat untuk mobile;
-/// implementasi API nantinya menggabungkan `/api/networth`, `/api/settings`, `/api/brief/today`.
+/// Ringkasan beranda.
 abstract interface class DashboardRemoteDataSource {
   Future<DashboardSummary> fetchSummary();
+}
+
+/// Angka dari `/api/summary` (dihitung server, sama dengan dashboard web) + briefing terakhir.
+class DashboardApiDataSource implements DashboardRemoteDataSource {
+  const DashboardApiDataSource(this._api);
+  final ApiClient _api;
+
+  @override
+  Future<DashboardSummary> fetchSummary() async {
+    final results = await Future.wait([_api.get('/api/summary'), _api.get('/api/brief/today')]);
+    final s = results[0] as Map<String, dynamic>;
+    final brief = results[1] as Map<String, dynamic>?;
+    Money idr(String key) => Money.idr((s[key] as num).toDouble());
+
+    return DashboardSummary(
+      netWorth: idr('combinedNetWorth'),
+      totalAssets: idr('totalAssetsAll'),
+      totalLiabilities: idr('totalLiabilities'),
+      portfolioValue: idr('portfolioValueIDR'),
+      healthScore: ((s['healthScore'] as Map<String, dynamic>?)?['total'] as num?)?.toInt(),
+      goalTarget: idr('target'),
+      asOf: DateTime.parse((s['asOf'] as Map<String, dynamic>)['computedAt'] as String),
+      briefing: brief == null
+          ? null
+          : BriefingPreview(
+              date: DateTime.parse(brief['date'] as String),
+              summary: briefingText(brief['content'] as String),
+            ),
+    );
+  }
+
+  /// Briefing disimpan dalam MarkdownV2 Telegram: buang penanda format & escape, lewati baris judul.
+  static String briefingText(String markdownV2) {
+    final plain = markdownV2.replaceAllMapped(RegExp(r'\\(.)|\|\||[*_~`]'), (m) => m[1] ?? '');
+    final lines = plain.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+    return lines.skip(lines.length > 1 ? 1 : 0).join(' · ');
+  }
 }
 
 /// Fixture S02.

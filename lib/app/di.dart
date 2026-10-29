@@ -57,7 +57,9 @@ void configureDependencies() {
       () => AuthBloc(getCurrentUser: GetCurrentUser(sl()), signIn: SignIn(sl()), signOut: SignOut(sl())),
     )
     // Dashboard
-    ..registerLazySingleton<DashboardRemoteDataSource>(DashboardFixtureDataSource.new)
+    ..registerLazySingleton<DashboardRemoteDataSource>(
+      () => _useFixtures ? DashboardFixtureDataSource() : DashboardApiDataSource(sl()),
+    )
     ..registerLazySingleton<DashboardRepository>(() => DashboardRepositoryImpl(sl()))
     ..registerFactory(() => DashboardCubit(GetDashboardSummary(sl())))
     // Portfolio
@@ -71,7 +73,9 @@ void configureDependencies() {
     ..registerLazySingleton<AssistantRepository>(() => AssistantRepositoryImpl(sl()))
     ..registerFactory(() => ChatBloc(sendMessage: SendChatMessage(sl())))
     // Net worth
-    ..registerLazySingleton<NetWorthRemoteDataSource>(NetWorthFixtureDataSource.new)
+    ..registerLazySingleton<NetWorthRemoteDataSource>(
+      () => _useFixtures ? NetWorthFixtureDataSource() : NetWorthApiDataSource(sl()),
+    )
     ..registerLazySingleton<NetWorthRepository>(() => NetWorthRepositoryImpl(sl()))
     ..registerFactory(() => NetWorthCubit(GetNetWorth(sl())));
 }
