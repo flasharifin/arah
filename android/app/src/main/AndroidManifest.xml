@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Build release butuh izin ini; manifest debug/profile saja tidak cukup. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Arah"
         android:name="${applicationName}"

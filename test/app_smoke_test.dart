@@ -25,7 +25,7 @@ void main() {
   setUpAll(() async {
     await initializeDateFormatting('id');
     FlutterSecureStorage.setMockInitialValues({});
-    configureDependencies();
+    configureDependencies(useFixtures: true);
     sl
       ..unregister<PushNotificationService>()
       ..registerSingleton<PushNotificationService>(_FakePush());

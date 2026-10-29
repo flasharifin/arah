@@ -31,20 +31,26 @@ import 'package:get_it/get_it.dart';
 
 final sl = GetIt.instance;
 
-/// `flutter run --dart-define=USE_FIXTURES=false --dart-define=API_BASE_URL=https://...`
+/// `--dart-define=USE_FIXTURES=false` memakai backend (default URL produksi).
+/// Backend lain: `--dart-define=API_BASE_URL=https://...` — `localhost` di HP/emulator menunjuk ke
+/// perangkat itu sendiri, dan `http://` diblokir Android/iOS; pakai URL https (mis. tunnel ke dev server).
 const _useFixtures = bool.fromEnvironment('USE_FIXTURES', defaultValue: true);
-const _baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost:3000');
+const _baseUrl = String.fromEnvironment(
+  'API_BASE_URL',
+  defaultValue: 'https://dashboard-finance-tracker.vercel.app',
+);
 
 /// Komposisi dependensi. Bloc didaftarkan sebagai factory: dibuat baru setiap login.
-void configureDependencies() {
+/// [useFixtures] bisa dipaksa di tes supaya tidak bergantung pada `--dart-define`.
+void configureDependencies({bool useFixtures = _useFixtures}) {
   sl
     // Core
     ..registerLazySingleton(() => const TokenStorage(FlutterSecureStorage()))
     ..registerLazySingleton(() => ApiClient(baseUrl: _baseUrl, tokenStorage: sl()))
-    ..registerLazySingleton(() => PushNotificationService(api: _useFixtures ? null : sl()))
+    ..registerLazySingleton(() => PushNotificationService(api: useFixtures ? null : sl()))
     // Auth
     ..registerLazySingleton<AuthRemoteDataSource>(
-      () => _useFixtures ? AuthFixtureDataSource() : AuthApiDataSource(sl(), sl()),
+      () => useFixtures ? AuthFixtureDataSource() : AuthApiDataSource(sl(), sl()),
     )
     ..registerLazySingleton<AuthRepository>(
       () => AuthRepositoryImpl(
@@ -58,13 +64,13 @@ void configureDependencies() {
     )
     // Dashboard
     ..registerLazySingleton<DashboardRemoteDataSource>(
-      () => _useFixtures ? DashboardFixtureDataSource() : DashboardApiDataSource(sl()),
+      () => useFixtures ? DashboardFixtureDataSource() : DashboardApiDataSource(sl()),
     )
     ..registerLazySingleton<DashboardRepository>(() => DashboardRepositoryImpl(sl()))
     ..registerFactory(() => DashboardCubit(GetDashboardSummary(sl())))
     // Portfolio
     ..registerLazySingleton<PortfolioRemoteDataSource>(
-      () => _useFixtures ? PortfolioFixtureDataSource() : PortfolioApiDataSource(sl()),
+      () => useFixtures ? PortfolioFixtureDataSource() : PortfolioApiDataSource(sl()),
     )
     ..registerLazySingleton<PortfolioRepository>(() => PortfolioRepositoryImpl(sl()))
     ..registerFactory(() => PortfolioBloc(GetPortfolio(sl())))
@@ -74,7 +80,7 @@ void configureDependencies() {
     ..registerFactory(() => ChatBloc(sendMessage: SendChatMessage(sl())))
     // Net worth
     ..registerLazySingleton<NetWorthRemoteDataSource>(
-      () => _useFixtures ? NetWorthFixtureDataSource() : NetWorthApiDataSource(sl()),
+      () => useFixtures ? NetWorthFixtureDataSource() : NetWorthApiDataSource(sl()),
     )
     ..registerLazySingleton<NetWorthRepository>(() => NetWorthRepositoryImpl(sl()))
     ..registerFactory(() => NetWorthCubit(GetNetWorth(sl())));
