@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- AppColors.primary; warna aksen ikon notifikasi. -->
+    <color name="notification_accent">#173F35</color>
+</resources>

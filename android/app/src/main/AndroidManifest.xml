@@ -3,6 +3,16 @@
         android:label="Arah"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Notifikasi FCM saat app di background memakai channel yang sama dengan notifikasi lokal. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="arah_default" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_arah" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_accent" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

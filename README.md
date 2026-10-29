@@ -56,3 +56,17 @@ Antarfitur tidak saling impor; navigasi lintas fitur memakai route (contoh: deta
 
 Sudah: tema, navigasi 5 tab, auth (fixture), Beranda, Portofolio (+ detail, filter, cari), AI Chat (retry idempoten, konteks aset), Kekayaan, Lainnya.
 Data API nyata baru untuk portofolio (`/api/portfolio` + `/api/market`); auth mobile dan endpoint AI belum ada di backend sehingga memakai fixture.
+
+## Firebase (project `arah-106cb`)
+
+Package/bundle ID: `com.arkadigitalsolution.arah`. Crashlytics aktif di build non-debug; error Flutter dan async dikirim sebagai fatal.
+Push (FCM + `flutter_local_notifications`, channel Android `arah_default`): izin diminta setelah login.
+- App terbuka: pesan FCM ditampilkan sebagai notifikasi lokal.
+- Background/tertutup: pesan dengan blok `notification` ditampilkan sistem; pesan data-only (`data.title`, `data.body`) ditampilkan oleh `firebaseMessagingBackgroundHandler`.
+- Tap notifikasi membuka `data.route` (hanya rute internal, mis. `/portfolio/bbca`).
+
+iOS belum lengkap:
+1. Daftarkan app iOS `com.arkadigitalsolution.arah` di Firebase, taruh `GoogleService-Info.plist` di `ios/Runner/` dan tambahkan ke target Runner lewat Xcode.
+2. Xcode → Runner → Signing & Capabilities: tambah **Push Notifications** (Background Modes → Remote notifications sudah ada di Info.plist).
+3. Upload APNs Auth Key (.p8) di Firebase Console → Project settings → Cloud Messaging.
+4. Untuk simbolikasi crash iOS, tambahkan Run Script Crashlytics (`flutterfire configure` bisa mengaturnya).

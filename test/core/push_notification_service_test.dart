@@ -3,13 +3,22 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  String? route(Object? value) => PushNotificationService.routeOf(RemoteMessage(data: {'route': ?value}));
-
   test('hanya rute internal dari payload yang diterima', () {
-    expect(route('/portfolio/bbca'), '/portfolio/bbca');
-    expect(route('https://evil.example'), isNull);
-    expect(route('//evil.example'), isNull);
-    expect(route(null), isNull);
-    expect(route(1), isNull);
+    expect(PushNotificationService.safeRoute('/portfolio/bbca'), '/portfolio/bbca');
+    expect(PushNotificationService.safeRoute('https://evil.example'), isNull);
+    expect(PushNotificationService.safeRoute('//evil.example'), isNull);
+    expect(PushNotificationService.safeRoute(null), isNull);
+    expect(PushNotificationService.safeRoute(1), isNull);
+  });
+
+  test('judul/isi dari blok notification, fallback ke data untuk data-only', () {
+    const withNotification = RemoteMessage(
+      notification: RemoteNotification(title: 'Harga', body: 'BBCA naik'),
+      data: {'title': 'abaikan'},
+    );
+    expect(PushNotificationService.contentOf(withNotification), (title: 'Harga', body: 'BBCA naik'));
+
+    const dataOnly = RemoteMessage(data: {'title': 'Briefing', 'body': 'Siap dibaca'});
+    expect(PushNotificationService.contentOf(dataOnly), (title: 'Briefing', body: 'Siap dibaca'));
   });
 }

@@ -1,7 +1,6 @@
 import 'package:arah/app/app.dart';
 import 'package:arah/app/di.dart';
 import 'package:arah/core/notifications/push_notification_service.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,10 +12,10 @@ class _FakePush implements PushNotificationService {
   Future<void> requestPermissionAndRegister() async {}
 
   @override
-  Stream<RemoteMessage> get foregroundMessages => const Stream.empty();
+  Future<void> initialize() async {}
 
   @override
-  Stream<String> openedRoutes() => const Stream.empty();
+  Stream<String> get openedRoutes => const Stream.empty();
 }
 
 void main() {
