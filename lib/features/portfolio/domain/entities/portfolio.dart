@@ -1,0 +1,33 @@
+import 'package:arah/core/domain/money.dart';
+import 'package:arah/features/portfolio/domain/entities/position.dart';
+import 'package:equatable/equatable.dart';
+
+class Portfolio extends Equatable {
+  const Portfolio({required this.positions, this.priceAsOf});
+
+  final List<Position> positions;
+
+  /// Waktu harga diambil; harga bisa dari cache, jadi jangan dilabeli "live".
+  final DateTime? priceAsOf;
+
+  /// Mata uang yang ada di portofolio. Total tidak dicampur lintas mata uang.
+  List<Currency> get currencies => {for (final p in positions) p.currency}.toList();
+
+  /// Total nilai pasar per mata uang; `null` jika ada harga yang belum tersedia.
+  Money? marketValue(Currency currency) => _sum(currency, (p) => p.marketValue);
+
+  Money? unrealizedPnl(Currency currency) => _sum(currency, (p) => p.unrealizedPnl);
+
+  Money? _sum(Currency currency, Money? Function(Position p) pick) {
+    var total = 0.0;
+    for (final p in positions.where((p) => p.currency == currency)) {
+      final value = pick(p);
+      if (value == null) return null;
+      total += value.amount;
+    }
+    return Money(total, currency);
+  }
+
+  @override
+  List<Object?> get props => [positions, priceAsOf];
+}

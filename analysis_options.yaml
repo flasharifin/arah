@@ -1,0 +1,11 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    prefer_const_constructors: true
+    prefer_final_locals: true
+    always_use_package_imports: true
+    require_trailing_commas: true
+
+formatter:
+  page_width: 110

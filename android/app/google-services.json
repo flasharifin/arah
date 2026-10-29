@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "16686419444",
+    "project_id": "arah-106cb",
+    "storage_bucket": "arah-106cb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:16686419444:android:5871176425cc58f24e7da1",
+        "android_client_info": {
+          "package_name": "com.arkadigitalsolution.arah"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWscU3VW2jYqeqiswqvC9ljAxlfS57RU8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
