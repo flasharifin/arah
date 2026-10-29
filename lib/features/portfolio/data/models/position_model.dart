@@ -1,8 +1,8 @@
 import 'package:arah/core/domain/money.dart';
 import 'package:arah/features/portfolio/domain/entities/position.dart';
 
-/// Pemetaan dari model Prisma `Portfolio` (`/api/portfolio`).
-/// Decimal Prisma diserialisasi sebagai string, jadi parse keduanya.
+/// Pemetaan posisi dari `/api/summary` (`positions`, sudah berisi `marketPrice`) atau baris
+/// Prisma `/api/portfolio`. Decimal Prisma diserialisasi sebagai string, jadi parse keduanya.
 class PositionModel extends Position {
   const PositionModel({
     required super.id,
@@ -25,6 +25,8 @@ class PositionModel extends Position {
       avgPrice: Money(_decimal(json['avgPrice']), currency),
       broker: json['platform'] as String? ?? '',
       sector: json['sector'] as String?,
+      // null = harga gagal diambil server, bukan nol
+      lastPrice: json['marketPrice'] == null ? null : Money(_decimal(json['marketPrice']), currency),
     );
   }
 

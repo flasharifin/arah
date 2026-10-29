@@ -4,6 +4,8 @@ import 'package:arah/core/storage/token_storage.dart';
 import 'package:arah/features/dashboard/data/datasources/dashboard_remote_data_source.dart';
 import 'package:arah/features/networth/data/datasources/net_worth_remote_data_source.dart';
 import 'package:arah/features/networth/domain/entities/net_worth.dart';
+import 'package:arah/features/portfolio/data/datasources/portfolio_remote_data_source.dart';
+import 'package:arah/features/portfolio/domain/entities/position.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -127,4 +129,72 @@ void main() {
     final nw = await NetWorthApiDataSource(api).fetchNetWorth();
     expect(nw.assets.any((a) => a.isAutomatic), isFalse);
   });
+
+  test(
+    'portofolio: posisi dari summary.positions, harga hilang tetap null, waktu harga paling lama',
+    () async {
+      final api = _FakeApi({
+        '/api/summary': {
+          ..._summary,
+          // bentuk PortfolioWithCalc dari backend (src/lib/summary.ts enrichPortfolios)
+          'positions': [
+            {
+              'id': 'p1',
+              'stockCode': 'ZBASEA',
+              'exchange': 'IDX',
+              'currency': 'IDR',
+              'lot': 10,
+              'avgPrice': 9000,
+              'platform': 'Stockbit',
+              'sector': 'Keuangan',
+              'marketPrice': 8500,
+              'marketValue': 8500000,
+              'priceFetchedAt': '2026-10-29T07:30:00.000Z',
+            },
+            {
+              'id': 'p2',
+              'stockCode': 'ZBASEB',
+              'exchange': 'US',
+              'currency': 'USD',
+              'lot': 3,
+              'avgPrice': 150,
+              'platform': '',
+              'sector': null,
+              'marketPrice': 200,
+              'marketValue': 600,
+              'priceFetchedAt': '2026-10-29T07:12:00.000Z',
+            },
+            {
+              'id': 'p3',
+              'stockCode': 'ZZZZFAKE',
+              'exchange': 'IDX',
+              'currency': 'IDR',
+              'lot': 5,
+              'avgPrice': 1000,
+              'platform': '',
+              'sector': null,
+              'marketPrice': null,
+              'marketValue': null,
+              'priceFetchedAt': null,
+            },
+          ],
+        },
+      });
+      final portfolio = await PortfolioApiDataSource(api).fetchPortfolio();
+
+      final [a, b, missing] = portfolio.positions;
+      expect(
+        (a.symbol, a.exchange, a.quantity, a.broker, a.sector),
+        ('ZBASEA', Exchange.idx, 10, 'Stockbit', 'Keuangan'),
+      );
+      expect(a.lastPrice, const Money.idr(8500));
+      // nilai pasar dihitung entity = marketValue server
+      expect(a.marketValue, const Money.idr(8500000));
+      expect(b.currency, Currency.usd);
+      expect(b.marketValue, const Money.usd(600));
+      expect(missing.lastPrice, isNull);
+      expect(missing.marketValue, isNull);
+      expect(portfolio.priceAsOf, DateTime.parse('2026-10-29T07:12:00.000Z'));
+    },
+  );
 }

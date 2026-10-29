@@ -8,28 +8,20 @@ abstract interface class PortfolioRemoteDataSource {
   Future<Portfolio> fetchPortfolio();
 }
 
-/// Menggabungkan holding (`/api/portfolio`) dengan harga (`/api/market`).
+/// Posisi + harga dari `/api/summary`: satu request, sumber yang sama dengan Beranda & dashboard web.
 class PortfolioApiDataSource implements PortfolioRemoteDataSource {
   const PortfolioApiDataSource(this._api);
   final ApiClient _api;
 
   @override
   Future<Portfolio> fetchPortfolio() async {
-    final raw = await _api.get('/api/portfolio') as List<dynamic>;
-    final positions = raw.cast<Map<String, dynamic>>().map(PositionModel.fromJson).toList();
-    if (positions.isEmpty) return const Portfolio(positions: []);
-
-    final keys = positions.map((p) => '${p.symbol}:${p.exchange.code}').toSet().join(',');
-    final prices = await _api.get('/api/market', query: {'assets': keys}) as Map<String, dynamic>;
+    final summary = await _api.get('/api/summary') as Map<String, dynamic>;
+    final raw = (summary['positions'] as List<dynamic>).cast<Map<String, dynamic>>();
+    final fetchedAt = raw.map((p) => p['priceFetchedAt']).whereType<String>().map(DateTime.parse);
     return Portfolio(
-      priceAsOf: DateTime.now(),
-      positions: [
-        for (final p in positions)
-          switch (prices['${p.symbol}:${p.exchange.code}']) {
-            {'price': final num price} => p.copyWith(lastPrice: Money(price.toDouble(), p.currency)),
-            _ => p,
-          },
-      ],
+      positions: raw.map(PositionModel.fromJson).toList(),
+      // Harga paling lama = batas kesegaran seluruh daftar (harga bisa dari cache server).
+      priceAsOf: fetchedAt.isEmpty ? null : fetchedAt.reduce((a, b) => a.isBefore(b) ? a : b),
     );
   }
 }
