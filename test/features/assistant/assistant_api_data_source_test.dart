@@ -24,9 +24,75 @@ class _FakeApi extends ApiClient {
       },
     };
   }
+
+  @override
+  Future<dynamic> get(String path, {Map<String, dynamic>? query}) async {
+    calls.add((path, query));
+    if (path == '/api/mobile/conversations') {
+      return [
+        {
+          'id': 'c1',
+          'title': 'Soal BBCA',
+          'createdAt': '2026-10-28T08:00:00.000Z',
+          'updatedAt': '2026-10-29T08:00:00.000Z',
+        },
+      ];
+    }
+    return [
+      {
+        'id': 'm1',
+        'role': 'user',
+        'content': 'Berapa lot BBCA?',
+        'context': 'BBCA:IDX',
+        'createdAt': '2026-10-29T07:59:00.000Z',
+      },
+      {
+        'id': 'm2',
+        'role': 'assistant',
+        'content': '10 lot.',
+        'context': null,
+        'createdAt': '2026-10-29T08:00:00.000Z',
+      },
+    ];
+  }
+
+  @override
+  Future<dynamic> patch(String path, {Object? body}) async => calls.add((path, body));
+
+  @override
+  Future<dynamic> delete(String path, {Object? body}) async => calls.add((path, body));
 }
 
 void main() {
+  test('riwayat: daftar, isi (peran user/assistant), ubah nama, hapus', () async {
+    final api = _FakeApi();
+    final source = AssistantApiDataSource(api);
+
+    final list = await source.listConversations();
+    expect(
+      list.single,
+      ConversationSummary(
+        id: 'c1',
+        title: 'Soal BBCA',
+        updatedAt: DateTime.parse('2026-10-29T08:00:00.000Z'),
+      ),
+    );
+
+    final messages = await source.fetchMessages('c1');
+    expect(messages.map((m) => (m.id, m.role, m.content)), [
+      ('m1', ChatRole.user, 'Berapa lot BBCA?'),
+      ('m2', ChatRole.assistant, '10 lot.'),
+    ]);
+    expect(api.calls[1].$1, '/api/mobile/conversations/c1/messages');
+    expect(api.calls[1].$2, {'limit': '100'});
+
+    await source.renameConversation('c1', 'Judul baru');
+    await source.deleteConversation('c1');
+    expect(api.calls[2].$1, '/api/mobile/conversations/c1');
+    expect(api.calls[2].$2, {'title': 'Judul baru'});
+    expect(api.calls[3], ('/api/mobile/conversations/c1', null));
+  });
+
   test('pesan pertama ke /conversations dengan konteks aset; balasan dipetakan', () async {
     final api = _FakeApi();
     final reply = await AssistantApiDataSource(api).sendMessage(

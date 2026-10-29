@@ -22,4 +22,19 @@ class AssistantRepositoryImpl implements AssistantRepository {
       context: context,
     ),
   );
+
+  @override
+  Future<Result<List<ConversationSummary>>> listConversations() => guard(_remote.listConversations);
+
+  @override
+  Future<Result<List<ChatMessage>>> loadConversation(String conversationId) =>
+      guard(() => _remote.fetchMessages(conversationId));
+
+  @override
+  Future<Result<void>> renameConversation(String conversationId, String title) =>
+      guard(() => _remote.renameConversation(conversationId, title.trim()));
+
+  @override
+  Future<Result<void>> deleteConversation(String conversationId) =>
+      guard(() => _remote.deleteConversation(conversationId));
 }

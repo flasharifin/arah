@@ -4,6 +4,8 @@ import 'package:arah/app/app_shell.dart';
 import 'package:arah/app/di.dart';
 import 'package:arah/features/assistant/domain/entities/chat_message.dart';
 import 'package:arah/features/assistant/presentation/bloc/chat_bloc.dart';
+import 'package:arah/features/assistant/presentation/bloc/conversation_history_cubit.dart';
+import 'package:arah/features/assistant/presentation/pages/conversation_history_page.dart';
 import 'package:arah/features/assistant/presentation/pages/chat_page.dart';
 import 'package:arah/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:arah/features/auth/presentation/bloc/password_reset_cubit.dart';
@@ -91,6 +93,15 @@ GoRouter createRouter(AuthBloc auth) {
                         : AssetContext(symbol: symbol, exchange: q['exchange'] ?? 'IDX'),
                   );
                 },
+                routes: [
+                  GoRoute(
+                    path: 'history',
+                    builder: (_, _) => BlocProvider(
+                      create: (_) => sl<ConversationHistoryCubit>()..refresh(),
+                      child: const ConversationHistoryPage(),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

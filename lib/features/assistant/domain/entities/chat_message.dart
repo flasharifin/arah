@@ -60,3 +60,15 @@ class ChatReply extends Equatable {
   @override
   List<Object?> get props => [conversationId, message];
 }
+
+/// Satu baris riwayat percakapan.
+class ConversationSummary extends Equatable {
+  const ConversationSummary({required this.id, required this.title, required this.updatedAt});
+
+  final String id;
+  final String title;
+  final DateTime updatedAt;
+
+  @override
+  List<Object?> get props => [id, title, updatedAt];
+}

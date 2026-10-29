@@ -59,3 +59,13 @@ final class ChatFailedMessageEdited extends ChatEvent {
 final class ChatResetRequested extends ChatEvent {
   const ChatResetRequested();
 }
+
+final class ChatConversationLoaded extends ChatEvent {
+  const ChatConversationLoaded(this.conversationId, this.messages);
+
+  final String conversationId;
+  final List<ChatMessage> messages;
+
+  @override
+  List<Object?> get props => [conversationId, messages];
+}

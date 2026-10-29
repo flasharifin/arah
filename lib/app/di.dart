@@ -7,6 +7,8 @@ import 'package:arah/features/assistant/data/repositories/assistant_repository_i
 import 'package:arah/features/assistant/domain/repositories/assistant_repository.dart';
 import 'package:arah/features/assistant/domain/usecases/send_chat_message.dart';
 import 'package:arah/features/assistant/presentation/bloc/chat_bloc.dart';
+import 'package:arah/features/assistant/domain/usecases/conversation_usecases.dart';
+import 'package:arah/features/assistant/presentation/bloc/conversation_history_cubit.dart';
 import 'package:arah/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:arah/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:arah/features/auth/domain/repositories/auth_repository.dart';
@@ -92,6 +94,14 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
     )
     ..registerLazySingleton<AssistantRepository>(() => AssistantRepositoryImpl(sl()))
     ..registerFactory(() => ChatBloc(sendMessage: SendChatMessage(sl())))
+    ..registerFactory(
+      () => ConversationHistoryCubit(
+        list: ListConversations(sl()),
+        load: LoadConversation(sl()),
+        rename: RenameConversation(sl()),
+        delete: DeleteConversation(sl()),
+      ),
+    )
     // Net worth
     ..registerLazySingleton<NetWorthRemoteDataSource>(
       () => useFixtures ? NetWorthFixtureDataSource() : NetWorthApiDataSource(sl()),

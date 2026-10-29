@@ -147,4 +147,69 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Lupa password?'), findsOneWidget);
   });
+
+  testWidgets('riwayat chat: ubah nama, buka percakapan lama, hapus (fixture)', (tester) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const ArahApp());
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).at(0), 'demo@arah.id');
+    await tester.enterText(find.byType(TextFormField).at(1), 'password123');
+    await tester.tap(find.text('Masuk'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('AI Chat'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, 'Pertanyaan untuk riwayat');
+    await tester.tap(find.byTooltip('Kirim'));
+    await tester.pump(const Duration(seconds: 1)); // jeda balasan fixture
+    await tester.pumpAndSettle();
+    // Chat baru → layar kosong, lalu buka percakapan tadi dari riwayat.
+    await tester.tap(find.byTooltip('Chat baru'));
+    await tester.pumpAndSettle();
+    expect(find.text('Pertanyaan untuk riwayat'), findsNothing);
+
+    await tester.tap(find.byTooltip('Riwayat'));
+    await tester.pumpAndSettle();
+    expect(find.text('Hari ini'), findsOneWidget);
+    Finder tileOf(String title) => find.ancestor(of: find.text(title), matching: find.byType(ListTile));
+
+    await tester.tap(
+      find.descendant(of: tileOf('Pertanyaan untuk riwayat'), matching: find.byTooltip('Opsi percakapan')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ubah nama'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.descendant(of: find.byType(AlertDialog), matching: find.byType(TextFormField)),
+      'Judul baru',
+    );
+    await tester.tap(find.text('Simpan'));
+    await tester.pumpAndSettle();
+    expect(find.text('Judul baru'), findsOneWidget);
+
+    await tester.tap(find.text('Judul baru'));
+    await tester.pumpAndSettle();
+    expect(find.text('Pertanyaan untuk riwayat'), findsOneWidget); // pesan lama tampil di layar chat
+
+    await tester.tap(find.byTooltip('Riwayat'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(of: tileOf('Judul baru'), matching: find.byTooltip('Opsi percakapan')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Hapus'));
+    await tester.pumpAndSettle();
+    expect(find.text('Hapus percakapan?'), findsOneWidget);
+    await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text('Hapus')));
+    await tester.pumpAndSettle();
+    expect(find.text('Judul baru'), findsNothing);
+
+    // Percakapan yang sedang terbuka dihapus → layar chat kosong lagi.
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Pertanyaan untuk riwayat'), findsNothing);
+    expect(find.text('Apa yang ingin kamu pahami hari ini?'), findsOneWidget);
+  });
 }

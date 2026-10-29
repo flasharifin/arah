@@ -21,6 +21,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatRetryRequested>(_onRetry);
     on<ChatFailedMessageEdited>(_onEdit);
     on<ChatResetRequested>((e, emit) => emit(const ChatState()));
+    // Percakapan lama dari riwayat: pesan sudah dimuat halaman riwayat, lanjut chat di percakapan itu.
+    on<ChatConversationLoaded>(
+      (e, emit) => emit(ChatState(conversationId: e.conversationId, messages: e.messages)),
+    );
   }
 
   final SendChatMessage _sendMessage;

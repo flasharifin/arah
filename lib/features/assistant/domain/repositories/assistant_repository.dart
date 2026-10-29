@@ -9,4 +9,9 @@ abstract interface class AssistantRepository {
     required String content,
     AssetContext? context,
   });
+
+  Future<Result<List<ConversationSummary>>> listConversations();
+  Future<Result<List<ChatMessage>>> loadConversation(String conversationId);
+  Future<Result<void>> renameConversation(String conversationId, String title);
+  Future<Result<void>> deleteConversation(String conversationId);
 }

@@ -7,6 +7,7 @@ import 'package:arah/features/assistant/presentation/widgets/chat_composer.dart'
 import 'package:arah/features/assistant/presentation/widgets/message_bubble.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 /// S05/S06 — AI Chat. [initialContext] datang dari detail posisi via query parameter.
 class ChatPage extends StatefulWidget {
@@ -44,6 +45,11 @@ class _ChatPageState extends State<ChatPage> {
       appBar: AppBar(
         title: const Text('AI Assistant'),
         actions: [
+          IconButton(
+            tooltip: 'Riwayat',
+            icon: const Icon(Icons.history),
+            onPressed: () => context.go('/assistant/history'),
+          ),
           IconButton(
             tooltip: 'Chat baru',
             icon: const Icon(Icons.add),

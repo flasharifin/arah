@@ -28,6 +28,15 @@ class _FlakyRepository implements AssistantRepository {
       ),
     );
   }
+
+  @override
+  Future<Result<List<ConversationSummary>>> listConversations() => throw UnimplementedError();
+  @override
+  Future<Result<List<ChatMessage>>> loadConversation(String conversationId) => throw UnimplementedError();
+  @override
+  Future<Result<void>> renameConversation(String conversationId, String title) => throw UnimplementedError();
+  @override
+  Future<Result<void>> deleteConversation(String conversationId) => throw UnimplementedError();
 }
 
 void main() {
