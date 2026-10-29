@@ -2,4 +2,6 @@
 <resources>
     <!-- AppColors.primary; warna aksen ikon notifikasi. -->
     <color name="notification_accent">#173F35</color>
+    <!-- Latar ikon adaptif; dari flutter_launcher_icons (warna kotak di logo). -->
+    <color name="ic_launcher_background">#143F35</color>
 </resources>
