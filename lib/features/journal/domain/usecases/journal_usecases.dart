@@ -16,6 +16,5 @@ class SaveJournalNote implements UseCase<void, ({String day, String note})> {
   final JournalRepository _repository;
 
   @override
-  Future<Result<void>> call(({String day, String note}) params) =>
-      _repository.saveNote(params.day, params.note);
+  Future<Result<void>> call(({String day, String note}) params) => _repository.saveNote(params.day, params.note);
 }

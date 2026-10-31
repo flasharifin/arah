@@ -40,11 +40,8 @@ class JournalData extends Equatable {
   final List<StockContribution> today;
 
   /// Catatan kosong = dihapus (sama seperti server).
-  JournalData withNote(String day, String note) => JournalData(
-    notes: note.isEmpty ? ({...notes}..remove(day)) : {...notes, day: note},
-    pnl: pnl,
-    today: today,
-  );
+  JournalData withNote(String day, String note) =>
+      JournalData(notes: note.isEmpty ? ({...notes}..remove(day)) : {...notes, day: note}, pnl: pnl, today: today);
 
   @override
   List<Object?> get props => [notes, pnl, today];

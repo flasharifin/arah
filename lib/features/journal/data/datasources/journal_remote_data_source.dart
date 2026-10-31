@@ -56,8 +56,7 @@ class JournalApiDataSource implements JournalRemoteDataSource {
 
   /// Catatan kosong → server menghapus catatan tanggal itu.
   @override
-  Future<void> saveNote(String day, String note) =>
-      _api.post('/api/daily-note', body: {'date': day, 'note': note});
+  Future<void> saveNote(String day, String note) => _api.post('/api/daily-note', body: {'date': day, 'note': note});
 }
 
 /// Data ilustrasi S14, catatan disimpan di memori.
@@ -74,17 +73,10 @@ class JournalFixtureDataSource implements JournalRemoteDataSource {
         StockContribution(symbol: 'BBCA', change: Money.idr(-300000), contributionPercent: -0.3),
         StockContribution(symbol: 'TLKM', change: Money.idr(-150000), contributionPercent: -0.15),
       ],
-      pnl: {
-        yesterday: const DailyPnl(
-          portfolioValue: Money.idr(98450000),
-          pnl: Money.idr(-450000),
-          pnlPercent: -0.45,
-        ),
-      },
+      pnl: {yesterday: const DailyPnl(portfolioValue: Money.idr(98450000), pnl: Money.idr(-450000), pnlPercent: -0.45)},
     );
   }
 
   @override
-  Future<void> saveNote(String day, String note) async =>
-      note.isEmpty ? _notes.remove(day) : (_notes[day] = note);
+  Future<void> saveNote(String day, String note) async => note.isEmpty ? _notes.remove(day) : (_notes[day] = note);
 }
