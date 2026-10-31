@@ -132,8 +132,11 @@ class _RankCard extends StatelessWidget {
     final top = rank <= 3;
     return AppCard(
       semanticLabel: 'Peringkat $rank, ${item.symbol}, ${item.label}',
-      onTap: () =>
-          item.positionId != null ? context.go('/portfolio/${item.positionId}') : context.go('/more/watchlist'),
+      // Relatif ke peringkat (/home/… atau /more/…): back kembali ke sini, bukan ke tab lain.
+      onTap: () {
+        final here = GoRouterState.of(context).uri.path;
+        context.go(item.positionId != null ? '$here/position/${item.positionId}' : '$here/watchlist');
+      },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

@@ -219,15 +219,43 @@ void main() {
     await tester.tap(find.text('Masuk'));
     await tester.pumpAndSettle();
 
-    // Pintasan Sinyal di Beranda: back kembali ke Beranda, bukan ke Lainnya.
+    // Pintasan Sinyal di Beranda → kartu emiten → back ke Peringkat → back ke Beranda (bukan tab lain).
+    Future<void> back() async {
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> openRankCard() async {
+      expect(find.text('Peringkat teknikal'), findsOneWidget);
+      await tester.ensureVisible(find.text('BBCA').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('BBCA').first);
+      await tester.pumpAndSettle();
+      expect(find.text('Kepemilikan'), findsOneWidget); // detail posisi
+      await back();
+      expect(find.text('Peringkat teknikal'), findsOneWidget);
+      expect(find.text('Kepemilikan'), findsNothing);
+      await back();
+    }
+
     await tester.tap(find.text('Sinyal'));
     await tester.pumpAndSettle();
-    expect(find.text('Peringkat teknikal'), findsOneWidget);
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    expect(find.text('Peringkat teknikal'), findsNothing);
-    expect(find.text('Sinyal'), findsOneWidget);
+    await openRankCard();
+    expect(find.text('Sinyal'), findsOneWidget); // Beranda
     expect(find.text('Tutup Arah?'), findsNothing);
+
+    // Sama dari menu Lainnya: back berakhir di Lainnya, bukan Portofolio.
+    await tester.tap(find.text('Lainnya').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Peringkat teknikal'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Peringkat teknikal'));
+    await tester.pumpAndSettle();
+    await openRankCard();
+    expect(find.text('Kalkulator'), findsOneWidget); // kembali di halaman Lainnya
+    expect(find.text('Kepemilikan'), findsNothing);
+    await tester.tap(find.text('Beranda').last);
+    await tester.pumpAndSettle();
 
     for (final (shortcut, page) in [('Kinerja', 'Portofolio'), ('Jurnal', 'Jurnal')]) {
       await tester.tap(find.text(shortcut));

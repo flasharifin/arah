@@ -48,8 +48,21 @@ import 'package:go_router/go_router.dart';
 /// Bisa dibuka tanpa login.
 const _publicRoutes = {'/login', '/forgot-password'};
 
-Widget _technicalRank() =>
-    BlocProvider(create: (_) => sl<TechnicalRankCubit>()..load(), child: const TechnicalRankPage());
+/// Peringkat teknikal (di Beranda & Lainnya). Detail posisi/watchlist dibuka di bawahnya
+/// supaya back kembali ke peringkat, lalu ke tab asal — bukan pindah ke tab Portofolio/Lainnya.
+GoRoute _technicalRankRoute() => GoRoute(
+  path: 'technical-rank',
+  builder: (_, _) => BlocProvider(create: (_) => sl<TechnicalRankCubit>()..load(), child: const TechnicalRankPage()),
+  routes: [
+    GoRoute(
+      path: 'position/:id',
+      builder: (_, state) => PositionDetailPage(positionId: state.pathParameters['id']!),
+    ),
+    GoRoute(path: 'watchlist', builder: (_, _) => _watchlist()),
+  ],
+);
+
+Widget _watchlist() => BlocProvider(create: (_) => sl<WatchlistCubit>()..load(), child: const WatchlistPage());
 
 Widget _journal() => BlocProvider(create: (_) => sl<JournalCubit>()..load(), child: const JournalPage());
 
@@ -93,7 +106,7 @@ GoRouter createRouter(AuthBloc auth) {
                 builder: (_, _) => const HomePage(),
                 // Pintasan Beranda juga terpasang di sini supaya back kembali ke Beranda, bukan ke tab lain.
                 routes: [
-                  GoRoute(path: 'technical-rank', builder: (_, _) => _technicalRank()),
+                  _technicalRankRoute(),
                   GoRoute(
                     path: 'performance',
                     builder: (_, _) => const PortfolioPage(initialTab: 'kinerja'),
@@ -152,11 +165,7 @@ GoRouter createRouter(AuthBloc auth) {
                 builder: (_, _) => const MorePage(),
                 routes: [
                   // Rute fitur didahulukan; slug lain jatuh ke :feature (halaman "segera hadir").
-                  GoRoute(
-                    path: 'watchlist',
-                    builder: (_, _) =>
-                        BlocProvider(create: (_) => sl<WatchlistCubit>()..load(), child: const WatchlistPage()),
-                  ),
+                  GoRoute(path: 'watchlist', builder: (_, _) => _watchlist()),
                   GoRoute(
                     path: 'dca',
                     builder: (_, _) => BlocProvider(create: (_) => sl<DcaCubit>()..load(), child: const DcaPage()),
@@ -188,7 +197,7 @@ GoRouter createRouter(AuthBloc auth) {
                       ),
                     ],
                   ),
-                  GoRoute(path: 'technical-rank', builder: (_, _) => _technicalRank()),
+                  _technicalRankRoute(),
                   GoRoute(
                     path: 'analysis',
                     builder: (_, _) =>
