@@ -44,8 +44,7 @@ class AuthApiDataSource implements AuthRemoteDataSource {
   }
 
   @override
-  Future<UserModel> me() async =>
-      UserModel.fromJson(await _api.get('/api/mobile/auth/me') as Map<String, dynamic>);
+  Future<UserModel> me() async => UserModel.fromJson(await _api.get('/api/mobile/auth/me') as Map<String, dynamic>);
 
   @override
   Future<void> revoke() async {
@@ -55,8 +54,7 @@ class AuthApiDataSource implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> deleteAccount({required String password}) =>
-      _api.delete('/api/account', body: {'password': password});
+  Future<void> deleteAccount({required String password}) => _api.delete('/api/account', body: {'password': password});
 
   @override
   Future<void> requestPasswordReset({required String email}) =>
@@ -92,16 +90,11 @@ class AuthFixtureDataSource implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> requestPasswordReset({required String email}) =>
-      Future<void>.delayed(const Duration(milliseconds: 600));
+  Future<void> requestPasswordReset({required String email}) => Future<void>.delayed(const Duration(milliseconds: 600));
 
   /// Fixture: kode yang benar `123456`.
   @override
-  Future<void> resetPassword({
-    required String email,
-    required String code,
-    required String newPassword,
-  }) async {
+  Future<void> resetPassword({required String email, required String code, required String newPassword}) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
     if (code != '123456') {
       throw const ApiException(FailureCode.validation, 'Kode salah atau sudah kedaluwarsa');

@@ -71,18 +71,11 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Image(
-                      image: AssetImage('assets/images/arah-logo.png'),
-                      height: 120,
-                      semanticLabel: 'Arah',
-                    ),
+                    const Image(image: AssetImage('assets/images/arah-logo.png'), height: 120, semanticLabel: 'Arah'),
                     const SizedBox(height: AppSpacing.xxl),
                     Text('Kenali asetmu.\nTentukan langkahmu.', style: text.headlineSmall),
                     const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      'Catat investasi, pantau kekayaan, dan tanyakan datamu ke AI.',
-                      style: text.bodySmall,
-                    ),
+                    Text('Catat investasi, pantau kekayaan, dan tanyakan datamu ke AI.', style: text.bodySmall),
                     const SizedBox(height: AppSpacing.xxl),
                     AppTextField(
                       label: 'Email',
@@ -119,11 +112,7 @@ class _LoginPageState extends State<LoginPage> {
                           Row(
                             children: [
                               Expanded(
-                                child: PrimaryButton(
-                                  label: 'Masuk',
-                                  busy: state.isSubmitting,
-                                  onPressed: _submit,
-                                ),
+                                child: PrimaryButton(label: 'Masuk', busy: state.isSubmitting, onPressed: _submit),
                               ),
                               const SizedBox(width: AppSpacing.md),
                               OutlinedButton(

@@ -67,9 +67,6 @@ class ResetPassword implements UseCase<void, ResetPasswordParams> {
   final AuthRepository _repository;
 
   @override
-  Future<Result<void>> call(ResetPasswordParams params) => _repository.resetPassword(
-    email: params.email.trim(),
-    code: params.code.trim(),
-    newPassword: params.newPassword,
-  );
+  Future<Result<void>> call(ResetPasswordParams params) =>
+      _repository.resetPassword(email: params.email.trim(), code: params.code.trim(), newPassword: params.newPassword);
 }

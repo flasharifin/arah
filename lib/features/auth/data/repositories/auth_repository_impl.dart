@@ -52,9 +52,6 @@ class AuthRepositoryImpl implements AuthRepository {
       guard(() => _remote.requestPasswordReset(email: email));
 
   @override
-  Future<Result<void>> resetPassword({
-    required String email,
-    required String code,
-    required String newPassword,
-  }) => guard(() => _remote.resetPassword(email: email, code: code, newPassword: newPassword));
+  Future<Result<void>> resetPassword({required String email, required String code, required String newPassword}) =>
+      guard(() => _remote.resetPassword(email: email, code: code, newPassword: newPassword));
 }

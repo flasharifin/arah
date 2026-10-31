@@ -48,9 +48,7 @@ class PasswordResetCubit extends Cubit<PasswordResetState> {
   Future<void> reset({required String code, required String newPassword}) async {
     if (state.isSubmitting) return;
     emit(PasswordResetState(step: state.step, email: state.email, isSubmitting: true));
-    final result = await _resetPassword(
-      ResetPasswordParams(email: state.email, code: code, newPassword: newPassword),
-    );
+    final result = await _resetPassword(ResetPasswordParams(email: state.email, code: code, newPassword: newPassword));
     emit(
       result.fold(
         (failure) => PasswordResetState(step: state.step, email: state.email, failure: failure),

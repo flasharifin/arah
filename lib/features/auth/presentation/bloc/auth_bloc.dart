@@ -51,9 +51,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(state.copyWith(isSubmitting: true));
     final unlocked = await _biometricLock.authenticate();
     emit(
-      unlocked
-          ? AuthState(status: AuthStatus.authenticated, user: state.user)
-          : state.copyWith(isSubmitting: false),
+      unlocked ? AuthState(status: AuthStatus.authenticated, user: state.user) : state.copyWith(isSubmitting: false),
     );
   }
 

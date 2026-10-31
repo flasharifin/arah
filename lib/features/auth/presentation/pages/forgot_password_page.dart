@@ -92,9 +92,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           controller: _code,
                           keyboardType: TextInputType.number,
                           autofillHints: const [AutofillHints.oneTimeCode],
-                          validator: (v) => RegExp(r'^\d{6}$').hasMatch((v ?? '').trim())
-                              ? null
-                              : 'Kode terdiri dari 6 angka',
+                          validator: (v) =>
+                              RegExp(r'^\d{6}$').hasMatch((v ?? '').trim()) ? null : 'Kode terdiri dari 6 angka',
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         PasswordField(
@@ -132,9 +131,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           child: const Text('Kirim ulang kode'),
                         ),
                         TextButton(
-                          onPressed: state.isSubmitting
-                              ? null
-                              : context.read<PasswordResetCubit>().changeEmail,
+                          onPressed: state.isSubmitting ? null : context.read<PasswordResetCubit>().changeEmail,
                           child: const Text('Ganti email'),
                         ),
                       ],
