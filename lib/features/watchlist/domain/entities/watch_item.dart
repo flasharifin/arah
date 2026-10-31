@@ -12,8 +12,7 @@ enum WatchStatus {
   final String code;
   final String label;
 
-  static WatchStatus fromCode(String? code) =>
-      values.firstWhere((s) => s.code == code, orElse: () => observe);
+  static WatchStatus fromCode(String? code) => values.firstWhere((s) => s.code == code, orElse: () => observe);
 }
 
 /// Sinyal teknikal dari cache server (diperbarui morning briefing); bisa belum ada untuk saham baru.
@@ -77,13 +76,7 @@ class WatchItem extends Equatable {
 
 /// Isian form tambah/ubah.
 class WatchDraft {
-  const WatchDraft({
-    required this.symbol,
-    required this.exchange,
-    required this.status,
-    this.targetPrice,
-    this.note,
-  });
+  const WatchDraft({required this.symbol, required this.exchange, required this.status, this.targetPrice, this.note});
 
   final String symbol;
   final Exchange exchange;

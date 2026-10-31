@@ -70,10 +70,7 @@ class _WatchlistPageState extends State<WatchlistPage> {
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         if (shown.isEmpty)
-                          Text(
-                            'Tidak ada saham dengan status ini.',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
+                          Text('Tidak ada saham dengan status ini.', style: Theme.of(context).textTheme.bodySmall),
                         for (final item in shown)
                           Padding(
                             padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -282,8 +279,7 @@ class _WatchFormState extends State<_WatchForm> {
               ],
               const SizedBox(height: AppSpacing.lg),
               PrimaryButton(label: 'Simpan', busy: _busy, onPressed: _save),
-              if (editing)
-                TextButton(onPressed: _busy ? null : _delete, child: const Text('Hapus dari watchlist')),
+              if (editing) TextButton(onPressed: _busy ? null : _delete, child: const Text('Hapus dari watchlist')),
             ],
           ),
         ),

@@ -16,8 +16,7 @@ class SaveWatchItem implements UseCase<void, ({WatchDraft draft, String? id})> {
   final WatchlistRepository _repository;
 
   @override
-  Future<Result<void>> call(({WatchDraft draft, String? id}) params) =>
-      _repository.save(params.draft, id: params.id);
+  Future<Result<void>> call(({WatchDraft draft, String? id}) params) => _repository.save(params.draft, id: params.id);
 }
 
 /// Parameter: id item.
