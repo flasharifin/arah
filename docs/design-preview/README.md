@@ -13,11 +13,11 @@ Buka `index.html` di browser untuk galeri screenshot. Klik gambar untuk ukuran p
 
 ## Batas perubahan
 
-Perubahan desain hanya menyentuh shell navigasi, tema, komponen kartu/menu, Beranda, Lainnya, dan daftar Kalkulator. Lebar konten kartu juga diseragamkan melalui `PageBody`. Layar fitur lain mendapat tema bersama; susunan form dan logika bisnisnya dipertahankan. Endpoint, parsing JSON, model, repository, autentikasi, dan respons backend tidak diubah dalam pekerjaan ini. Perubahan lokal yang telah ada sebelumnya tetap dipertahankan.
+Desain mengikuti artifact "Arah — redesign layar" (31 Okt 2026): font Plus Jakarta Sans (aset lokal, OFL), latar hijau sangat muda, kartu putih modular, hero hijau hutan datar, aksen lime, angka tabular. Navigasi bawah: Beranda · Portofolio · **Catat** (tombol tengah → sheet semua pencatatan) · Kekayaan · Lainnya; AI Chat dibuka dari tombol "Tanya AI" di header dan menu Lainnya (rutenya tetap cabang shell supaya percakapan bertahan). Layar di artifact (Beranda, Portofolio · Posisi/Kinerja, Catat, Kekayaan bertumpuk tanpa tab, Lainnya dengan pencarian, Analisis) disusun ulang; layar lain mendapat tema, tab segmen, chip, dan komponen bersama (`ModuleCard`, `StatTile`, `SegmentedTabBar`, `AskAiButton`). Endpoint, parsing JSON, model, repository, autentikasi, dan respons backend tidak diubah; Beranda memakai `totalDailyChangeIDR`/`totalDailyChangePct` yang sudah ada di `/api/summary`.
 
 ## Cakupan preview
 
-Lima tab utama; posisi, kinerja dan riwayat portofolio; riwayat AI; aset, utang, target dan riwayat kekayaan; Watchlist; DCA beserta riwayat dan simulasi; Dividen mendatang dan diterima; Jurnal; Analisis risiko, korelasi dan stress test; Surat investor; Pengaturan; Panduan; serta tujuh alat Kalkulator. Termasuk contoh tablet dan menu dengan teks 200%.
+Lima tab utama dan sheet Catat; posisi, kinerja dan riwayat portofolio; riwayat AI; target dan riwayat kekayaan; Watchlist; DCA beserta riwayat dan simulasi; Dividen mendatang dan diterima; Jurnal; Analisis risiko, korelasi dan stress test; Surat investor; Pengaturan; Panduan; serta tujuh alat Kalkulator. Termasuk contoh tablet dan menu dengan teks 200%.
 
 Screenshot menunjukkan viewport awal tiap layar; bagian bawah tetap dapat digulir dalam aplikasi. Dialog tambah/ubah/hapus tidak seluruhnya diekspor. Font preview dimuat dari Flutter SDK; hasil perangkat dapat sedikit berbeda.
 

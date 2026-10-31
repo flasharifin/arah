@@ -15,10 +15,10 @@ import 'package:intl/intl.dart';
 typedef _Series = ({String label, Color color, List<double> values});
 
 // Kategori tetap (lolos uji CVD dataviz): urutan & warna mengikuti entitas, bukan peringkat.
-const _portfolioColor = Color(0xFF2A78D6);
-const _ihsgColor = Color(0xFFEB6834);
-const _sp500Color = Color(0xFF1BAF7A);
-const _btcColor = Color(0xFFEDA100);
+final _portfolioColor = AppColors.series[0];
+final _ihsgColor = AppColors.series[1];
+final _sp500Color = AppColors.series[2];
+final _btcColor = AppColors.series[3];
 
 /// S03 Kinerja: periode → grafik return kumulatif vs IHSG & S&P 500 → ringkasan teks → PnL harian.
 class PerformanceTab extends StatefulWidget {
@@ -62,11 +62,19 @@ class _PerformanceTabState extends State<PerformanceTab> {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
               children: [
                 PageBody(
-                  child: ChoiceChipBar<PerformancePeriod>(
-                    options: PerformancePeriod.values,
-                    selected: _period,
-                    labelOf: (p) => p.label,
-                    onSelected: (p) => setState(() => _period = p),
+                  child: Row(
+                    children: [
+                      for (final (i, p) in PerformancePeriod.values.indexed) ...[
+                        if (i > 0) const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: _PeriodButton(
+                            label: p.label,
+                            selected: p == _period,
+                            onTap: () => setState(() => _period = p),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -75,7 +83,18 @@ class _PerformanceTabState extends State<PerformanceTab> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text('Return kumulatif', style: text.titleSmall),
+                        Row(
+                          children: [
+                            Expanded(child: Text('Return kumulatif · ${_period.label}', style: text.titleSmall)),
+                            if (rows.isNotEmpty)
+                              Text(
+                                Fmt.percent(series.first.values.last),
+                                style: text.titleLarge?.copyWith(
+                                  color: series.first.values.last >= 0 ? AppColors.positive : AppColors.negative,
+                                ),
+                              ),
+                          ],
+                        ),
                         const SizedBox(height: AppSpacing.md),
                         if (rows.length < 2)
                           Text('Belum cukup data untuk periode ini.', style: text.bodySmall)
@@ -154,7 +173,10 @@ class _ReturnChart extends StatelessWidget {
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 48,
+                reservedSize: 56,
+                // Hanya garis bantu bulat; nilai min/max (mis. 14,62%) tidak dicetak supaya tidak bertumpuk.
+                minIncluded: false,
+                maxIncluded: false,
                 getTitlesWidget: (v, meta) => SideTitleWidget(
                   meta: meta,
                   child: Text(Fmt.percent(v, signed: false), style: axis),
@@ -201,33 +223,96 @@ class _Legend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme.bodySmall;
-    return Wrap(
-      spacing: AppSpacing.lg,
-      runSpacing: AppSpacing.xs,
+    final text = Theme.of(context).textTheme;
+    Widget tile(_Series s, {required bool main}) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
+      decoration: BoxDecoration(color: AppColors.surfaceMuted, borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        children: [
+          Container(
+            width: 14,
+            height: 4,
+            decoration: BoxDecoration(color: s.color, borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              s.label,
+              overflow: TextOverflow.ellipsis,
+              style: text.labelMedium?.copyWith(fontWeight: main ? FontWeight.w700 : FontWeight.w500),
+            ),
+          ),
+          // Teks memakai warna teks, bukan warna garis (warna hanya identitas).
+          Text(Fmt.percent(s.values.last), style: text.labelMedium?.copyWith(fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+    return Column(
       children: [
-        for (final s in series)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(width: 12, height: 3, color: s.color),
-              const SizedBox(width: AppSpacing.xs),
-              Text('${s.label} ${Fmt.percent(s.values.last)}', style: text),
-            ],
+        for (var i = 0; i < series.length; i += 2)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: Row(
+              children: [
+                Expanded(child: tile(series[i], main: i == 0)),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(child: i + 1 < series.length ? tile(series[i + 1], main: false) : const SizedBox.shrink()),
+              ],
+            ),
           ),
       ],
     );
   }
 }
 
-/// Total & rincian PnL harian dalam periode (juga jadi tampilan tabel dari grafik).
-class _DailySummary extends StatelessWidget {
+class _PeriodButton extends StatelessWidget {
+  const _PeriodButton({required this.label, required this.selected, required this.onTap});
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(12));
+    return Semantics(
+      selected: selected,
+      child: selected
+          ? FilledButton(
+              onPressed: onTap,
+              style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(44), shape: shape),
+              child: Text(label),
+            )
+          : OutlinedButton(
+              onPressed: onTap,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(44),
+                shape: shape,
+                foregroundColor: AppColors.text,
+                backgroundColor: AppColors.surface,
+                side: const BorderSide(color: Color(0xFFD5DED2)),
+              ),
+              child: Text(label),
+            ),
+    );
+  }
+}
+
+/// Total & rincian PnL harian dalam periode (juga jadi tampilan tabel dari grafik); 5 hari terakhir dulu.
+class _DailySummary extends StatefulWidget {
   const _DailySummary({required this.rows});
   final List<DailyPerformance> rows;
 
   @override
+  State<_DailySummary> createState() => _DailySummaryState();
+}
+
+class _DailySummaryState extends State<_DailySummary> {
+  bool _all = false;
+
+  @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
+    final rows = widget.rows;
     final up = rows.where((r) => r.pnl.amount > 0).length;
     final down = rows.where((r) => r.pnl.amount < 0).length;
     DailyPerformance? best, worst;
@@ -235,32 +320,62 @@ class _DailySummary extends StatelessWidget {
       if (best == null || r.pnl.amount > best.pnl.amount) best = r;
       if (worst == null || r.pnl.amount < worst.pnl.amount) worst = r;
     }
-    return AppCard(
+    final recent = rows.reversed.take(_all ? rows.length : 5).toList();
+    Widget pair(Widget a, Widget b) => Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: a),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(child: b),
+        ],
+      ),
+    );
+    return ModuleCard(
+      title: 'PnL harian',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('PnL harian', style: text.titleSmall),
-          const SizedBox(height: AppSpacing.sm),
-          InfoRow(
-            label: 'Total periode',
-            value: PnlText(amount: Money.idr(rows.fold(0, (s, r) => s + r.pnl.amount))),
+          pair(
+            StatTile(
+              label: 'Total periode',
+              value: PnlText(amount: Money.idr(rows.fold(0, (s, r) => s + r.pnl.amount))),
+            ),
+            StatTile(label: 'Hari naik / turun', value: Text('$up / $down')),
           ),
-          InfoRow(label: 'Hari naik / turun', value: Text('$up / $down')),
-          if (best != null && best.pnl.amount > 0)
-            InfoRow(
-              label: 'Terbaik · ${Fmt.date(best.date)}',
-              value: PnlText(amount: best.pnl),
+          if ((best != null && best.pnl.amount > 0) || (worst != null && worst.pnl.amount < 0))
+            pair(
+              best != null && best.pnl.amount > 0
+                  ? StatTile(
+                      label: 'Terbaik · ${Fmt.date(best.date)}',
+                      value: PnlText(amount: best.pnl),
+                    )
+                  : const SizedBox.shrink(),
+              worst != null && worst.pnl.amount < 0
+                  ? StatTile(
+                      label: 'Terburuk · ${Fmt.date(worst.date)}',
+                      value: PnlText(amount: worst.pnl),
+                    )
+                  : const SizedBox.shrink(),
             ),
-          if (worst != null && worst.pnl.amount < 0)
-            InfoRow(
-              label: 'Terburuk · ${Fmt.date(worst.date)}',
-              value: PnlText(amount: worst.pnl),
+          for (final r in recent)
+            DecoratedBox(
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: AppColors.divider)),
+              ),
+              child: InfoRow(
+                label: Fmt.date(r.date),
+                value: PnlText(amount: r.pnl, percent: r.pnlPercent, stacked: true),
+              ),
             ),
-          const Divider(height: AppSpacing.xxl),
-          for (final r in rows.reversed)
-            InfoRow(
-              label: Fmt.date(r.date),
-              value: PnlText(amount: r.pnl, percent: r.pnlPercent),
+          if (rows.length > 5)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () => setState(() => _all = !_all),
+                child: Text(_all ? 'Tampilkan 5 hari terakhir' : 'Lihat semua ${rows.length} hari'),
+              ),
             ),
         ],
       ),

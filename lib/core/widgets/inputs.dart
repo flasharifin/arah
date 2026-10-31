@@ -1,4 +1,5 @@
 import 'package:arah/core/theme/app_spacing.dart';
+import 'package:arah/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 /// Field dengan label yang selalu terlihat; hint bukan pengganti label.
@@ -135,6 +136,12 @@ class ChoiceChipBar<T> extends StatelessWidget {
                 label: Text(labelOf(option)),
                 selected: option == selected,
                 onSelected: (_) => onSelected(option),
+                // Warna label per status ditetapkan di sini: tema chip tidak meresolusi status untuk label.
+                labelStyle: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: option == selected ? Colors.white : AppColors.text,
+                ),
               ),
             ),
         ],

@@ -43,13 +43,17 @@ class PositionDetailPage extends StatelessWidget {
                 AppCard(
                   child: Column(
                     children: [
-                      InfoRow(label: 'Jumlah', value: Text('${Fmt.number(position.quantity)} $unit')),
+                      InfoRow(label: 'Jumlah', value: Text('${Fmt.quantity(position.quantity)} $unit')),
                       InfoRow(label: 'Harga rata-rata', value: AmountText(position.avgPrice)),
                       InfoRow(label: 'Modal', value: AmountText(position.costBasis)),
                       InfoRow(label: 'Nilai pasar', value: AmountText(position.marketValue)),
                       InfoRow(
                         label: 'Unrealized PnL',
-                        value: PnlText(amount: position.unrealizedPnl, percent: position.unrealizedPercent),
+                        value: PnlText(
+                          amount: position.unrealizedPnl,
+                          percent: position.unrealizedPercent,
+                          stacked: true,
+                        ),
                       ),
                     ],
                   ),

@@ -47,6 +47,12 @@ void main() {
       for (final family in ['Roboto', 'Ahem']) {
         await (FontLoader(family)..addFont(Future.value(bytes))).load();
       }
+      // Font aplikasi (pubspec) supaya screenshot sama dengan perangkat.
+      final jakarta = FontLoader('PlusJakartaSans');
+      for (final w in ['Regular', 'Medium', 'SemiBold', 'Bold', 'ExtraBold']) {
+        jakarta.addFont(rootBundle.load('assets/fonts/PlusJakartaSans-$w.ttf'));
+      }
+      await jakarta.load();
     }
   });
   tearDownAll(() => sl.reset());
@@ -58,10 +64,7 @@ void main() {
     await tester.pumpWidget(const RepaintBoundary(key: boundaryKey, child: ArahApp()));
     if (export) {
       await tester.runAsync(
-        () => precacheImage(
-          const AssetImage('assets/images/arah-logo.png'),
-          tester.element(find.byType(MaterialApp)),
-        ),
+        () => precacheImage(const AssetImage('assets/images/arah-logo.png'), tester.element(find.byType(MaterialApp))),
       );
     }
     await tester.pumpAndSettle();
@@ -91,8 +94,20 @@ void main() {
       await capture(name);
     }
 
+    // Modul Portofolio & Alokasi menunggu bloc sesi (fixture tertunda) yang dibuat saat Beranda dibaca.
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
     await capture('01-beranda');
-    await tester.tap(find.text('Semua menu'));
+    await tester.ensureVisible(find.text('Baca briefing lengkap'));
+    await tester.pumpAndSettle();
+    await capture('01-beranda-bawah');
+    await tester.tap(find.text('Baca briefing lengkap'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('pantau area support'), findsOneWidget);
+    await capture('01-beranda-briefing');
+    Navigator.of(tester.element(find.text('Briefing pagi'))).pop();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Lainnya'));
     await tester.pumpAndSettle();
     expect(find.text('Watchlist'), findsOneWidget);
     await capture('05-semua-menu');
@@ -127,11 +142,30 @@ void main() {
     await open('/assistant', '03-ai-chat');
     await open('/assistant/history', 'ai-riwayat');
     await open('/wealth', '04-kekayaan');
-    for (final tab in ['Utang', 'Target', 'Riwayat']) {
-      await tester.tap(find.text(tab));
+    // Kekayaan = modul bertumpuk; tangkap bagian target & riwayat setelah digulir.
+    // Isi beberapa snapshot supaya galeri memperlihatkan daftar Riwayat (fixture awalnya kosong).
+    await tester.ensureVisible(find.text('Simpan snapshot'));
+    await tester.pumpAndSettle();
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(find.text('Simpan snapshot'));
+      await tester.pump(const Duration(seconds: 5));
       await tester.pumpAndSettle();
-      await capture('kekayaan-${tab.toLowerCase()}');
     }
+    await tester.pump(const Duration(seconds: 5)); // SnackBar terakhir hilang sebelum ditangkap
+    await tester.pumpAndSettle();
+    for (final (label, name) in [('Ubah target', 'kekayaan-target'), ('Riwayat kekayaan', 'kekayaan-riwayat')]) {
+      await tester.ensureVisible(find.text(label));
+      await tester.pumpAndSettle();
+      await capture(name);
+    }
+    router.go('/home');
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Catat transaksi'));
+    await tester.pumpAndSettle();
+    expect(find.text('Pembelian'), findsOneWidget);
+    await capture('06-catat');
+    Navigator.of(tester.element(find.text('Pembelian'))).pop();
+    await tester.pumpAndSettle();
     for (final tool in CalculatorTool.values) {
       await open('/more/calculator/${tool.slug}', 'kalkulator-${tool.slug}');
     }
@@ -150,24 +184,49 @@ void main() {
     }
     tester.view.physicalSize = const Size(1280, 900);
     await open('/home', 'tablet-beranda');
-    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(find.byKey(const ValueKey('side-nav')), findsOneWidget);
     await tester.tap(find.text('Lainnya'));
     await tester.pumpAndSettle();
     // Berpindah tab memulihkan subhalaman; tap tab aktif kembali ke akar.
     await tester.tap(find.text('Lainnya'));
     await tester.pumpAndSettle();
     expect(router.routeInformationProvider.value.uri.path, '/more');
-    expect(find.text('Semua kebutuhan, satu tempat.'), findsOneWidget);
-    await tester.ensureVisible(find.text('Semua kebutuhan, satu tempat.'));
-    await tester.pumpAndSettle();
+    expect(find.text('Ruang keuanganmu'), findsOneWidget);
     await capture('tablet-menu');
+    // HP landscape (Poco F5 ≈ 873×393 dp): lebar ≥ 840 tapi pendek → rail ringkas tanpa overflow.
+    tester.view.physicalSize = const Size(873, 393);
+    await open('/home', 'landscape-beranda');
+    expect(find.byKey(const ValueKey('side-nav')), findsOneWidget);
+    final catat = find.descendant(of: find.byKey(const ValueKey('side-nav')), matching: find.text('Catat'));
+    await tester.ensureVisible(catat);
+    await tester.pumpAndSettle();
+    await tester.tap(catat);
+    await tester.pumpAndSettle();
+    await capture('landscape-catat');
+    Navigator.of(tester.element(find.text('Pembelian'))).pop();
+    await tester.pumpAndSettle();
+    await open('/wealth', 'landscape-kekayaan');
+    // Semua menu samping terjangkau dengan menggulir (logo, Catat, dan tujuan ada di satu scroll view).
+    for (final size in [const Size(873, 393), const Size(900, 600), const Size(873, 300)]) {
+      tester.view.physicalSize = size;
+      await tester.pumpAndSettle();
+      final lainnya = find.descendant(of: find.byKey(const ValueKey('side-nav')), matching: find.text('Lainnya'));
+      await tester.ensureVisible(lainnya);
+      await tester.pumpAndSettle();
+      await tester.tap(lainnya);
+      await tester.pumpAndSettle();
+      expect(router.routeInformationProvider.value.uri.path, '/more', reason: '$size');
+      expect(tester.takeException(), isNull, reason: '$size');
+    }
+    router.go('/more'); // langkah teks besar berikutnya memeriksa menu Lainnya
+    await tester.pumpAndSettle();
     tester.view.physicalSize = const Size(360, 800);
     tester.platformDispatcher.textScaleFactorTestValue = 2;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Semua kebutuhan, satu tempat.'));
+    await tester.ensureVisible(find.text('Ruang keuanganmu'));
     await tester.pumpAndSettle();
     await capture('aksesibilitas-menu');
-    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.bySemanticsLabel('Catat transaksi'), findsOneWidget);
   });
 }

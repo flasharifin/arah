@@ -31,29 +31,64 @@ class AmountText extends StatelessWidget {
 }
 
 /// Perubahan nilai (PnL): selalu bertanda +/− selain berwarna, agar tidak bergantung warna.
+/// Tidak pernah patah baris otomatis: satu baris yang mengecil bila sempit, atau [stacked] =
+/// nominal di baris pertama dan persen di baris kedua (dipakai di daftar & kartu).
 class PnlText extends StatelessWidget {
-  const PnlText({super.key, this.amount, this.percent, this.style});
+  const PnlText({
+    super.key,
+    this.amount,
+    this.percent,
+    this.style,
+    this.onDark = false,
+    this.stacked = false,
+    this.align = CrossAxisAlignment.end,
+  });
 
   final Money? amount;
   final double? percent;
   final TextStyle? style;
+
+  /// Di atas latar hijau gelap (hero): hijau/merah versi terang supaya tetap kontras.
+  final bool onDark;
+  final bool stacked;
+
+  /// Perataan baris saat [stacked].
+  final CrossAxisAlignment align;
 
   @override
   Widget build(BuildContext context) {
     final hidden = context.select<PrivacyCubit, bool>((c) => c.state);
     final sign = amount?.amount ?? percent;
     final color = sign == null || sign == 0
-        ? AppColors.textSecondary
+        ? (onDark ? AppColors.heroMuted : AppColors.textSecondary)
         : sign > 0
-        ? AppColors.positive
-        : AppColors.negative;
-    final parts = [
-      if (amount != null) hidden ? Fmt.hidden : Fmt.money(amount, signed: true),
-      if (percent != null) '(${Fmt.percent(percent)})',
-    ];
-    return Text(
-      parts.isEmpty ? Fmt.missing : parts.join(' '),
-      style: AppTypography.amount.copyWith(color: color).merge(style),
+        ? (onDark ? AppColors.accent : AppColors.positive)
+        : (onDark ? const Color(0xFFFFD9D5) : AppColors.negative);
+    // Warna dipasang terakhir: gaya dari tema (mis. labelMedium) membawa warna teks yang akan menimpa hijau/merah.
+    final textStyle = AppTypography.amount.merge(style).copyWith(color: color);
+    final money = amount == null ? null : (hidden ? Fmt.hidden : Fmt.money(amount, signed: true));
+    final pct = percent == null ? null : Fmt.percent(percent);
+    final alignment = switch (align) {
+      CrossAxisAlignment.start => Alignment.centerLeft,
+      CrossAxisAlignment.center => Alignment.center,
+      _ => Alignment.centerRight,
+    };
+    Widget line(String value, TextStyle st) => FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: alignment,
+      child: Text(value, maxLines: 1, softWrap: false, style: st),
     );
+    if (stacked && money != null && pct != null) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: align,
+        children: [
+          line(money, textStyle),
+          line(pct, textStyle.copyWith(fontSize: (textStyle.fontSize ?? 14) - 2, fontWeight: FontWeight.w600)),
+        ],
+      );
+    }
+    final parts = [?money, if (pct != null) (money == null ? pct : '($pct)')];
+    return line(parts.isEmpty ? Fmt.missing : parts.join(' '), textStyle);
   }
 }

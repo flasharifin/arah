@@ -33,7 +33,7 @@ class AppCard extends StatelessWidget {
   }
 }
 
-/// Kartu utama hijau forest untuk nilai ringkasan (net worth, total portofolio).
+/// Kartu utama hijau hutan (datar) untuk nilai ringkasan: net worth, target.
 class HeroCard extends StatelessWidget {
   const HeroCard({super.key, required this.child, this.onTap});
 
@@ -48,14 +48,7 @@ class HeroCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Ink(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.primary, Color(0xFF24685C)],
-            ),
-          ),
+        child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: DefaultTextStyle.merge(
             style: const TextStyle(color: Colors.white),
@@ -65,6 +58,92 @@ class HeroCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Modul kartu berjudul dengan aksi kanan opsional ("Lihat posisi", "Tambah aset"): satu kartu = satu topik.
+class ModuleCard extends StatelessWidget {
+  const ModuleCard({super.key, required this.title, required this.child, this.action, this.trailing});
+
+  final String title;
+  final Widget child;
+
+  /// Tombol teks kanan; atau [trailing] untuk isi bebas (mis. angka utama).
+  /// `onPressed: null` = tombol nonaktif (mis. sedang menyimpan).
+  final ({String label, VoidCallback? onPressed, IconData? icon})? action;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final action = this.action;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Semantics(header: true, child: Text(title, style: Theme.of(context).textTheme.titleSmall)),
+              ),
+              ?trailing,
+              if (action != null)
+                TextButton.icon(
+                  onPressed: action.onPressed,
+                  icon: action.icon == null ? const SizedBox.shrink() : Icon(action.icon, size: 18),
+                  label: Text(action.label),
+                  style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm)),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+/// Kotak statistik kecil: label kecil di atas, nilai tebal di bawah (di dalam kartu putih atau hero).
+class StatTile extends StatelessWidget {
+  const StatTile({super.key, required this.label, required this.value, this.caption, this.onHero = false});
+
+  final String label;
+  final Widget value;
+  final String? caption;
+
+  /// Di atas [HeroCard]: kotak hijau gelap, teks terang.
+  final bool onHero;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: onHero ? AppColors.heroTile : AppColors.surfaceMuted,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: text.bodySmall?.copyWith(color: onHero ? AppColors.heroMuted : null)),
+          const SizedBox(height: 2),
+          DefaultTextStyle.merge(
+            style: text.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: onHero ? Colors.white : AppColors.text,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+            child: value,
+          ),
+          if (caption != null)
+            Text(
+              caption!,
+              style: text.labelSmall?.copyWith(color: onHero ? AppColors.heroMuted : AppColors.textSecondary),
+            ),
+        ],
       ),
     );
   }

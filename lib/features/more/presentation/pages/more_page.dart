@@ -9,27 +9,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Entri menu fitur pendukung. Setiap `slug` dibuka di `/more/<slug>`.
+/// Entri menu fitur pendukung. Setiap `slug` dibuka di `/more/<slug>` (kecuali `assistant` → `/assistant`).
 typedef _MenuEntry = ({IconData icon, String title, String subtitle, String slug});
 
-/// S08 — Lainnya.
-class MorePage extends StatelessWidget {
+/// S08 — Lainnya: cari fitur → Rencanakan → Pahami (tile 2 kolom) → Akun.
+class MorePage extends StatefulWidget {
   const MorePage({super.key});
 
   static const _plan = <_MenuEntry>[
-    (
-      icon: Icons.visibility_outlined,
-      title: 'Watchlist',
-      subtitle: 'Saham yang sedang kamu amati',
-      slug: 'watchlist',
-    ),
+    (icon: Icons.visibility_outlined, title: 'Watchlist', subtitle: 'Saham yang kamu amati', slug: 'watchlist'),
     (icon: Icons.event_repeat_outlined, title: 'DCA', subtitle: 'Rencana beli berkala', slug: 'dca'),
-    (
-      icon: Icons.payments_outlined,
-      title: 'Dividen',
-      subtitle: 'Jadwal dan dividen diterima',
-      slug: 'dividends',
-    ),
+    (icon: Icons.payments_outlined, title: 'Dividen', subtitle: 'Jadwal dan diterima', slug: 'dividends'),
+    (icon: Icons.edit_note_outlined, title: 'Jurnal', subtitle: 'Catatan dan PnL harian', slug: 'journal'),
   ];
 
   static const _understand = <_MenuEntry>[
@@ -39,26 +30,17 @@ class MorePage extends StatelessWidget {
       subtitle: 'Konsentrasi, korelasi, stress test',
       slug: 'analysis',
     ),
-    (
-      icon: Icons.calculate_outlined,
-      title: 'Kalkulator',
-      subtitle: 'Lot, position sizing, BEP',
-      slug: 'calculator',
-    ),
-    (icon: Icons.edit_note_outlined, title: 'Jurnal', subtitle: 'Catatan dan PnL harian', slug: 'journal'),
-    (
-      icon: Icons.mail_outline,
-      title: 'Surat investor',
-      subtitle: 'Laporan mingguan',
-      slug: 'investor-letter',
-    ),
+    (icon: Icons.calculate_outlined, title: 'Kalkulator', subtitle: 'Lot, sizing, BEP, FI', slug: 'calculator'),
+    (icon: Icons.mail_outline, title: 'Surat investor', subtitle: 'Ringkasan 7 hari', slug: 'investor-letter'),
+    // AI Chat tidak lagi di navigasi bawah.
+    (icon: Icons.auto_awesome_outlined, title: 'AI Chat', subtitle: 'Tanya soal portofoliomu', slug: 'assistant'),
   ];
 
   static const _account = <_MenuEntry>[
     (
       icon: Icons.settings_outlined,
       title: 'Pengaturan',
-      subtitle: 'Akun, target, Telegram',
+      subtitle: 'Profil, Telegram, alert drawdown',
       slug: 'settings',
     ),
     (icon: Icons.help_outline, title: 'Panduan', subtitle: 'Istilah dan cara pakai', slug: 'help'),
@@ -69,16 +51,38 @@ class MorePage extends StatelessWidget {
       [..._plan, ..._understand, ..._account].where((e) => e.slug == slug).firstOrNull?.title ?? 'Fitur';
 
   @override
+  State<MorePage> createState() => _MorePageState();
+}
+
+class _MorePageState extends State<MorePage> {
+  String _query = '';
+
+  static String _path(_MenuEntry e) => e.slug == 'assistant' ? '/assistant' : '/more/${e.slug}';
+
+  bool _match(_MenuEntry e) {
+    final q = _query.trim().toLowerCase();
+    return q.isEmpty || e.title.toLowerCase().contains(q) || e.subtitle.toLowerCase().contains(q);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    List<Widget> tiles(List<_MenuEntry> entries) => [
-      for (final e in entries)
-        MenuTile(
-          icon: e.icon,
-          title: e.title,
-          subtitle: e.subtitle,
-          onTap: () => context.go('/more/${e.slug}'),
-        ),
+    final text = Theme.of(context).textTheme;
+    final groups = [
+      (title: 'Rencanakan', entries: MorePage._plan.where(_match).toList(), tint: AppColors.primarySoft),
+      (title: 'Pahami', entries: MorePage._understand.where(_match).toList(), tint: AppColors.accent),
     ];
+    final account = MorePage._account.where(_match).toList();
+    final searching = _query.trim().isNotEmpty;
+    Widget heading(String title) => Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xl, bottom: AppSpacing.sm, left: AppSpacing.xs),
+      child: Semantics(
+        header: true,
+        child: Text(
+          title.toUpperCase(),
+          style: text.labelMedium?.copyWith(color: AppColors.textSecondary, letterSpacing: 0.7),
+        ),
+      ),
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Ruang keuanganmu')),
@@ -89,55 +93,73 @@ class MorePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: AppSpacing.md),
-                Text('Semua kebutuhan, satu tempat.', style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: AppSpacing.sm),
-                const Text('Pantau investasi, susun rencana, dan pahami keputusanmu.'),
-                for (final group in [
-                  (title: 'Rencanakan', entries: _plan),
-                  (title: 'Pahami', entries: _understand),
-                ]) ...[
-                  SectionHeader(group.title),
-                  FeatureMenu(
-                    children: [
-                      for (final e in group.entries)
-                        FeatureTile(
-                          icon: e.icon,
-                          title: e.title,
-                          subtitle: e.subtitle,
-                          onTap: () => context.go('/more/${e.slug}'),
-                        ),
-                    ],
+                TextField(
+                  decoration: const InputDecoration(
+                    hintText: 'Cari fitur: DCA, dividen, kalkulator…',
+                    prefixIcon: Icon(Icons.search),
                   ),
-                ],
-                MenuGroup(
-                  title: 'Akun',
-                  children: [
-                    ...tiles(_account),
-                    BlocBuilder<PrivacyCubit, bool>(
-                      builder: (context, hidden) => SwitchListTile(
-                        title: const Text('Sembunyikan nominal'),
-                        value: hidden,
-                        onChanged: (_) => context.read<PrivacyCubit>().toggle(),
-                      ),
-                    ),
-                    const _BiometricLockTile(),
-                    MenuTile(
-                      icon: Icons.logout,
-                      title: 'Keluar',
-                      destructive: true,
-                      onTap: () => _confirmLogout(context),
-                    ),
-                    MenuTile(
-                      icon: Icons.delete_forever_outlined,
-                      title: 'Hapus akun',
-                      subtitle: 'Hapus akun dan semua data secara permanen',
-                      destructive: true,
-                      onTap: () =>
-                          showDialog<void>(context: context, builder: (_) => const _DeleteAccountDialog()),
+                  onChanged: (q) => setState(() => _query = q),
+                ),
+                for (final group in groups)
+                  if (group.entries.isNotEmpty) ...[
+                    heading(group.title),
+                    FeatureMenu(
+                      children: [
+                        for (final e in group.entries)
+                          FeatureTile(
+                            icon: e.icon,
+                            title: e.title,
+                            subtitle: e.subtitle,
+                            tint: group.tint,
+                            onTap: () => context.go(_path(e)),
+                          ),
+                      ],
                     ),
                   ],
-                ),
+                if (searching && account.isEmpty && groups.every((g) => g.entries.isEmpty))
+                  const EmptyView(icon: Icons.search_off, title: 'Tidak ada fitur cocok'),
+                if (!searching || account.isNotEmpty) ...[
+                  heading('Akun'),
+                  Card(
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      children: [
+                        for (final e in account)
+                          MenuTile(
+                            icon: e.icon,
+                            title: e.title,
+                            subtitle: e.subtitle,
+                            onTap: () => context.go(_path(e)),
+                          ),
+                        if (!searching) ...[
+                          BlocBuilder<PrivacyCubit, bool>(
+                            builder: (context, hidden) => SwitchListTile(
+                              title: const Text('Sembunyikan nominal'),
+                              value: hidden,
+                              onChanged: (_) => context.read<PrivacyCubit>().toggle(),
+                            ),
+                          ),
+                          const _BiometricLockTile(),
+                          MenuTile(
+                            icon: Icons.logout,
+                            title: 'Keluar',
+                            destructive: true,
+                            onTap: () => _confirmLogout(context),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (!searching)
+                    Center(
+                      child: TextButton(
+                        onPressed: () =>
+                            showDialog<void>(context: context, builder: (_) => const _DeleteAccountDialog()),
+                        style: TextButton.styleFrom(foregroundColor: AppColors.onNegativeSoft),
+                        child: const Text('Hapus akun dan semua data'),
+                      ),
+                    ),
+                ],
               ],
             ),
           ),

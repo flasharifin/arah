@@ -183,12 +183,8 @@ void main() {
     // Target kekayaan
     await tester.tap(find.text('Kekayaan'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Target'));
-    await tester.pumpAndSettle();
-    // Tombol di bawah kartu target belum dibangun list sebelum digulir.
-    await tester.drag(find.text('Tenggat'), const Offset(0, -400));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Ubah target'));
+    // Modul Target ada di halaman Kekayaan yang sama (bukan tab).
+    await tapVisible(tester, find.text('Ubah target'));
     await tester.pumpAndSettle();
     await tester.enterText(find.widgetWithText(TextFormField, 'Nominal target (Rp)'), '2000000000');
     await tapVisible(tester, find.text('Simpan'));

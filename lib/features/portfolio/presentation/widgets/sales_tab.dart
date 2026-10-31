@@ -109,11 +109,14 @@ class _SaleCard extends StatelessWidget {
           ),
           Text([s.exchange.label, if (s.broker.isNotEmpty) s.broker].join(' · '), style: text.bodySmall),
           const SizedBox(height: AppSpacing.sm),
-          InfoRow(label: 'Jual ${Fmt.number(s.quantity)} ${s.exchange.quantityLabel}', value: AmountText(s.salePrice)),
+          InfoRow(
+            label: 'Jual ${Fmt.quantity(s.quantity)} ${s.exchange.quantityLabel}',
+            value: AmountText(s.salePrice),
+          ),
           InfoRow(label: 'Hasil jual', value: AmountText(s.proceeds)),
           InfoRow(
             label: 'Realized PnL',
-            value: PnlText(amount: s.realizedPnl, percent: s.realizedPercent),
+            value: PnlText(amount: s.realizedPnl, percent: s.realizedPercent, stacked: true),
           ),
           if (s.note case final note? when note.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xs),

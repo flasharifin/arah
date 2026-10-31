@@ -32,13 +32,7 @@ class DcaPage extends StatelessWidget {
               ),
             ),
           ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Rencana'),
-              Tab(text: 'Riwayat'),
-              Tab(text: 'Simulasi'),
-            ],
-          ),
+          bottom: const SegmentedTabBar(tabs: ['Rencana', 'Riwayat', 'Simulasi']),
         ),
         body: BlocBuilder<DcaCubit, ViewState<DcaOverview>>(
           builder: (context, state) => ViewStateBuilder<DcaOverview>(
@@ -219,7 +213,7 @@ class _Records extends StatelessWidget {
       children: [
         for (final r in records)
           ListTile(
-            title: Text('${r.symbol} · ${Fmt.number(r.quantity)} @ ${Fmt.number(r.price)}'),
+            title: Text('${r.symbol} · ${Fmt.quantity(r.quantity)} @ ${Fmt.number(r.price)}'),
             subtitle: Text(Fmt.date(r.date)),
             trailing: Text(Fmt.number(r.total)),
           ),
@@ -527,7 +521,7 @@ class _SimulationState extends State<_Simulation> {
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Saat ini ${Fmt.number(position.quantity)} ${position.exchange.quantityLabel} @ ${Fmt.money(position.avgPrice)}',
+                'Saat ini ${Fmt.quantity(position.quantity)} ${position.exchange.quantityLabel} @ ${Fmt.money(position.avgPrice)}',
                 style: text.bodySmall,
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -553,7 +547,7 @@ class _SimulationState extends State<_Simulation> {
                       InfoRow(label: 'Harga rata-rata baru', value: AmountText(money(result.newAvgPrice))),
                       InfoRow(
                         label: 'Total kepemilikan',
-                        value: Text('${Fmt.number(result.totalQuantity)} ${position.exchange.quantityLabel}'),
+                        value: Text('${Fmt.quantity(result.totalQuantity)} ${position.exchange.quantityLabel}'),
                       ),
                       InfoRow(label: 'Tambahan modal', value: AmountText(money(result.additionalCost))),
                       InfoRow(label: 'Total modal', value: AmountText(money(result.totalCost))),

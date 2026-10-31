@@ -27,6 +27,23 @@ class Portfolio extends Equatable {
 
   Money? unrealizedPnl(Currency currency) => _sum(currency, (p) => p.unrealizedPnl);
 
+  /// Posisi yang belum punya harga terakhir (tidak masuk [pricedTotals]).
+  List<Position> get unpriced => positions.where((p) => p.marketValue == null).toList();
+
+  /// Total posisi yang sudah punya harga untuk satu mata uang; `null` bila tidak ada.
+  ({Money value, Money pnl, double? percent, int count})? pricedTotals(Currency currency) {
+    final priced = positions.where((p) => p.currency == currency && p.marketValue != null).toList();
+    if (priced.isEmpty) return null;
+    final value = priced.fold(0.0, (s, p) => s + p.marketValue!.amount);
+    final cost = priced.fold(0.0, (s, p) => s + p.costBasis.amount);
+    return (
+      value: Money(value, currency),
+      pnl: Money(value - cost, currency),
+      percent: cost == 0 ? null : (value - cost) / cost * 100,
+      count: priced.length,
+    );
+  }
+
   Money? _sum(Currency currency, Money? Function(Position p) pick) {
     var total = 0.0;
     for (final p in positions.where((p) => p.currency == currency)) {

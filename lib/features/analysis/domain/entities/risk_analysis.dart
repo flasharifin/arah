@@ -123,3 +123,12 @@ String drawdownLevel(double? d) => d == null ? '—' : (d < 10 ? 'Rendah' : (d <
   }
   return (before: Money.idr(before), after: Money.idr(after), rows: rows);
 }
+
+/// Arti singkat beta untuk tile Ringkasan (tanpa angka nol bila data kurang: pemanggil cek `null`).
+String betaMeaning(double beta) => switch (beta) {
+  < 0 => 'Cenderung berlawanan',
+  < 0.3 => 'Hampir tidak terpengaruh',
+  < 0.7 => 'Sedikit terpengaruh',
+  < 1.2 => 'Hampir searah',
+  _ => 'Lebih liar dari pasar',
+};

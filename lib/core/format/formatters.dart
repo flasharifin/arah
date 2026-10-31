@@ -46,6 +46,11 @@ abstract final class Fmt {
 
   static String number(num? value) => value == null ? missing : _number.format(value);
 
+  static final _quantity = NumberFormat('#,##0.########', 'id');
+
+  /// Jumlah lot/unit: pecahan kripto sampai 8 desimal (0,01784512), tidak dibulatkan ke 3 desimal.
+  static String quantity(num? value) => value == null ? missing : _quantity.format(value);
+
   /// `28 Okt 2026`.
   static String date(DateTime? value) =>
       value == null ? missing : DateFormat('d MMM yyyy', 'id').format(value.toLocal());

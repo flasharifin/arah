@@ -34,12 +34,7 @@ class DividendsPage extends StatelessWidget {
           actions: [
             IconButton(tooltip: 'Tambah dividen', icon: const Icon(Icons.add), onPressed: () => _openForm(context)),
           ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Mendatang'),
-              Tab(text: 'Diterima'),
-            ],
-          ),
+          bottom: const SegmentedTabBar(tabs: ['Mendatang', 'Diterima']),
         ),
         body: BlocBuilder<DividendsCubit, ViewState<List<Dividend>>>(
           builder: (context, state) => ViewStateBuilder<List<Dividend>>(

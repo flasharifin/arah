@@ -94,7 +94,7 @@ void main() {
     expect(find.textContaining('dalam 1B'), findsOneWidget);
     expect(find.textContaining('dari IHSG'), findsOneWidget);
     expect(find.textContaining('dari BTC'), findsOneWidget); // garis BTC ikut di ringkasan & legenda
-    expect(find.textContaining(RegExp(r'^BTC ')), findsOneWidget);
+    expect(find.text('BTC'), findsOneWidget); // label legenda
 
     await tester.tap(find.text('1T'));
     await tester.pumpAndSettle();
@@ -129,12 +129,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Rp 128.450.000'), findsOneWidget);
 
-    // Item baru di bawah daftar; gulir daftar aset seperti pengguna.
-    // Item baru paling bawah; gulir sampai mentok supaya tidak berhenti di tepi layar.
+    // Modul Kekayaan bertumpuk dalam satu halaman; gulir ke item seperti pengguna.
     Future<void> showDolar() async {
-      final list = find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first;
-      await tester.scrollUntilVisible(find.text('Dolar'), 100, scrollable: list);
-      await tester.drag(list, const Offset(0, -300));
+      await tester.ensureVisible(find.text('Dolar'));
       await tester.pumpAndSettle();
     }
 
@@ -161,7 +158,7 @@ void main() {
     await tester.tap(find.text('Simpan'));
     await tester.pumpAndSettle();
     await showDolar();
-    expect(find.text('Rp 3.200.000'), findsOneWidget); // tile; hero sudah tergulir ke atas
+    expect(find.text('Rp 3.200.000'), findsOneWidget); // nilai item
     expect(find.text('Kas · Jenius'), findsOneWidget); // catatan tampil seperti di web
 
     // Hapus
@@ -174,17 +171,32 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Dolar'), findsNothing);
 
-    // Snapshot — tab bar ikut tergulir (tidak di-pin); gulir kembali ke atas dulu.
-    await tester.drag(find.byType(ListView).first, const Offset(0, 600));
+    // Snapshot: tombol simpan di kepala kartu Riwayat (tidak perlu menggulir melewati daftar).
+    await tester.ensureVisible(find.text('Riwayat kekayaan'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Riwayat'));
-    await tester.pumpAndSettle();
-    expect(find.text('Belum ada snapshot'), findsOneWidget);
-    await tester.tap(find.text('Simpan snapshot sekarang'));
+    expect(find.textContaining('Belum ada snapshot'), findsOneWidget);
+    await tester.tap(find.text('Simpan snapshot'));
     await tester.pumpAndSettle();
     expect(find.text('Snapshot tersimpan'), findsOneWidget);
-    expect(find.text('Rp 128.450.000'), findsWidgets); // snapshot (hero bisa tergulir)
-    expect(find.text('Belum ada snapshot'), findsNothing);
+    expect(find.textContaining('Belum ada snapshot'), findsNothing);
+
+    // 6 snapshot → tampil 5 terbaru + "Lihat semua"; filter periode tetap menampilkan yang baru disimpan.
+    for (var i = 0; i < 5; i++) {
+      await tester.tap(find.text('Simpan snapshot'));
+      await tester.pump(const Duration(seconds: 5)); // tunggu SnackBar hilang
+      await tester.pumpAndSettle();
+    }
+    expect(find.byIcon(Icons.delete_outline), findsNWidgets(5));
+    await tester.ensureVisible(find.text('Lihat semua 6 snapshot'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Lihat semua 6 snapshot'));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.delete_outline), findsNWidgets(6));
+    await tester.ensureVisible(find.text('1T'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('1T'));
+    await tester.pumpAndSettle();
+    expect(find.text('Lihat semua 6 snapshot'), findsOneWidget); // ganti periode kembali ke 5 terbaru
   });
 
   testWidgets('hapus akun: password salah ditolak, password benar kembali ke layar masuk (fixture)', (tester) async {
@@ -202,9 +214,9 @@ void main() {
 
     await tester.tap(find.text('Lainnya'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Hapus akun'));
+    await tester.ensureVisible(find.text('Hapus akun dan semua data'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Hapus akun'));
+    await tester.tap(find.text('Hapus akun dan semua data'));
     await tester.pumpAndSettle();
     expect(find.text('Hapus akun permanen?'), findsOneWidget);
 
@@ -272,7 +284,7 @@ void main() {
     await tester.tap(find.text('Masuk'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('AI Chat'));
+    await tester.tap(find.text('Tanya AI')); // AI Chat dibuka dari header Beranda
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).last, 'Pertanyaan untuk riwayat');
     await tester.tap(find.byTooltip('Kirim'));

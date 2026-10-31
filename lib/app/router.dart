@@ -86,7 +86,7 @@ GoRouter createRouter(AuthBloc auth) {
             routes: [
               GoRoute(
                 path: '/portfolio',
-                builder: (_, _) => const PortfolioPage(),
+                builder: (_, state) => PortfolioPage(initialTab: state.uri.queryParameters['tab']),
                 routes: [
                   GoRoute(
                     path: ':id',

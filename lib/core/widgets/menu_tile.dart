@@ -26,10 +26,7 @@ class MenuTile extends StatelessWidget {
       minTileHeight: AppSpacing.minTouchTarget + AppSpacing.md,
       leading: Container(
         padding: const EdgeInsets.all(AppSpacing.sm),
-        decoration: BoxDecoration(
-          color: AppColors.primarySoft,
-          borderRadius: BorderRadius.circular(AppRadius.field),
-        ),
+        decoration: BoxDecoration(color: AppColors.primarySoft, borderRadius: BorderRadius.circular(AppRadius.field)),
         child: Icon(icon, color: destructive ? color : AppColors.primary, size: 22),
       ),
       title: Text(
@@ -120,6 +117,7 @@ class FeatureTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.tint = AppColors.primarySoft,
   });
 
   final IconData icon;
@@ -127,35 +125,29 @@ class FeatureTile extends StatelessWidget {
   final String subtitle;
   final VoidCallback onTap;
 
+  /// Latar ikon; tiap kelompok menu punya warna sendiri (hijau muda / lime).
+  final Color tint;
+
   @override
   Widget build(BuildContext context) => Card(
     clipBehavior: Clip.antiAlias,
     child: InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.md + 2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.primarySoft,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Icon(icon, color: AppColors.primary),
-                  ),
-                ),
-                const Spacer(),
-                const Icon(Icons.north_east, size: 16, color: AppColors.textSecondary),
-              ],
+            DecoratedBox(
+              decoration: BoxDecoration(color: tint, borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Icon(icon, color: AppColors.primary, size: 20),
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
-            Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: AppSpacing.xs),
+            Text(title, style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 2),
             Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
           ],
         ),

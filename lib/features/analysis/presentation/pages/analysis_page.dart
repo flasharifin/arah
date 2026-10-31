@@ -3,6 +3,7 @@ import 'package:arah/core/format/formatters.dart';
 import 'package:arah/core/state/view_state.dart';
 import 'package:arah/core/theme/app_colors.dart';
 import 'package:arah/core/theme/app_spacing.dart';
+import 'package:arah/core/theme/app_typography.dart';
 import 'package:arah/core/widgets/widgets.dart';
 import 'package:arah/features/analysis/domain/entities/risk_analysis.dart';
 import 'package:arah/features/analysis/presentation/bloc/analysis_cubit.dart';
@@ -21,13 +22,7 @@ class AnalysisPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Analisis risiko'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Ringkasan'),
-              Tab(text: 'Korelasi'),
-              Tab(text: 'Stress test'),
-            ],
-          ),
+          bottom: const SegmentedTabBar(tabs: ['Ringkasan', 'Korelasi', 'Stress test']),
         ),
         body: BlocBuilder<AnalysisCubit, ViewState<RiskAnalysis>>(
           builder: (context, state) => ViewStateBuilder<RiskAnalysis>(
@@ -69,68 +64,140 @@ class _SummaryTab extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final top = analysis.largest!;
     final positions = [...analysis.positions]..sort((a, b) => b.weight.compareTo(a.weight));
+    final withRisk = positions.where((p) => p.volatility != null).toList();
+    final noHistory = positions.where((p) => p.volatility == null).map((p) => p.symbol).toList();
+    const gap = SizedBox(height: AppSpacing.md);
+    Widget levelText(String value, String level) => Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(value, style: text.labelLarge?.copyWith(fontWeight: FontWeight.w700)),
+        Text(
+          level,
+          style: text.labelSmall?.copyWith(color: level == 'Rendah' ? AppColors.positive : AppColors.warning),
+        ),
+      ],
+    );
     return ListView(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       children: [
         PageBody(
-          child: AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text('Konsentrasi', style: text.titleSmall),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  '${top.symbol} = ${Fmt.percent(top.weight, signed: false)} dari nilai portofolio'
-                  '${top.weight >= 40 ? ' — porsi besar di satu aset.' : '.'}',
-                  style: text.bodyMedium,
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        if (analysis.portfolio case final risk?) ...[
-          PageBody(child: _PortfolioRiskCard(risk: risk)),
-          const SizedBox(height: AppSpacing.md),
-        ],
-        _note(
-          context,
-          'Metode: histori harga penutupan 1 bulan. Volatilitas = simpangan baku return harian × √252 (tahunan). '
-          'Max drawdown = penurunan terdalam dari puncak dalam periode itu. Bobot = nilai pasar, atau modal bila harga belum ada.',
-        ),
-        for (final p in positions)
-          PageBody(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (analysis.portfolio case final risk?) ...[_PortfolioRiskCard(risk: risk), gap],
+              ModuleCard(
+                title: 'Konsentrasi',
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(child: Text('${p.symbol} · ${p.exchange}', style: text.titleSmall)),
-                        Text(Fmt.percent(p.weight, signed: false), style: text.labelLarge),
-                      ],
+                    Text(
+                      '${top.symbol} = ${Fmt.percent(top.weight, signed: false)} dari nilai portofolio'
+                      '${top.weight >= 40 ? ' — porsi besar di satu aset.' : '.'}',
+                      style: text.labelLarge?.copyWith(color: top.weight >= 40 ? AppColors.warning : null),
                     ),
-                    if (!p.hasPrice) Text('Harga belum tersedia, bobot memakai modal.', style: text.bodySmall),
-                    const SizedBox(height: AppSpacing.sm),
-                    if (p.volatility == null)
-                      Text('Data histori belum cukup untuk volatilitas & drawdown.', style: text.bodySmall)
-                    else ...[
-                      InfoRow(
-                        label: 'Volatilitas (tahunan)',
-                        value: Text('${Fmt.percent(p.volatility, signed: false)} · ${volatilityLevel(p.volatility)}'),
+                    const SizedBox(height: AppSpacing.md),
+                    for (final p in positions)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: Row(
+                          children: [
+                            SizedBox(width: 56, child: Text(p.symbol, style: text.labelLarge)),
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(999),
+                                child: LinearProgressIndicator(
+                                  value: (p.weight / 100).clamp(0, 1),
+                                  minHeight: 10,
+                                  color: AppColors.series[0],
+                                  backgroundColor: AppColors.divider,
+                                  semanticsLabel: 'Bobot ${p.symbol}',
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 64,
+                              child: Text(
+                                Fmt.percent(p.weight, signed: false),
+                                textAlign: TextAlign.right,
+                                style: text.labelLarge,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      InfoRow(
-                        label: 'Max drawdown (1 bln)',
-                        value: Text('${Fmt.percent(p.maxDrawdown, signed: false)} · ${drawdownLevel(p.maxDrawdown)}'),
-                      ),
-                    ],
+                    Text('Bobot = nilai pasar, atau modal bila harga belum ada.', style: text.bodySmall),
                   ],
                 ),
               ),
-            ),
+              gap,
+              ModuleCard(
+                title: 'Risiko per posisi · 1 bulan',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (withRisk.isNotEmpty)
+                      Row(
+                        children: [
+                          Expanded(child: Text('Posisi', style: text.labelSmall)),
+                          SizedBox(
+                            width: 92,
+                            child: Text('Volatilitas', textAlign: TextAlign.right, style: text.labelSmall),
+                          ),
+                          SizedBox(
+                            width: 92,
+                            child: Text('Max drawdown', textAlign: TextAlign.right, style: text.labelSmall),
+                          ),
+                        ],
+                      ),
+                    for (final p in withRisk)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                        decoration: const BoxDecoration(
+                          border: Border(top: BorderSide(color: AppColors.divider)),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(p.symbol, style: text.titleSmall),
+                                  Text(p.exchange, style: text.bodySmall),
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              width: 92,
+                              child: levelText(Fmt.percent(p.volatility, signed: false), volatilityLevel(p.volatility)),
+                            ),
+                            SizedBox(
+                              width: 92,
+                              child: levelText(Fmt.percent(p.maxDrawdown, signed: false), drawdownLevel(p.maxDrawdown)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (noHistory.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: Text(
+                          '${noHistory.join(', ')}: histori harga belum cukup — dihitung setelah ada data, '
+                          'bukan dianggap nol.',
+                          style: text.bodySmall,
+                        ),
+                      ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Volatilitas = simpangan baku return harian × √252 (tahunan). Max drawdown = penurunan '
+                      'terdalam dari puncak dalam periode itu.',
+                      style: text.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
+        ),
       ],
     );
   }
@@ -317,32 +384,67 @@ class _PortfolioRiskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final enough = risk.sharpe != null || risk.betaIhsg != null || risk.betaSp500 != null || risk.betaBtc != null;
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('Return vs risiko portofolio', style: text.titleSmall),
-          const SizedBox(height: AppSpacing.sm),
-          if (!enough)
-            Text(
+    final betas = [('IHSG', risk.betaIhsg), ('S&P 500', risk.betaSp500), ('BTC', risk.betaBtc)];
+    return ModuleCard(
+      title: 'Return vs risiko portofolio',
+      trailing: Text('${risk.days} hari PnL', style: text.bodySmall),
+      child: !enough
+          ? Text(
               'Butuh minimal 20 hari catatan PnL harian (sekarang ${risk.days} hari). PnL dicatat setiap malam.',
               style: text.bodySmall,
             )
-          else ...[
-            InfoRow(label: 'Sharpe ratio', value: Text(_fmt(risk.sharpe))),
-            InfoRow(label: 'Beta vs IHSG', value: Text(_fmt(risk.betaIhsg))),
-            InfoRow(label: 'Beta vs S&P 500', value: Text(_fmt(risk.betaSp500))),
-            InfoRow(label: 'Beta vs BTC', value: Text(_fmt(risk.betaBtc))),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Dari ${risk.days} hari catatan PnL terakhir (maks 1 tahun). Sharpe = (return tahunan − '
-              '${Fmt.percent(risk.riskFreePercent, signed: false)} asumsi bebas risiko) ÷ volatilitas tahunan; '
-              'di atas 1 tergolong baik. Beta 1 = bergerak sebesar benchmark, < 1 lebih tenang, > 1 lebih liar.',
-              style: text.bodySmall,
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md + 2),
+                  decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(16)),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Sharpe ratio', style: text.labelLarge?.copyWith(color: Colors.white)),
+                            Text(
+                              'Asumsi bebas risiko ${Fmt.percent(risk.riskFreePercent, signed: false)}/thn · '
+                              '> 1 tergolong baik',
+                              style: text.bodySmall?.copyWith(color: AppColors.heroMuted),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        _fmt(risk.sharpe),
+                        style: AppTypography.amountLarge.copyWith(color: Colors.white, fontSize: 28),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final (i, (name, beta)) in betas.indexed) ...[
+                      if (i > 0) const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: StatTile(
+                          label: 'Beta vs $name',
+                          value: Text(_fmt(beta)),
+                          caption: beta == null ? 'Data kurang' : betaMeaning(beta),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Dari ${risk.days} hari catatan PnL terakhir (maks 1 tahun). Beta 1 = bergerak sebesar benchmark, '
+                  '< 1 lebih tenang, > 1 lebih liar.',
+                  style: text.bodySmall,
+                ),
+              ],
             ),
-          ],
-        ],
-      ),
     );
   }
 }

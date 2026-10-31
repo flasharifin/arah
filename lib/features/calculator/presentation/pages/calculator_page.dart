@@ -8,12 +8,7 @@ enum CalculatorTool {
   lot('lot', Icons.straighten, 'Kalkulator lot', 'Berapa lot/unit dari dana yang ada'),
   sizing('sizing', Icons.balance, 'Position sizing', 'Jumlah beli dari risiko % dan stop loss'),
   bep('bep', Icons.flag_outlined, 'BEP & averaging', 'Harga impas dan simulasi beli tambahan'),
-  rebalance(
-    'rebalance',
-    Icons.pie_chart_outline,
-    'Rebalancing',
-    'Selisih alokasi aktual vs target per bursa',
-  ),
+  rebalance('rebalance', Icons.pie_chart_outline, 'Rebalancing', 'Selisih alokasi aktual vs target per bursa'),
   fi('fi', Icons.beach_access_outlined, 'Financial independence', 'FI number dan estimasi waktu menuju FI'),
   invisible(
     'invisible-cost',
