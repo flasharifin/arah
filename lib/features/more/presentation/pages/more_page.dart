@@ -30,6 +30,12 @@ class MorePage extends StatefulWidget {
       subtitle: 'Konsentrasi, korelasi, stress test',
       slug: 'analysis',
     ),
+    (
+      icon: Icons.leaderboard_outlined,
+      title: 'Peringkat teknikal',
+      subtitle: 'Saham teknikal terkuat & alasannya',
+      slug: 'technical-rank',
+    ),
     (icon: Icons.calculate_outlined, title: 'Kalkulator', subtitle: 'Lot, sizing, BEP, FI', slug: 'calculator'),
     (icon: Icons.mail_outline, title: 'Surat investor', subtitle: 'Ringkasan 7 hari', slug: 'investor-letter'),
     // AI Chat tidak lagi di navigasi bawah.

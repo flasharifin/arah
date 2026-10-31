@@ -117,6 +117,7 @@ void main() {
       'DCA': 'dca',
       'Dividen': 'dividends',
       'Analisis risiko': 'analysis',
+      'Peringkat teknikal': 'technical-rank',
       'Kalkulator': 'calculator',
       'Jurnal': 'journal',
       'Surat investor': 'investor-letter',

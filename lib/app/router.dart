@@ -28,6 +28,8 @@ import 'package:arah/features/dividends/presentation/pages/dividends_page.dart';
 import 'package:arah/features/journal/presentation/bloc/journal_cubit.dart';
 import 'package:arah/features/analysis/presentation/bloc/analysis_cubit.dart';
 import 'package:arah/features/analysis/presentation/pages/analysis_page.dart';
+import 'package:arah/features/analysis/presentation/bloc/technical_rank_cubit.dart';
+import 'package:arah/features/analysis/presentation/pages/technical_rank_page.dart';
 import 'package:arah/features/calculator/presentation/bloc/insights_cubits.dart';
 import 'package:arah/features/calculator/presentation/pages/calculator_page.dart';
 import 'package:arah/features/calculator/presentation/pages/calculator_tool_page.dart';
@@ -170,6 +172,11 @@ GoRouter createRouter(AuthBloc auth) {
                         },
                       ),
                     ],
+                  ),
+                  GoRoute(
+                    path: 'technical-rank',
+                    builder: (_, _) =>
+                        BlocProvider(create: (_) => sl<TechnicalRankCubit>()..load(), child: const TechnicalRankPage()),
                   ),
                   GoRoute(
                     path: 'analysis',

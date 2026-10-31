@@ -61,6 +61,11 @@ import 'package:arah/features/analysis/data/repositories/analysis_repository_imp
 import 'package:arah/features/analysis/domain/repositories/analysis_repository.dart';
 import 'package:arah/features/analysis/domain/usecases/get_risk_analysis.dart';
 import 'package:arah/features/analysis/presentation/bloc/analysis_cubit.dart';
+import 'package:arah/features/analysis/data/datasources/technical_rank_remote_data_source.dart';
+import 'package:arah/features/analysis/data/repositories/technical_rank_repository_impl.dart';
+import 'package:arah/features/analysis/domain/repositories/technical_rank_repository.dart';
+import 'package:arah/features/analysis/domain/usecases/get_technical_ranking.dart';
+import 'package:arah/features/analysis/presentation/bloc/technical_rank_cubit.dart';
 import 'package:arah/features/calculator/data/datasources/insights_remote_data_source.dart';
 import 'package:arah/features/calculator/data/repositories/insights_repository_impl.dart';
 import 'package:arah/features/calculator/domain/repositories/insights_repository.dart';
@@ -230,6 +235,11 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
     )
     ..registerLazySingleton<AnalysisRepository>(() => AnalysisRepositoryImpl(sl()))
     ..registerFactory(() => AnalysisCubit(GetRiskAnalysis(sl())))
+    ..registerLazySingleton<TechnicalRankRemoteDataSource>(
+      () => useFixtures ? TechnicalRankFixtureDataSource() : TechnicalRankApiDataSource(sl()),
+    )
+    ..registerLazySingleton<TechnicalRankRepository>(() => TechnicalRankRepositoryImpl(sl()))
+    ..registerFactory(() => TechnicalRankCubit(GetTechnicalRanking(sl())))
     // Kalkulator (biaya tersembunyi & wealth timeline dari server)
     ..registerLazySingleton<InsightsRemoteDataSource>(
       () => useFixtures ? InsightsFixtureDataSource() : InsightsApiDataSource(sl()),
