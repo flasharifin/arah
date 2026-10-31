@@ -15,6 +15,11 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/notification_accent" />
+        <!-- Wajib untuk FirebaseMessaging.register() (kirim lewat FID, firebase_messaging >=17):
+             tanpa ini register gagal "API disabled" dan backend ditolak installation-id-not-registered. -->
+        <meta-data
+            android:name="firebase_messaging_installation_id_enabled"
+            android:value="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

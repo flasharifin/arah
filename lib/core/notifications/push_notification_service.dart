@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:arah/core/network/api_client.dart';
 import 'package:arah/core/theme/app_colors.dart';
+import 'package:firebase_app_installations/firebase_app_installations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -58,15 +60,25 @@ class PushNotificationService {
   }
 
   /// Minta izin notifikasi lalu daftarkan perangkat ke FCM dan backend (`PUT /api/mobile/devices`).
-  /// Dipanggil setelah login; FID baru dari FCM (registrasi ulang) ikut dikirim lewat `onRegistered`.
+  /// Dipanggil setiap sesi login aktif (login & app dibuka dengan sesi tersimpan).
   Future<void> requestPermissionAndRegister() async {
     final settings = await _fcm.requestPermission();
+    debugPrint('[push] izin: ${settings.authorizationStatus.name}');
     if (settings.authorizationStatus == AuthorizationStatus.denied) return;
     _registered ??= _fcm.onRegistered.listen(_sendToBackend);
     try {
       await _fcm.register();
-    } catch (_) {
+    } catch (e) {
       // Registrasi bisa gagal (mis. APNs belum siap di iOS); notifikasi tidak boleh membuat app gagal.
+      debugPrint('[push] register gagal: $e');
+    }
+    // `onRegistered` hanya terpicu saat registrasi FCM baru; perangkat yang sudah terdaftar tidak memancarkannya
+    // lagi, sehingga bila backend kehilangan datanya (dihapus, akun baru) push tidak pernah sampai.
+    // FID = Firebase Installation ID yang sama: kirim ulang tiap sesi (PUT idempoten di backend).
+    try {
+      await _sendToBackend(await FirebaseInstallations.instance.getId());
+    } catch (e) {
+      debugPrint('[push] ambil FID gagal: $e');
     }
   }
 
@@ -92,12 +104,14 @@ class PushNotificationService {
   Future<void> _sendToBackend(String fid) async {
     _fid = fid;
     final api = _api;
-    if (api == null) return;
+    if (api == null) return debugPrint('[push] mode fixture: perangkat tidak didaftarkan');
     try {
       // Backend menyimpan FID di field `token` (lihat PushDevice di backend).
       await api.put('/api/mobile/devices', body: {'token': fid, 'platform': Platform.isIOS ? 'ios' : 'android'});
-    } catch (_) {
-      // shortcut: gagal (mis. offline) baru dicoba lagi saat FCM memancarkan onRegistered lagi (login ulang pasti, buka app belum tentu); simpan FID & kirim ulang di app start kalau push sering tidak sampai.
+      debugPrint('[push] perangkat terdaftar di backend');
+    } catch (e) {
+      debugPrint('[push] daftar ke backend gagal: $e');
+      // Gagal (mis. offline) dicoba lagi saat sesi berikutnya (app dibuka / login ulang).
     }
   }
 
