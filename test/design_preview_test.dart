@@ -139,6 +139,14 @@ void main() {
       await capture('portofolio-${tab.toLowerCase()}');
     }
     await open('/portfolio/bbca', 'portofolio-detail');
+    await tester.pump(const Duration(seconds: 1)); // data teknikal fixture tertunda
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Sinyal teknikal'));
+    await tester.pumpAndSettle();
+    await capture('portofolio-teknikal');
+    await tester.ensureVisible(find.text('Bacaan indikator'));
+    await tester.pumpAndSettle();
+    await capture('portofolio-teknikal-indikator');
     await open('/assistant', '03-ai-chat');
     await open('/assistant/history', 'ai-riwayat');
     await open('/wealth', '04-kekayaan');

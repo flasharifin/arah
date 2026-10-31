@@ -1,10 +1,13 @@
+import 'package:arah/app/di.dart';
 import 'package:arah/core/format/formatters.dart';
 import 'package:arah/core/theme/app_spacing.dart';
 import 'package:arah/core/theme/app_typography.dart';
 import 'package:arah/core/widgets/widgets.dart';
 import 'package:arah/features/portfolio/domain/entities/position.dart';
 import 'package:arah/features/portfolio/presentation/bloc/portfolio_bloc.dart';
+import 'package:arah/features/portfolio/presentation/bloc/technical_cubit.dart';
 import 'package:arah/features/portfolio/presentation/widgets/purchase_form.dart';
+import 'package:arah/features/portfolio/presentation/widgets/technical_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -93,6 +96,11 @@ class PositionDetailPage extends StatelessWidget {
                       Icon(Icons.chevron_right),
                     ],
                   ),
+                ),
+                const SectionHeader('Teknikal'),
+                BlocProvider(
+                  create: (_) => sl<TechnicalCubit>(param1: position.id)..load(),
+                  child: const TechnicalSection(),
                 ),
               ],
             ),

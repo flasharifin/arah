@@ -26,6 +26,11 @@ import 'package:arah/features/networth/domain/repositories/net_worth_repository.
 import 'package:arah/features/networth/domain/usecases/get_net_worth.dart';
 import 'package:arah/features/networth/presentation/bloc/net_worth_cubit.dart';
 import 'package:arah/features/portfolio/data/datasources/performance_remote_data_source.dart';
+import 'package:arah/features/portfolio/data/datasources/technical_remote_data_source.dart';
+import 'package:arah/features/portfolio/data/repositories/technical_repository_impl.dart';
+import 'package:arah/features/portfolio/domain/repositories/technical_repository.dart';
+import 'package:arah/features/portfolio/domain/usecases/get_technical.dart';
+import 'package:arah/features/portfolio/presentation/bloc/technical_cubit.dart';
 import 'package:arah/features/portfolio/data/datasources/portfolio_remote_data_source.dart';
 import 'package:arah/features/portfolio/data/repositories/performance_repository_impl.dart';
 import 'package:arah/features/portfolio/data/repositories/portfolio_repository_impl.dart';
@@ -133,6 +138,11 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
     ..registerLazySingleton<PerformanceRepository>(() => PerformanceRepositoryImpl(sl()))
     ..registerFactory(() => PerformanceCubit(GetDailyPerformance(sl())))
     ..registerFactory(() => SalesCubit(GetSales(sl())))
+    ..registerLazySingleton<TechnicalRemoteDataSource>(
+      () => useFixtures ? TechnicalFixtureDataSource() : TechnicalApiDataSource(sl()),
+    )
+    ..registerLazySingleton<TechnicalRepository>(() => TechnicalRepositoryImpl(sl()))
+    ..registerFactoryParam<TechnicalCubit, String, void>((id, _) => TechnicalCubit(GetTechnical(sl()), id))
     ..registerFactory(() => RecordPurchase(sl()))
     // Assistant
     ..registerLazySingleton<AssistantRemoteDataSource>(
