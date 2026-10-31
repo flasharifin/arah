@@ -25,14 +25,8 @@ class ChatMessage extends Equatable {
 
   bool get isUser => role == ChatRole.user;
 
-  ChatMessage withStatus(MessageStatus status, {Failure? failure}) => ChatMessage(
-    id: id,
-    role: role,
-    content: content,
-    createdAt: createdAt,
-    status: status,
-    failure: failure,
-  );
+  ChatMessage withStatus(MessageStatus status, {Failure? failure}) =>
+      ChatMessage(id: id, role: role, content: content, createdAt: createdAt, status: status, failure: failure);
 
   @override
   List<Object?> get props => [id, role, content, createdAt, status, failure];

@@ -12,9 +12,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       _newId = newId ?? _defaultId,
       _now = now ?? DateTime.now,
       super(const ChatState()) {
-    on<ChatContextAttached>(
-      (e, emit) => emit(state.copyWith(context: () => e.context, prefill: () => e.prefill)),
-    );
+    on<ChatContextAttached>((e, emit) => emit(state.copyWith(context: () => e.context, prefill: () => e.prefill)));
     on<ChatPrefillRequested>((e, emit) => emit(state.copyWith(prefill: () => e.text)));
     on<ChatContextCleared>((e, emit) => emit(state.copyWith(context: () => null)));
     on<ChatMessageSent>(_onSent);
@@ -22,9 +20,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ChatFailedMessageEdited>(_onEdit);
     on<ChatResetRequested>((e, emit) => emit(const ChatState()));
     // Percakapan lama dari riwayat: pesan sudah dimuat halaman riwayat, lanjut chat di percakapan itu.
-    on<ChatConversationLoaded>(
-      (e, emit) => emit(ChatState(conversationId: e.conversationId, messages: e.messages)),
-    );
+    on<ChatConversationLoaded>((e, emit) => emit(ChatState(conversationId: e.conversationId, messages: e.messages)));
   }
 
   final SendChatMessage _sendMessage;
@@ -76,18 +72,15 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         context: state.context,
       ),
     );
-    result.fold(
-      (failure) => emit(state.replace(message.withStatus(MessageStatus.failed, failure: failure))),
-      (reply) {
-        final sent = state.replace(message.withStatus(MessageStatus.sent));
-        emit(
-          sent.copyWith(
-            messages: [...sent.messages, reply.message],
-            conversationId: reply.conversationId,
-            context: () => null,
-          ),
-        );
-      },
-    );
+    result.fold((failure) => emit(state.replace(message.withStatus(MessageStatus.failed, failure: failure))), (reply) {
+      final sent = state.replace(message.withStatus(MessageStatus.sent));
+      emit(
+        sent.copyWith(
+          messages: [...sent.messages, reply.message],
+          conversationId: reply.conversationId,
+          context: () => null,
+        ),
+      );
+    });
   }
 }

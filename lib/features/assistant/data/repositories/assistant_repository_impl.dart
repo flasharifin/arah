@@ -15,12 +15,7 @@ class AssistantRepositoryImpl implements AssistantRepository {
     required String content,
     AssetContext? context,
   }) => guard(
-    () => _remote.sendMessage(
-      conversationId: conversationId,
-      requestId: requestId,
-      content: content,
-      context: context,
-    ),
+    () => _remote.sendMessage(conversationId: conversationId, requestId: requestId, content: content, context: context),
   );
 
   @override

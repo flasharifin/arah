@@ -31,10 +31,7 @@ class MessageBubble extends StatelessWidget {
                 border: isUser ? null : Border.all(color: AppColors.border),
                 borderRadius: BorderRadius.circular(AppRadius.card),
               ),
-              child: SelectableText(
-                message.content,
-                style: TextStyle(color: isUser ? Colors.white : AppColors.text),
-              ),
+              child: SelectableText(message.content, style: TextStyle(color: isUser ? Colors.white : AppColors.text)),
             ),
             const SizedBox(height: AppSpacing.xs),
             switch (message.status) {

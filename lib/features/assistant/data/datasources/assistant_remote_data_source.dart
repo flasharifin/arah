@@ -55,8 +55,7 @@ class AssistantApiDataSource implements AssistantRemoteDataSource {
 
   @override
   Future<List<ConversationSummary>> listConversations() async => [
-    for (final c
-        in (await _api.get('/api/mobile/conversations') as List<dynamic>).cast<Map<String, dynamic>>())
+    for (final c in (await _api.get('/api/mobile/conversations') as List<dynamic>).cast<Map<String, dynamic>>())
       ConversationSummary(
         id: c['id'] as String,
         title: c['title'] as String,
@@ -79,8 +78,7 @@ class AssistantApiDataSource implements AssistantRemoteDataSource {
       _api.patch('/api/mobile/conversations/$conversationId', body: {'title': title});
 
   @override
-  Future<void> deleteConversation(String conversationId) =>
-      _api.delete('/api/mobile/conversations/$conversationId');
+  Future<void> deleteConversation(String conversationId) => _api.delete('/api/mobile/conversations/$conversationId');
 }
 
 /// Balasan ilustrasi; bukan hasil pemanggilan AI. Percakapan disimpan di memori supaya riwayat bisa dicoba.
@@ -111,11 +109,7 @@ class AssistantFixtureDataSource implements AssistantRemoteDataSource {
     _conversations[id] = (
       existing?.$1 ?? (content.length > 60 ? content.substring(0, 60) : content),
       now,
-      [
-        ...?existing?.$3,
-        ChatMessage(id: requestId, role: ChatRole.user, content: content, createdAt: now),
-        reply,
-      ],
+      [...?existing?.$3, ChatMessage(id: requestId, role: ChatRole.user, content: content, createdAt: now), reply],
     );
     return ChatReply(conversationId: id, message: reply);
   }
@@ -127,8 +121,7 @@ class AssistantFixtureDataSource implements AssistantRemoteDataSource {
   ];
 
   @override
-  Future<List<ChatMessage>> fetchMessages(String conversationId) async =>
-      _conversations[conversationId]?.$3 ?? [];
+  Future<List<ChatMessage>> fetchMessages(String conversationId) async => _conversations[conversationId]?.$3 ?? [];
 
   @override
   Future<void> renameConversation(String conversationId, String title) async {

@@ -49,15 +49,9 @@ class ConversationHistoryPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         if (today.isNotEmpty)
-                          MenuGroup(
-                            title: 'Hari ini',
-                            children: [for (final c in today) _ConversationTile(c)],
-                          ),
+                          MenuGroup(title: 'Hari ini', children: [for (final c in today) _ConversationTile(c)]),
                         if (earlier.isNotEmpty)
-                          MenuGroup(
-                            title: 'Sebelumnya',
-                            children: [for (final c in earlier) _ConversationTile(c)],
-                          ),
+                          MenuGroup(title: 'Sebelumnya', children: [for (final c in earlier) _ConversationTile(c)]),
                       ],
                     ),
                   ),

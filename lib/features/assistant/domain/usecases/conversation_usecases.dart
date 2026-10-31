@@ -17,8 +17,7 @@ class LoadConversation implements UseCase<List<ChatMessage>, String> {
   final AssistantRepository _repository;
 
   @override
-  Future<Result<List<ChatMessage>>> call(String conversationId) =>
-      _repository.loadConversation(conversationId);
+  Future<Result<List<ChatMessage>>> call(String conversationId) => _repository.loadConversation(conversationId);
 }
 
 class RenameConversation implements UseCase<void, ({String id, String title})> {
