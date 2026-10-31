@@ -12,12 +12,7 @@ abstract final class AppTypography {
     bodyLarge: TextStyle(fontSize: 16, height: 24 / 16, fontWeight: FontWeight.w400),
     bodyMedium: TextStyle(fontSize: 16, height: 24 / 16, fontWeight: FontWeight.w400),
     labelLarge: TextStyle(fontSize: 14, height: 20 / 14, fontWeight: FontWeight.w500),
-    bodySmall: TextStyle(
-      fontSize: 12,
-      height: 18 / 12,
-      fontWeight: FontWeight.w400,
-      color: AppColors.textSecondary,
-    ),
+    bodySmall: TextStyle(fontSize: 12, height: 18 / 12, fontWeight: FontWeight.w400, color: AppColors.textSecondary),
   );
 
   /// Nilai utama (hero), 30/38 bold.

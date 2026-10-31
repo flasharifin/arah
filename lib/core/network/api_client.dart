@@ -53,8 +53,7 @@ class ApiClient {
   Future<dynamic> delete(String path, {Object? body}) => _send(() => _dio.delete<dynamic>(path, data: body));
 
   /// Backend mengembalikan `{ data }` untuk semua response sukses (doc/designapp/07, G6).
-  static dynamic unwrap(dynamic body) =>
-      body is Map<String, dynamic> && body.containsKey('data') ? body['data'] : body;
+  static dynamic unwrap(dynamic body) => body is Map<String, dynamic> && body.containsKey('data') ? body['data'] : body;
 
   Future<dynamic> _send(Future<Response<dynamic>> Function() request) async {
     try {
@@ -83,15 +82,9 @@ class ApiClient {
     final refreshToken = await _tokens.readRefreshToken();
     if (refreshToken == null) return false;
     try {
-      final response = await _dio.post<dynamic>(
-        '/api/mobile/auth/refresh',
-        data: {'refreshToken': refreshToken},
-      );
+      final response = await _dio.post<dynamic>('/api/mobile/auth/refresh', data: {'refreshToken': refreshToken});
       final data = unwrap(response.data) as Map<String, dynamic>;
-      await _tokens.save(
-        accessToken: data['accessToken'] as String,
-        refreshToken: data['refreshToken'] as String,
-      );
+      await _tokens.save(accessToken: data['accessToken'] as String, refreshToken: data['refreshToken'] as String);
       return true;
     } on DioException catch (e) {
       // Hanya 401 yang pasti mengakhiri sesi; gagal jaringan biarkan token untuk dicoba lagi.

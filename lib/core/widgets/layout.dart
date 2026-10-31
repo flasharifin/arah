@@ -14,7 +14,10 @@ class PageBody extends StatelessWidget {
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: AppSpacing.maxContentWidth),
-        child: padded ? Padding(padding: AppSpacing.screen, child: child) : child,
+        child: SizedBox(
+          width: double.infinity,
+          child: padded ? Padding(padding: AppSpacing.screen, child: child) : child,
+        ),
       ),
     );
   }
@@ -35,7 +38,13 @@ class SectionHeader extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
-          if (actionLabel != null) TextButton(onPressed: onAction, child: Text('$actionLabel →')),
+          if (actionLabel != null)
+            TextButton.icon(
+              onPressed: onAction,
+              label: Text(actionLabel!),
+              icon: const Icon(Icons.arrow_forward, size: 16),
+              iconAlignment: IconAlignment.end,
+            ),
         ],
       ),
     );

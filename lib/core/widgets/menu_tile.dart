@@ -74,3 +74,92 @@ class MenuGroup extends StatelessWidget {
     );
   }
 }
+
+/// Kartu fitur berbagi tinggi per baris; teks besar beralih ke satu kolom.
+class FeatureMenu extends StatelessWidget {
+  const FeatureMenu({super.key, required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final largeText = MediaQuery.textScalerOf(context).scale(16) > 22;
+      final columns = largeText || constraints.maxWidth < 300
+          ? 1
+          : constraints.maxWidth >= 600
+          ? 3
+          : 2;
+      return Column(
+        children: [
+          for (var i = 0; i < children.length; i += columns)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var j = 0; j < columns; j++) ...[
+                      if (j > 0) const SizedBox(width: AppSpacing.md),
+                      Expanded(child: i + j < children.length ? children[i + j] : const SizedBox.shrink()),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+        ],
+      );
+    },
+  );
+}
+
+class FeatureTile extends StatelessWidget {
+  const FeatureTile({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.primarySoft,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Icon(icon, color: AppColors.primary),
+                  ),
+                ),
+                const Spacer(),
+                const Icon(Icons.north_east, size: 16, color: AppColors.textSecondary),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: AppSpacing.xs),
+            Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+          ],
+        ),
+      ),
+    ),
+  );
+}

@@ -112,8 +112,7 @@ class InlineError extends StatelessWidget {
         const Icon(Icons.error_outline, color: AppColors.negative, size: 20),
         const SizedBox(width: AppSpacing.sm),
         Expanded(child: Text(failure.message, style: Theme.of(context).textTheme.bodySmall)),
-        if (failure.isRetryable && onRetry != null)
-          TextButton(onPressed: onRetry, child: const Text('Coba lagi')),
+        if (failure.isRetryable && onRetry != null) TextButton(onPressed: onRetry, child: const Text('Coba lagi')),
       ],
     );
   }

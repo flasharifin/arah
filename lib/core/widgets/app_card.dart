@@ -48,7 +48,14 @@ class HeroCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
+        child: Ink(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.primary, Color(0xFF24685C)],
+            ),
+          ),
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: DefaultTextStyle.merge(
             style: const TextStyle(color: Colors.white),

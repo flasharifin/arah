@@ -95,10 +95,7 @@ class PushNotificationService {
     if (api == null) return;
     try {
       // Backend menyimpan FID di field `token` (lihat PushDevice di backend).
-      await api.put(
-        '/api/mobile/devices',
-        body: {'token': fid, 'platform': Platform.isIOS ? 'ios' : 'android'},
-      );
+      await api.put('/api/mobile/devices', body: {'token': fid, 'platform': Platform.isIOS ? 'ios' : 'android'});
     } catch (_) {
       // shortcut: gagal (mis. offline) baru dicoba lagi saat FCM memancarkan onRegistered lagi (login ulang pasti, buka app belum tentu); simpan FID & kirim ulang di app start kalau push sering tidak sampai.
     }

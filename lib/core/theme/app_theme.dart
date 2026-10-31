@@ -90,6 +90,18 @@ abstract final class AppTheme {
           ),
         ),
       ),
+      navigationRailTheme: const NavigationRailThemeData(
+        backgroundColor: AppColors.surface,
+        indicatorColor: AppColors.accent,
+        selectedIconTheme: IconThemeData(color: AppColors.primary),
+        selectedLabelTextStyle: TextStyle(fontFamily: 'Roboto', color: AppColors.primary, fontWeight: FontWeight.w700),
+      ),
+      tabBarTheme: const TabBarThemeData(
+        labelColor: AppColors.primary,
+        unselectedLabelColor: AppColors.textSecondary,
+        indicatorColor: AppColors.primary,
+        dividerColor: AppColors.border,
+      ),
       dividerTheme: const DividerThemeData(color: AppColors.border, space: 1),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
