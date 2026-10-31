@@ -41,12 +41,15 @@ import 'package:arah/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:arah/features/settings/presentation/pages/settings_page.dart';
 import 'package:arah/features/watchlist/presentation/bloc/watchlist_cubit.dart';
 import 'package:arah/features/watchlist/presentation/pages/watchlist_page.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// Bisa dibuka tanpa login.
 const _publicRoutes = {'/login', '/forgot-password'};
+
+Widget _technicalRank() =>
+    BlocProvider(create: (_) => sl<TechnicalRankCubit>()..load(), child: const TechnicalRankPage());
 
 GoRouter createRouter(AuthBloc auth) {
   return GoRouter(
@@ -82,7 +85,14 @@ GoRouter createRouter(AuthBloc auth) {
         ),
         branches: [
           StatefulShellBranch(
-            routes: [GoRoute(path: '/home', builder: (_, _) => const HomePage())],
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (_, _) => const HomePage(),
+                // Juga di bawah Beranda supaya back dari pintasan kembali ke Beranda, bukan ke Lainnya.
+                routes: [GoRoute(path: 'technical-rank', builder: (_, _) => _technicalRank())],
+              ),
+            ],
           ),
           StatefulShellBranch(
             routes: [
@@ -173,11 +183,7 @@ GoRouter createRouter(AuthBloc auth) {
                       ),
                     ],
                   ),
-                  GoRoute(
-                    path: 'technical-rank',
-                    builder: (_, _) =>
-                        BlocProvider(create: (_) => sl<TechnicalRankCubit>()..load(), child: const TechnicalRankPage()),
-                  ),
+                  GoRoute(path: 'technical-rank', builder: (_, _) => _technicalRank()),
                   GoRoute(
                     path: 'analysis',
                     builder: (_, _) =>

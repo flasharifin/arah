@@ -106,9 +106,9 @@ class _HomeContent extends StatelessWidget {
             for (final (i, a) in [
               (icon: Icons.add, label: 'Catat beli', onTap: () => showPurchaseForm(context), lime: true),
               (
-                icon: Icons.account_balance_wallet_outlined,
-                label: 'Aset',
-                onTap: () => context.go('/wealth'),
+                icon: Icons.leaderboard_outlined,
+                label: 'Sinyal',
+                onTap: () => context.go('/home/technical-rank'),
                 lime: false,
               ),
               (

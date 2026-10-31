@@ -1,6 +1,7 @@
 import 'package:arah/app/record_sheet.dart';
 import 'package:arah/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 /// Navigasi utama. Ponsel: Beranda · Portofolio · Catat (+) · Kekayaan · Lainnya; AI Chat dibuka dari tombol
@@ -21,8 +22,34 @@ class AppShell extends StatelessWidget {
 
   void _select(int branch) => shell.goBranch(branch, initialLocation: branch == shell.currentIndex);
 
+  /// Back di layar utama (bukan sub-halaman): konfirmasi dulu, jangan langsung menutup app.
+  /// Back di sub-halaman (detail, Watchlist, …) tetap ditangani router dan tidak sampai ke sini.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => PopScope(
+    canPop: false,
+    onPopInvokedWithResult: (didPop, _) async {
+      if (didPop) return;
+      if (await _confirmExit(context)) await SystemNavigator.pop();
+    },
+    child: _layout(context),
+  );
+
+  static Future<bool> _confirmExit(BuildContext context) async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Tutup Arah?'),
+          // Menutup app tidak mengeluarkan akun: sesi tetap tersimpan.
+          content: const Text('Kamu tetap masuk; buka lagi kapan saja tanpa login ulang.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
+            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Tutup')),
+          ],
+        ),
+      ) ??
+      false;
+
+  Widget _layout(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final wide = size.width >= 840;
     // HP landscape (mis. 873×393): lebar seperti tablet tapi pendek → navigasi samping ringkas.

@@ -3,6 +3,7 @@ import 'package:arah/app/di.dart';
 import 'package:arah/core/notifications/push_notification_service.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -197,6 +198,63 @@ void main() {
     await tester.tap(find.text('1T'));
     await tester.pumpAndSettle();
     expect(find.text('Lihat semua 6 snapshot'), findsOneWidget); // ganti periode kembali ke 5 terbaru
+  });
+
+  testWidgets('back di layar utama: konfirmasi tutup app; back di sub-halaman kembali biasa', (tester) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final platformCalls = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      platformCalls.add(call.method);
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+
+    await tester.pumpWidget(const ArahApp());
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).at(0), 'demo@arah.id');
+    await tester.enterText(find.byType(TextFormField).at(1), 'password123');
+    await tester.tap(find.text('Masuk'));
+    await tester.pumpAndSettle();
+
+    // Pintasan Sinyal di Beranda: back kembali ke Beranda, bukan ke Lainnya.
+    await tester.tap(find.text('Sinyal'));
+    await tester.pumpAndSettle();
+    expect(find.text('Peringkat teknikal'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Peringkat teknikal'), findsNothing);
+    expect(find.text('Sinyal'), findsOneWidget);
+    expect(find.text('Tutup Arah?'), findsNothing);
+
+    // Sub-halaman: back kembali ke daftar, tanpa dialog.
+    await tester.tap(find.text('Portofolio').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('BBCA'));
+    await tester.pumpAndSettle();
+    expect(find.text('Kepemilikan'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Kepemilikan'), findsNothing);
+    expect(find.text('Tutup Arah?'), findsNothing);
+
+    // Layar utama: konfirmasi dulu; Batal tetap di app.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Tutup Arah?'), findsOneWidget);
+    await tester.tap(find.text('Batal'));
+    await tester.pumpAndSettle();
+    expect(find.text('Tutup Arah?'), findsNothing);
+    expect(platformCalls, isNot(contains('SystemNavigator.pop')));
+
+    // Tutup → app benar-benar ditutup.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tutup'));
+    await tester.pumpAndSettle();
+    expect(platformCalls, contains('SystemNavigator.pop'));
   });
 
   testWidgets('hapus akun: password salah ditolak, password benar kembali ke layar masuk (fixture)', (tester) async {
