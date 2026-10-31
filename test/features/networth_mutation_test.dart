@@ -26,7 +26,13 @@ void main() {
       const ManualEntry(kind: WealthKind.asset, name: ' Emas ', category: 'gold', amount: 10, currency: 'GOLD'),
     );
     await ds.saveEntry(
-      const ManualEntry(kind: WealthKind.liability, name: 'KPR', category: 'mortgage', amount: 250000000),
+      const ManualEntry(
+        kind: WealthKind.liability,
+        name: 'KPR',
+        category: 'mortgage',
+        amount: 250000000,
+        note: ' Tenor 15 thn ',
+      ),
       id: 'l1',
     );
     await ds.removeEntry(WealthKind.asset, 'a1');
@@ -44,8 +50,8 @@ void main() {
         ('DELETE', '/api/networth/snapshot/n1'),
       ],
     );
-    expect(api.calls[0].$3, {'name': 'Emas', 'category': 'gold', 'value': 10.0, 'currency': 'GOLD'});
-    expect(api.calls[1].$3, {'name': 'KPR', 'category': 'mortgage', 'amount': 250000000.0});
+    expect(api.calls[0].$3, {'name': 'Emas', 'category': 'gold', 'note': '', 'value': 10.0, 'currency': 'GOLD'});
+    expect(api.calls[1].$3, {'name': 'KPR', 'category': 'mortgage', 'note': 'Tenor 15 thn', 'amount': 250000000.0});
     expect(api.calls[3].$3, isNull); // total snapshot dihitung server
   });
 }

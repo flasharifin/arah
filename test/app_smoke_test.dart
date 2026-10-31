@@ -128,11 +128,13 @@ void main() {
     expect(find.text('Rp 128.450.000'), findsOneWidget);
 
     // Item baru di bawah daftar; gulir daftar aset seperti pengguna.
-    Future<void> showDolar() => tester.scrollUntilVisible(
-      find.text('Dolar'),
-      100,
-      scrollable: find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first,
-    );
+    // Item baru paling bawah; gulir sampai mentok supaya tidak berhenti di tepi layar.
+    Future<void> showDolar() async {
+      final list = find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first;
+      await tester.scrollUntilVisible(find.text('Dolar'), 100, scrollable: list);
+      await tester.drag(list, const Offset(0, -300));
+      await tester.pumpAndSettle();
+    }
 
     // Tambah US$100 → fixture mengonversi 16.000/US$ → kekayaan bersih +1,6 jt
     await tester.tap(find.text('Tambah aset'));
@@ -153,10 +155,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Ubah aset'), findsOneWidget);
     await tester.enterText(find.widgetWithText(TextFormField, 'Nilai (US\$)'), '200');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Catatan (opsional)'), 'Jenius');
     await tester.tap(find.text('Simpan'));
     await tester.pumpAndSettle();
     await showDolar();
     expect(find.text('Rp 3.200.000'), findsOneWidget); // tile; hero sudah tergulir ke atas
+    expect(find.text('Kas · Jenius'), findsOneWidget); // catatan tampil seperti di web
 
     // Hapus
     await showDolar();

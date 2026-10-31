@@ -33,11 +33,19 @@ final _summary = <String, dynamic>{
   'portfolioSummary': {'totalCostIDR': 62998250, 'unrealizedPnl': -2313500, 'count': 4},
   'manualAssets': [
     {'id': 'a1', 'name': 'Kas', 'category': 'cash', 'currency': 'IDR', 'value': 30000000, 'valueIDR': 30000000},
-    {'id': 'a2', 'name': 'Dolar', 'category': 'cash', 'currency': 'USD', 'value': 1000, 'valueIDR': 18125000},
+    {
+      'id': 'a2',
+      'name': 'Dolar',
+      'category': 'cash',
+      'currency': 'USD',
+      'value': 1000,
+      'valueIDR': 18125000,
+      'note': 'Jenius',
+    },
     {'id': 'a3', 'name': 'Emas', 'category': 'gold', 'currency': 'GOLD', 'value': 10, 'valueIDR': 23587236.97},
   ],
   'liabilityItems': [
-    {'id': 'l1', 'name': 'Kartu kredit', 'category': 'credit_card', 'amountIDR': 5000000},
+    {'id': 'l1', 'name': 'Kartu kredit', 'category': 'credit_card', 'amountIDR': 5000000, 'note': null},
   ],
   'asOf': {'computedAt': '2026-10-29T07:36:41.453Z', 'usdToIdr': 18125},
 };
@@ -120,8 +128,16 @@ void main() {
     expect(nw.snapshots.map((n) => (n.id, n.netValue.amount)), [('n2', 125000000), ('n1', 115000000)]);
     expect(
       nw.assets.firstWhere((a) => a.name == 'Dolar').entry,
-      const ManualEntry(kind: WealthKind.asset, name: 'Dolar', category: 'cash', amount: 1000, currency: 'USD'),
+      const ManualEntry(
+        kind: WealthKind.asset,
+        name: 'Dolar',
+        category: 'cash',
+        amount: 1000,
+        currency: 'USD',
+        note: 'Jenius',
+      ),
     );
+    expect(nw.liabilities.single.entry!.note, isNull);
   });
 
   test('kekayaan: tanpa posisi tidak menampilkan baris portofolio Rp 0', () async {
