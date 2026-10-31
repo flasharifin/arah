@@ -10,4 +10,10 @@ class DividendRepositoryImpl implements DividendRepository {
 
   @override
   Future<Result<List<Dividend>>> list() => guard(_remote.list);
+
+  @override
+  Future<Result<void>> save(DividendDraft draft, {String? id}) => guard(() => _remote.save(draft, id: id));
+
+  @override
+  Future<Result<void>> remove(String id) => guard(() => _remote.remove(id));
 }
