@@ -3,12 +3,21 @@ import 'package:arah/features/portfolio/domain/entities/position.dart';
 import 'package:equatable/equatable.dart';
 
 class Portfolio extends Equatable {
-  const Portfolio({required this.positions, this.priceAsOf});
+  const Portfolio({required this.positions, this.priceAsOf, this.usdToIdr});
 
   final List<Position> positions;
 
   /// Waktu harga diambil; harga bisa dari cache, jadi jangan dilabeli "live".
   final DateTime? priceAsOf;
+
+  /// Kurs server (`asOf.usdToIdr` /api/summary) untuk alat yang butuh total rupiah, mis. kalkulator.
+  final double? usdToIdr;
+
+  /// Nilai posisi dalam rupiah: nilai pasar, atau modal bila harga belum ada (rumus web & server).
+  double valueIdr(Position p) =>
+      (p.marketValue ?? p.costBasis).amount * (p.currency == Currency.idr ? 1 : (usdToIdr ?? 0));
+
+  double get totalValueIdr => positions.fold(0, (s, p) => s + valueIdr(p));
 
   /// Mata uang yang ada di portofolio. Total tidak dicampur lintas mata uang.
   List<Currency> get currencies => {for (final p in positions) p.currency}.toList();
@@ -29,5 +38,5 @@ class Portfolio extends Equatable {
   }
 
   @override
-  List<Object?> get props => [positions, priceAsOf];
+  List<Object?> get props => [positions, priceAsOf, usdToIdr];
 }

@@ -11,6 +11,7 @@ class DailyPerformance extends Equatable {
     required this.pnlPercent,
     this.ihsgChange,
     this.sp500Change,
+    this.btcChange,
   });
 
   final DateTime date;
@@ -23,9 +24,10 @@ class DailyPerformance extends Equatable {
   /// `null` = bursa tutup / data benchmark belum ada.
   final double? ihsgChange;
   final double? sp500Change;
+  final double? btcChange;
 
   @override
-  List<Object?> get props => [date, portfolioValue, pnl, pnlPercent, ihsgChange, sp500Change];
+  List<Object?> get props => [date, portfolioValue, pnl, pnlPercent, ihsgChange, sp500Change, btcChange];
 }
 
 enum PerformancePeriod {

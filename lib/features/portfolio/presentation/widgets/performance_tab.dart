@@ -18,6 +18,7 @@ typedef _Series = ({String label, Color color, List<double> values});
 const _portfolioColor = Color(0xFF2A78D6);
 const _ihsgColor = Color(0xFFEB6834);
 const _sp500Color = Color(0xFF1BAF7A);
+const _btcColor = Color(0xFFEDA100);
 
 /// S03 Kinerja: periode → grafik return kumulatif vs IHSG & S&P 500 → ringkasan teks → PnL harian.
 class PerformanceTab extends StatefulWidget {
@@ -51,6 +52,8 @@ class _PerformanceTabState extends State<PerformanceTab> {
               (label: 'IHSG', color: _ihsgColor, values: cumulativeReturn(rows.map((r) => r.ihsgChange))),
             if (rows.any((r) => r.sp500Change != null))
               (label: 'S&P 500', color: _sp500Color, values: cumulativeReturn(rows.map((r) => r.sp500Change))),
+            if (rows.any((r) => r.btcChange != null))
+              (label: 'BTC', color: _btcColor, values: cumulativeReturn(rows.map((r) => r.btcChange))),
           ];
           final text = Theme.of(context).textTheme;
           return RefreshIndicator(

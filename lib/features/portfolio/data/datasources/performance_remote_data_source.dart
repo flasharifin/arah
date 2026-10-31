@@ -36,6 +36,7 @@ class PerformanceApiDataSource implements PerformanceRemoteDataSource {
           pnlPercent: _num(p['pnlPct']),
           ihsgChange: _numOrNull(p['ihsgChange']),
           sp500Change: _numOrNull(p['sp500Change']),
+          btcChange: _numOrNull(p['btcChange']),
         ),
     ];
   }
@@ -89,6 +90,7 @@ class PerformanceFixtureDataSource implements PerformanceRemoteDataSource {
             pnlPercent: pct,
             ihsgChange: weekend ? null : 0.5 * sin(i * 0.9) + 0.03,
             sp500Change: weekend ? null : 0.7 * cos(i * 0.5) + 0.05,
+            btcChange: 1.8 * sin(i * 0.3) + 0.1, // kripto diperdagangkan setiap hari
           );
         }(),
     ];

@@ -12,14 +12,27 @@ import 'package:arah/features/portfolio/presentation/bloc/portfolio_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// S17 — Catat pembelian. Dibuka dari detail posisi & watchlist dengan isian awal.
-/// Sukses → Portofolio & Beranda dimuat ulang (keduanya hidup di shell, tersedia dari semua tab).
-Future<void> showPurchaseForm(BuildContext context, {String? symbol, Exchange? exchange, String? broker}) async {
+/// S17 — Catat pembelian. Dibuka dari detail posisi, watchlist & kalkulator dengan isian awal (draft;
+/// tidak ada yang tersimpan sebelum Simpan). Sukses → Portofolio & Beranda dimuat ulang.
+Future<void> showPurchaseForm(
+  BuildContext context, {
+  String? symbol,
+  Exchange? exchange,
+  String? broker,
+  double? quantity,
+  double? price,
+}) async {
   final saved = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
-    builder: (_) =>
-        _PurchaseForm(record: sl<RecordPurchase>(), symbol: symbol, exchange: exchange ?? Exchange.idx, broker: broker),
+    builder: (_) => _PurchaseForm(
+      record: sl<RecordPurchase>(),
+      symbol: symbol,
+      exchange: exchange ?? Exchange.idx,
+      broker: broker,
+      quantity: quantity,
+      price: price,
+    ),
   );
   if (saved != true || !context.mounted) return;
   context.read<PortfolioBloc>().add(const PortfolioRequested());
@@ -28,11 +41,20 @@ Future<void> showPurchaseForm(BuildContext context, {String? symbol, Exchange? e
 }
 
 class _PurchaseForm extends StatefulWidget {
-  const _PurchaseForm({required this.record, required this.exchange, this.symbol, this.broker});
+  const _PurchaseForm({
+    required this.record,
+    required this.exchange,
+    this.symbol,
+    this.broker,
+    this.quantity,
+    this.price,
+  });
   final RecordPurchase record;
   final Exchange exchange;
   final String? symbol;
   final String? broker;
+  final double? quantity;
+  final double? price;
 
   @override
   State<_PurchaseForm> createState() => _PurchaseFormState();
@@ -42,8 +64,8 @@ class _PurchaseFormState extends State<_PurchaseForm> {
   final _formKey = GlobalKey<FormState>();
   late final _symbol = TextEditingController(text: widget.symbol);
   late final _broker = TextEditingController(text: widget.broker);
-  final _quantity = TextEditingController();
-  final _price = TextEditingController();
+  late final _quantity = TextEditingController(text: _plain(widget.quantity));
+  late final _price = TextEditingController(text: _plain(widget.price));
   final _sector = TextEditingController();
   final _note = TextEditingController();
   late Exchange _exchange = widget.exchange;
@@ -69,6 +91,11 @@ class _PurchaseFormState extends State<_PurchaseForm> {
   }
 
   static double? _parse(String v) => double.tryParse(v.trim().replaceAll(',', '.'));
+  static String _plain(double? v) => switch (v) {
+    null => '',
+    final v when v == v.roundToDouble() => v.toInt().toString(),
+    final v => v.toString(),
+  };
   static String? _positive(String? v) {
     final n = _parse(v ?? '');
     return n == null || n <= 0 ? 'Masukkan angka lebih dari 0' : null;

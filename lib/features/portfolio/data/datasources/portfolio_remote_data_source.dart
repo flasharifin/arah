@@ -24,6 +24,7 @@ class PortfolioApiDataSource implements PortfolioRemoteDataSource {
       positions: raw.map(PositionModel.fromJson).toList(),
       // Harga paling lama = batas kesegaran seluruh daftar (harga bisa dari cache server).
       priceAsOf: fetchedAt.isEmpty ? null : fetchedAt.reduce((a, b) => a.isBefore(b) ? a : b),
+      usdToIdr: ((summary['asOf'] as Map<String, dynamic>?)?['usdToIdr'] as num?)?.toDouble(),
     );
   }
 
@@ -53,7 +54,7 @@ class PortfolioFixtureDataSource implements PortfolioRemoteDataSource {
   @override
   Future<Portfolio> fetchPortfolio() async {
     await Future<void>.delayed(const Duration(milliseconds: 500));
-    return Portfolio(priceAsOf: DateTime.now(), positions: List.of(_positions));
+    return Portfolio(priceAsOf: DateTime.now(), positions: List.of(_positions), usdToIdr: 16000);
   }
 
   /// Sama seperti server: kode + broker yang sudah ada → lot dijumlah, rata-rata tertimbang.
