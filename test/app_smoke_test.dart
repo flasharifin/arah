@@ -93,6 +93,8 @@ void main() {
     expect(find.byType(LineChart), findsOneWidget);
     expect(find.textContaining('dalam 1B'), findsOneWidget);
     expect(find.textContaining('dari IHSG'), findsOneWidget);
+    expect(find.textContaining('dari BTC'), findsOneWidget); // garis BTC ikut di ringkasan & legenda
+    expect(find.textContaining(RegExp(r'^BTC ')), findsOneWidget);
 
     await tester.tap(find.text('1T'));
     await tester.pumpAndSettle();

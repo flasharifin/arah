@@ -166,4 +166,127 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Watchlist'), findsOneWidget); // kembali ke Lainnya
   });
+
+  testWidgets('target, pengaturan, panduan, surat investor, analisis, kalkulator (fixture)', (tester) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const ArahApp());
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).at(0), 'demo@arah.id');
+    await tester.enterText(find.byType(TextFormField).at(1), 'password123');
+    await tester.tap(find.text('Masuk'));
+    await tester.pumpAndSettle();
+
+    // Target kekayaan
+    await tester.tap(find.text('Kekayaan'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Target'));
+    await tester.pumpAndSettle();
+    // Tombol di bawah kartu target belum dibangun list sebelum digulir.
+    await tester.drag(find.text('Tenggat'), const Offset(0, -400));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ubah target'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextFormField, 'Nominal target (Rp)'), '2000000000');
+    await tapVisible(tester, find.text('Simpan'));
+    await tester.pumpAndSettle();
+    expect(find.text('Rp 2 M'), findsOneWidget); // progress target memakai format ringkas
+
+    // Pengaturan: validasi chat ID lalu simpan
+    await openFromMore(tester, 'Pengaturan');
+    expect(find.text('demo@arah.id'), findsOneWidget);
+    await tester.enterText(find.widgetWithText(TextFormField, 'Telegram Chat ID'), 'abc');
+    await tapVisible(tester, find.text('Simpan'));
+    await tester.pumpAndSettle();
+    expect(find.text('Chat ID hanya angka'), findsOneWidget);
+    await tester.enterText(find.widgetWithText(TextFormField, 'Telegram Chat ID'), '-1001234567890'); // chat grup
+    await tapVisible(tester, find.text('Simpan'));
+    await tester.pumpAndSettle();
+    expect(find.text('Pengaturan tersimpan'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    await openFromMore(tester, 'Panduan');
+    expect(find.text('Mulai'), findsOneWidget);
+    final helpList = find.byType(Scrollable).last;
+    await tester.scrollUntilVisible(find.text('Drawdown'), 200, scrollable: helpList);
+    await tester.drag(helpList, const Offset(0, -200));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Drawdown'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('dari titik tertinggi'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    await openFromMore(tester, 'Surat investor');
+    expect(find.text('Portofolio minggu ini'), findsOneWidget);
+    expect(find.text('Posisi vs harga rata-rata beli'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    // Analisis risiko: tiga segmen + stress test kustom
+    await openFromMore(tester, 'Analisis risiko');
+    expect(find.text('Konsentrasi'), findsOneWidget);
+    expect(find.textContaining('BBCA = 64,20%'), findsOneWidget);
+    expect(find.text('Sharpe ratio'), findsOneWidget);
+    expect(find.text('0,92'), findsOneWidget); // beta vs IHSG fixture
+    expect(find.text('Beta vs BTC'), findsOneWidget);
+    expect(find.text('0,18'), findsOneWidget);
+    await tester.tap(find.text('Korelasi'));
+    await tester.pumpAndSettle();
+    expect(find.text('Searah'), findsOneWidget); // legenda heatmap
+    expect(find.text('0.62'), findsNWidgets(2)); // sel BBCA×TLKM & TLKM×BBCA
+    await tester.tap(find.text('Stress test'));
+    await tester.pumpAndSettle();
+    expect(find.text('Simulasi · Koreksi Ringan'), findsOneWidget);
+    await tapVisible(tester, find.text('Kustom')); // chip terakhir di luar layar 360 px
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(TextFormField, 'IDX (%)'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    // Kalkulator: lot (biaya ikut dihitung → 1 lot dari Rp1 jt di Rp5.000)
+    await openFromMore(tester, 'Kalkulator');
+    await tapVisible(tester, find.text('Kalkulator lot'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextFormField, 'Dana (Rp)'), '1000000');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Harga per lembar (Rp)'), '5000');
+    await tester.pumpAndSettle();
+    expect(find.text('1 lot'), findsOneWidget);
+    // Draft form pencatatan terisi dari hasil kalkulator, belum tersimpan.
+    await tester.scrollUntilVisible(
+      find.text('Gunakan pada form pencatatan'),
+      200,
+      // list halaman, bukan chip bursa yang juga bisa digulir mendatar
+      scrollable: find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first,
+    );
+    await tapVisible(tester, find.text('Gunakan pada form pencatatan'));
+    await tester.pumpAndSettle();
+    expect(find.text('Simpan pencatatan'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, '1'), findsOneWidget);
+    final priceField = find.widgetWithText(TextFormField, 'Harga beli per lembar');
+    expect(tester.widget<TextFormField>(priceField).controller!.text, '5000');
+    Navigator.of(tester.element(find.text('Simpan pencatatan'))).pop(); // tutup sheet tanpa menyimpan
+    await tester.pumpAndSettle();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    for (final (tool, expected) in [
+      ('Position sizing', 'Isi harga entry dan stop loss; stop loss harus di bawah entry.'),
+      ('BEP & averaging', 'Harga impas (BEP)'),
+      ('Rebalancing', 'Aktual vs target'),
+      ('Financial independence', 'FI number'),
+      ('Biaya tersembunyi', 'Total per mata uang'),
+      ('Wealth timeline', 'Nilai portofolio'),
+    ]) {
+      await tapVisible(tester, find.text(tool));
+      await tester.pumpAndSettle();
+      expect(find.text(expected), findsWidgets, reason: tool);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+    }
+  });
 }

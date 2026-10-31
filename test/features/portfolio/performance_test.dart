@@ -47,6 +47,7 @@ void main() {
           'pnlPct': '-0.45',
           'ihsgChange': '0.3',
           'sp500Change': null,
+          'btcChange': '-1.25',
         },
       ],
     });
@@ -57,6 +58,7 @@ void main() {
     expect(rows.single.pnlPercent, -0.45);
     expect(rows.single.ihsgChange, 0.3);
     expect(rows.single.sp500Change, isNull);
+    expect(rows.single.btcChange, -1.25);
   });
 
   test('API: sales dalam mata uang aset, persen realized dari totalCost', () async {
