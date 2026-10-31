@@ -94,14 +94,7 @@ class DcaFixtureDataSource implements DcaRemoteDataSource {
     ),
   ];
   final _records = [
-    DcaRecord(
-      id: 'r1',
-      symbol: 'BBCA',
-      quantity: 2,
-      price: 9100,
-      total: 1820000,
-      date: DateTime(2026, 10, 25),
-    ),
+    DcaRecord(id: 'r1', symbol: 'BBCA', quantity: 2, price: 9100, total: 1820000, date: DateTime(2026, 10, 25)),
   ];
   final _seen = <String>{};
 

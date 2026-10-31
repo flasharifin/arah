@@ -38,8 +38,7 @@ class DcaCubit extends Cubit<ViewState<DcaOverview>> {
   }
 
   Future<Result<void>> record(DcaExecution execution) => _thenReload(_record(execution));
-  Future<Result<void>> savePlan(DcaPlanDraft draft, {String? id}) =>
-      _thenReload(_savePlan((draft: draft, id: id)));
+  Future<Result<void>> savePlan(DcaPlanDraft draft, {String? id}) => _thenReload(_savePlan((draft: draft, id: id)));
   Future<Result<void>> deletePlan(String id) => _thenReload(_deletePlan(id));
 
   Future<Result<void>> _thenReload(Future<Result<void>> action) async {

@@ -12,12 +12,10 @@ class DcaRepositoryImpl implements DcaRepository {
   Future<Result<DcaOverview>> overview() => guard(_remote.overview);
 
   @override
-  Future<Result<void>> recordExecution(DcaExecution execution) =>
-      guard(() => _remote.recordExecution(execution));
+  Future<Result<void>> recordExecution(DcaExecution execution) => guard(() => _remote.recordExecution(execution));
 
   @override
-  Future<Result<void>> savePlan(DcaPlanDraft draft, {String? id}) =>
-      guard(() => _remote.savePlan(draft, id: id));
+  Future<Result<void>> savePlan(DcaPlanDraft draft, {String? id}) => guard(() => _remote.savePlan(draft, id: id));
 
   @override
   Future<Result<void>> deletePlan(String id) => guard(() => _remote.deletePlan(id));

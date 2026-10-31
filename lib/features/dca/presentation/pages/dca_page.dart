@@ -28,9 +28,7 @@ class DcaPage extends StatelessWidget {
               builder: (context, state) => IconButton(
                 tooltip: 'Tambah rencana',
                 icon: const Icon(Icons.add),
-                onPressed: state.data == null
-                    ? null
-                    : () => _openSheet(context, _PlanForm(data: state.data!)),
+                onPressed: state.data == null ? null : () => _openSheet(context, _PlanForm(data: state.data!)),
               ),
             ),
           ],
@@ -172,8 +170,7 @@ class _Plans extends StatelessWidget {
           () {
             final currency = data.positionOf(p)?.currency;
             // Mata uang dari posisinya; posisi sudah dijual habis → angka biasa.
-            Widget amount(double v) =>
-                currency == null ? Text(Fmt.number(v)) : AmountText(Money(v, currency));
+            Widget amount(double v) => currency == null ? Text(Fmt.number(v)) : AmountText(Money(v, currency));
             return PageBody(
               child: Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -320,9 +317,7 @@ class _PlanFormState extends State<_PlanForm> with _Submitting {
       busy: busy,
       error: error,
       onSave: _save,
-      extra: editing
-          ? TextButton(onPressed: busy ? null : _delete, child: const Text('Hapus rencana'))
-          : null,
+      extra: editing ? TextButton(onPressed: busy ? null : _delete, child: const Text('Hapus rencana')) : null,
       children: [
         if (!editing) ...[
           DropdownButtonFormField<Position>(
