@@ -229,7 +229,7 @@ void main() {
     expect(find.textContaining('BBCA = 64,20%'), findsOneWidget);
     expect(find.text('Sharpe ratio'), findsOneWidget);
     expect(find.text('0,92'), findsOneWidget); // beta vs IHSG fixture
-    expect(find.text('Beta vs BTC'), findsOneWidget);
+    expect(find.text('Beta terhadap'), findsOneWidget);
     expect(find.text('0,18'), findsOneWidget);
     await tester.tap(find.text('Korelasi'));
     await tester.pumpAndSettle();

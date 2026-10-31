@@ -379,6 +379,7 @@ class _PortfolioRiskCard extends StatelessWidget {
   final PortfolioRisk risk;
 
   static String _fmt(double? v) => v == null ? '—' : v.toStringAsFixed(2).replaceAll('.', ',');
+  static String _meaning(double? beta) => beta == null ? 'Data kurang' : betaMeaning(beta);
 
   @override
   Widget build(BuildContext context) {
@@ -406,9 +407,13 @@ class _PortfolioRiskCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Sharpe ratio', style: text.labelLarge?.copyWith(color: Colors.white)),
+                            // Dua baris disengaja: tidak patah di tengah "> 1".
                             Text(
-                              'Asumsi bebas risiko ${Fmt.percent(risk.riskFreePercent, signed: false)}/thn · '
-                              '> 1 tergolong baik',
+                              'Asumsi bebas risiko ${Fmt.percent(risk.riskFreePercent, signed: false)}/thn',
+                              style: text.bodySmall?.copyWith(color: AppColors.heroMuted),
+                            ),
+                            Text(
+                              'Di atas 1 tergolong baik',
                               style: text.bodySmall?.copyWith(color: AppColors.heroMuted),
                             ),
                           ],
@@ -421,21 +426,59 @@ class _PortfolioRiskCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (final (i, (name, beta)) in betas.indexed) ...[
-                      if (i > 0) const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: StatTile(
-                          label: 'Beta vs $name',
-                          value: Text(_fmt(beta)),
-                          caption: beta == null ? 'Data kurang' : betaMeaning(beta),
-                        ),
+                const SizedBox(height: AppSpacing.md),
+                Text('Beta terhadap', style: text.labelMedium?.copyWith(color: AppColors.textSecondary)),
+                const SizedBox(height: AppSpacing.xs),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Tiga kotak butuh ±96 px per kotak dengan teks normal. Teks diperbesar / layar sempit →
+                    // daftar baris supaya label, angka & arti tidak terjepit atau meluber.
+                    final asList = MediaQuery.textScalerOf(context).scale(16) > 20 || constraints.maxWidth < 300;
+                    if (asList) {
+                      return Column(
+                        key: const ValueKey('beta-list'),
+                        children: [
+                          for (final (i, (name, beta)) in betas.indexed)
+                            Container(
+                              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                              decoration: BoxDecoration(
+                                border: i == 0 ? null : const Border(top: BorderSide(color: AppColors.divider)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(name, style: text.labelLarge),
+                                        Text(_meaning(beta), style: text.bodySmall),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Text(_fmt(beta), style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                                ],
+                              ),
+                            ),
+                        ],
+                      );
+                    }
+                    // Kotak sama tinggi: label pendek (nama benchmark) satu baris, angka & arti sejajar.
+                    return IntrinsicHeight(
+                      key: const ValueKey('beta-tiles'),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (final (i, (name, beta)) in betas.indexed) ...[
+                            if (i > 0) const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: StatTile(label: name, value: Text(_fmt(beta)), caption: _meaning(beta)),
+                            ),
+                          ],
+                        ],
                       ),
-                    ],
-                  ],
+                    );
+                  },
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
