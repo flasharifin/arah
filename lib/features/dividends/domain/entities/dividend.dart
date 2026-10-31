@@ -35,18 +35,7 @@ class Dividend extends Equatable {
   bool isPaid(DateTime now) => paymentDate != null && !paymentDate!.isAfter(now);
 
   @override
-  List<Object?> get props => [
-    id,
-    portfolioId,
-    symbol,
-    dps,
-    taxPercent,
-    cumDate,
-    exDate,
-    paymentDate,
-    received,
-    note,
-  ];
+  List<Object?> get props => [id, portfolioId, symbol, dps, taxPercent, cumDate, exDate, paymentDate, received, note];
 }
 
 /// Isian form tambah/ubah. Posisi hanya dipilih saat tambah.

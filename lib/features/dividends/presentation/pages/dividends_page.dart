@@ -32,11 +32,7 @@ class DividendsPage extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Dividen'),
           actions: [
-            IconButton(
-              tooltip: 'Tambah dividen',
-              icon: const Icon(Icons.add),
-              onPressed: () => _openForm(context),
-            ),
+            IconButton(tooltip: 'Tambah dividen', icon: const Icon(Icons.add), onPressed: () => _openForm(context)),
           ],
           bottom: const TabBar(
             tabs: [
@@ -68,10 +64,7 @@ class DividendsPage extends StatelessWidget {
                       items: paid,
                       empty: 'Belum ada dividen diterima',
                       header: AppCard(
-                        child: InfoRow(
-                          label: 'Diterima tahun ${now.year}',
-                          value: AmountText(Money.idr(thisYear)),
-                        ),
+                        child: InfoRow(label: 'Diterima tahun ${now.year}', value: AmountText(Money.idr(thisYear))),
                       ),
                     ),
                   ),
@@ -145,11 +138,7 @@ class _DateField extends StatelessWidget {
           ),
         ),
         if (value != null)
-          IconButton(
-            tooltip: 'Kosongkan $label',
-            icon: const Icon(Icons.close),
-            onPressed: () => onChanged(null),
-          ),
+          IconButton(tooltip: 'Kosongkan $label', icon: const Icon(Icons.close), onPressed: () => onChanged(null)),
       ],
     );
   }
@@ -168,9 +157,7 @@ class _DividendFormState extends State<_DividendForm> {
   late final _dps = TextEditingController(text: widget.dividend?.dps.toString());
   late final _tax = TextEditingController(text: (widget.dividend?.taxPercent ?? 10).toString());
   late final _note = TextEditingController(text: widget.dividend?.note);
-  late Position? _position = widget.dividend == null
-      ? context.read<DividendsCubit>().positions.firstOrNull
-      : null;
+  late Position? _position = widget.dividend == null ? context.read<DividendsCubit>().positions.firstOrNull : null;
   late DateTime? _cum = widget.dividend?.cumDate;
   late DateTime? _ex = widget.dividend?.exDate;
   late DateTime? _pay = widget.dividend?.paymentDate;
@@ -225,9 +212,7 @@ class _DividendFormState extends State<_DividendForm> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Hapus dividen ${d.symbol}?'),
-        content: Text(
-          'Catatan dividen ${Fmt.number(d.dps)} per saham (bayar ${_dateOrUnset(d.paymentDate)}) dihapus.',
-        ),
+        content: Text('Catatan dividen ${Fmt.number(d.dps)} per saham (bayar ${_dateOrUnset(d.paymentDate)}) dihapus.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
           TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Hapus')),
@@ -258,15 +243,9 @@ class _DividendFormState extends State<_DividendForm> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                editing ? 'Ubah dividen ${widget.dividend!.symbol}' : 'Tambah dividen',
-                style: text.titleLarge,
-              ),
+              Text(editing ? 'Ubah dividen ${widget.dividend!.symbol}' : 'Tambah dividen', style: text.titleLarge),
               const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Jumlah diterima dihitung otomatis dari lot posisi, DPS, dan pajak.',
-                style: text.bodySmall,
-              ),
+              Text('Jumlah diterima dihitung otomatis dari lot posisi, DPS, dan pajak.', style: text.bodySmall),
               const SizedBox(height: AppSpacing.lg),
               if (!editing) ...[
                 DropdownButtonFormField<Position>(
