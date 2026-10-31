@@ -4,6 +4,7 @@ import 'package:arah/core/state/view_state.dart';
 import 'package:arah/core/theme/app_spacing.dart';
 import 'package:arah/core/widgets/widgets.dart';
 import 'package:arah/features/portfolio/domain/entities/position.dart';
+import 'package:arah/features/portfolio/presentation/widgets/purchase_form.dart';
 import 'package:arah/features/watchlist/domain/entities/watch_item.dart';
 import 'package:arah/features/watchlist/presentation/bloc/watchlist_cubit.dart';
 import 'package:flutter/material.dart';
@@ -114,10 +115,37 @@ class _WatchCard extends StatelessWidget {
           InfoRow(label: 'Harga terakhir', value: AmountText(item.lastPrice)),
           InfoRow(label: 'Target', value: AmountText(item.targetPrice)),
           InfoRow(label: 'Jarak ke target', value: Text(Fmt.percent(item.gapPercent))),
+          if (item.signal case final signal?) ...[
+            InfoRow(label: 'Sinyal teknikal', value: Text('${signal.label} (${signal.score}/5)')),
+            if (signal.rsi != null) InfoRow(label: 'RSI', value: Text(Fmt.number(signal.rsi))),
+            if (signal.week52Position case final pos?) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text('Rentang 52 minggu', style: text.bodySmall),
+              const SizedBox(height: AppSpacing.xs),
+              LinearProgressIndicator(
+                value: (pos / 100).clamp(0, 1),
+                semanticsLabel: 'Posisi harga dalam rentang 52 minggu',
+                semanticsValue: '${pos.round()}%',
+              ),
+              Row(
+                children: [
+                  Text(Fmt.number(signal.week52Low), style: text.bodySmall),
+                  const Spacer(),
+                  Text(Fmt.number(signal.week52High), style: text.bodySmall),
+                ],
+              ),
+            ],
+          ],
           if (item.note != null && item.note!.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.sm),
             Text(item.note!, style: text.bodySmall),
           ],
+          const SizedBox(height: AppSpacing.md),
+          // Hanya mengisi form portofolio; tidak menghapus item watchlist & bukan order ke bursa.
+          OutlinedButton(
+            onPressed: () => showPurchaseForm(context, symbol: item.symbol, exchange: item.exchange),
+            child: const Text('Catat pembelian'),
+          ),
         ],
       ),
     );

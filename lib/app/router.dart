@@ -21,6 +21,14 @@ import 'package:arah/features/networth/presentation/pages/net_worth_page.dart';
 import 'package:arah/features/portfolio/presentation/bloc/portfolio_bloc.dart';
 import 'package:arah/features/portfolio/presentation/pages/portfolio_page.dart';
 import 'package:arah/features/portfolio/presentation/pages/position_detail_page.dart';
+import 'package:arah/features/dca/presentation/bloc/dca_cubit.dart';
+import 'package:arah/features/dca/presentation/pages/dca_page.dart';
+import 'package:arah/features/dividends/presentation/bloc/dividends_cubit.dart';
+import 'package:arah/features/dividends/presentation/pages/dividends_page.dart';
+import 'package:arah/features/journal/presentation/bloc/journal_cubit.dart';
+import 'package:arah/features/journal/presentation/pages/journal_page.dart';
+import 'package:arah/features/watchlist/presentation/bloc/watchlist_cubit.dart';
+import 'package:arah/features/watchlist/presentation/pages/watchlist_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -114,6 +122,31 @@ GoRouter createRouter(AuthBloc auth) {
                 path: '/more',
                 builder: (_, _) => const MorePage(),
                 routes: [
+                  // Rute fitur didahulukan; slug lain jatuh ke :feature (halaman "segera hadir").
+                  GoRoute(
+                    path: 'watchlist',
+                    builder: (_, _) => BlocProvider(
+                      create: (_) => sl<WatchlistCubit>()..load(),
+                      child: const WatchlistPage(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'dca',
+                    builder: (_, _) =>
+                        BlocProvider(create: (_) => sl<DcaCubit>()..load(), child: const DcaPage()),
+                  ),
+                  GoRoute(
+                    path: 'dividends',
+                    builder: (_, _) => BlocProvider(
+                      create: (_) => sl<DividendsCubit>()..load(),
+                      child: const DividendsPage(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'journal',
+                    builder: (_, _) =>
+                        BlocProvider(create: (_) => sl<JournalCubit>()..load(), child: const JournalPage()),
+                  ),
                   GoRoute(
                     path: ':feature',
                     builder: (_, state) =>

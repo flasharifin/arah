@@ -32,6 +32,18 @@ class WatchlistApiDataSource implements WatchlistRemoteDataSource {
           lastPrice: money(j['lastPrice']),
           gapPercent: (j['gapPct'] as num?)?.toDouble(),
           note: j['note'] as String?,
+          signal: switch (j['signal']) {
+            final Map<String, dynamic> sig => WatchSignal(
+              score: (sig['score'] as num).toInt(),
+              label: sig['label'] as String,
+              rsi: (sig['rsi'] as num?)?.toDouble(),
+              trend: sig['emaTrend'] as String?,
+              week52High: (sig['week52High'] as num?)?.toDouble(),
+              week52Low: (sig['week52Low'] as num?)?.toDouble(),
+              week52Position: (sig['week52Pos'] as num?)?.toDouble(),
+            ),
+            _ => null,
+          },
         );
       }(),
   ];
@@ -68,6 +80,15 @@ class WatchlistFixtureDataSource implements WatchlistRemoteDataSource {
       lastPrice: Money.idr(2950),
       gapPercent: 5.36,
       note: 'Tunggu koreksi ke area support',
+      signal: WatchSignal(
+        score: 4,
+        label: 'Sinyal Beli',
+        rsi: 41.5,
+        trend: 'bullish',
+        week52High: 4250,
+        week52Low: 2650,
+        week52Position: 18.75,
+      ),
     ),
     const WatchItem(
       id: 'w2',

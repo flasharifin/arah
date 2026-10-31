@@ -3,6 +3,7 @@ import 'package:arah/core/state/view_state.dart';
 import 'package:arah/features/portfolio/data/datasources/portfolio_remote_data_source.dart';
 import 'package:arah/features/portfolio/domain/entities/portfolio.dart';
 import 'package:arah/features/portfolio/domain/entities/position.dart';
+import 'package:arah/features/portfolio/domain/entities/purchase.dart';
 import 'package:arah/features/portfolio/domain/repositories/portfolio_repository.dart';
 import 'package:arah/features/portfolio/domain/usecases/get_portfolio.dart';
 import 'package:arah/features/portfolio/presentation/bloc/portfolio_bloc.dart';
@@ -13,6 +14,9 @@ class _FixtureRepository implements PortfolioRepository {
   @override
   Future<Result<Portfolio>> getPortfolio() async =>
       Success(await PortfolioFixtureDataSource().fetchPortfolio());
+
+  @override
+  Future<Result<void>> recordPurchase(PositionPurchase purchase) => throw UnimplementedError();
 }
 
 void main() {

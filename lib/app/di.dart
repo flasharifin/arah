@@ -29,7 +29,28 @@ import 'package:arah/features/portfolio/data/datasources/portfolio_remote_data_s
 import 'package:arah/features/portfolio/data/repositories/portfolio_repository_impl.dart';
 import 'package:arah/features/portfolio/domain/repositories/portfolio_repository.dart';
 import 'package:arah/features/portfolio/domain/usecases/get_portfolio.dart';
+import 'package:arah/features/portfolio/domain/usecases/record_purchase.dart';
 import 'package:arah/features/portfolio/presentation/bloc/portfolio_bloc.dart';
+import 'package:arah/features/dca/data/datasources/dca_remote_data_source.dart';
+import 'package:arah/features/dca/data/repositories/dca_repository_impl.dart';
+import 'package:arah/features/dca/domain/repositories/dca_repository.dart';
+import 'package:arah/features/dca/domain/usecases/dca_usecases.dart';
+import 'package:arah/features/dca/presentation/bloc/dca_cubit.dart';
+import 'package:arah/features/dividends/data/datasources/dividend_remote_data_source.dart';
+import 'package:arah/features/dividends/data/repositories/dividend_repository_impl.dart';
+import 'package:arah/features/dividends/domain/repositories/dividend_repository.dart';
+import 'package:arah/features/dividends/domain/usecases/get_dividends.dart';
+import 'package:arah/features/dividends/presentation/bloc/dividends_cubit.dart';
+import 'package:arah/features/journal/data/datasources/journal_remote_data_source.dart';
+import 'package:arah/features/journal/data/repositories/journal_repository_impl.dart';
+import 'package:arah/features/journal/domain/repositories/journal_repository.dart';
+import 'package:arah/features/journal/domain/usecases/journal_usecases.dart';
+import 'package:arah/features/journal/presentation/bloc/journal_cubit.dart';
+import 'package:arah/features/watchlist/data/datasources/watchlist_remote_data_source.dart';
+import 'package:arah/features/watchlist/data/repositories/watchlist_repository_impl.dart';
+import 'package:arah/features/watchlist/domain/repositories/watchlist_repository.dart';
+import 'package:arah/features/watchlist/domain/usecases/watchlist_usecases.dart';
+import 'package:arah/features/watchlist/presentation/bloc/watchlist_cubit.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 
@@ -88,6 +109,7 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
     )
     ..registerLazySingleton<PortfolioRepository>(() => PortfolioRepositoryImpl(sl()))
     ..registerFactory(() => PortfolioBloc(GetPortfolio(sl())))
+    ..registerFactory(() => RecordPurchase(sl()))
     // Assistant
     ..registerLazySingleton<AssistantRemoteDataSource>(
       () => useFixtures ? AssistantFixtureDataSource() : AssistantApiDataSource(sl()),
@@ -107,5 +129,46 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
       () => useFixtures ? NetWorthFixtureDataSource() : NetWorthApiDataSource(sl()),
     )
     ..registerLazySingleton<NetWorthRepository>(() => NetWorthRepositoryImpl(sl()))
-    ..registerFactory(() => NetWorthCubit(GetNetWorth(sl())));
+    ..registerFactory(() => NetWorthCubit(GetNetWorth(sl())))
+    // Watchlist
+    ..registerLazySingleton<WatchlistRemoteDataSource>(
+      () => useFixtures ? WatchlistFixtureDataSource() : WatchlistApiDataSource(sl()),
+    )
+    ..registerLazySingleton<WatchlistRepository>(() => WatchlistRepositoryImpl(sl()))
+    ..registerFactory(
+      () => WatchlistCubit(get: GetWatchlist(sl()), save: SaveWatchItem(sl()), remove: RemoveWatchItem(sl())),
+    )
+    // DCA
+    ..registerLazySingleton<DcaRemoteDataSource>(
+      () => useFixtures ? DcaFixtureDataSource() : DcaApiDataSource(sl()),
+    )
+    ..registerLazySingleton<DcaRepository>(() => DcaRepositoryImpl(sl()))
+    ..registerFactory(
+      () => DcaCubit(
+        get: GetDcaOverview(sl()),
+        record: RecordDcaExecution(sl()),
+        savePlan: SaveDcaPlan(sl()),
+        deletePlan: DeleteDcaPlan(sl()),
+        getPortfolio: GetPortfolio(sl()),
+      ),
+    )
+    // Dividen
+    ..registerLazySingleton<DividendRemoteDataSource>(
+      () => useFixtures ? DividendFixtureDataSource() : DividendApiDataSource(sl()),
+    )
+    ..registerLazySingleton<DividendRepository>(() => DividendRepositoryImpl(sl()))
+    ..registerFactory(
+      () => DividendsCubit(
+        get: GetDividends(sl()),
+        save: SaveDividend(sl()),
+        remove: RemoveDividend(sl()),
+        getPortfolio: GetPortfolio(sl()),
+      ),
+    )
+    // Jurnal
+    ..registerLazySingleton<JournalRemoteDataSource>(
+      () => useFixtures ? JournalFixtureDataSource() : JournalApiDataSource(sl()),
+    )
+    ..registerLazySingleton<JournalRepository>(() => JournalRepositoryImpl(sl()))
+    ..registerFactory(() => JournalCubit(get: GetJournal(sl()), save: SaveJournalNote(sl())));
 }
