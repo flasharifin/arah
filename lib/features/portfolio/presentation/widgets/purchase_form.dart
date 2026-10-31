@@ -14,21 +14,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// S17 — Catat pembelian. Dibuka dari detail posisi & watchlist dengan isian awal.
 /// Sukses → Portofolio & Beranda dimuat ulang (keduanya hidup di shell, tersedia dari semua tab).
-Future<void> showPurchaseForm(
-  BuildContext context, {
-  String? symbol,
-  Exchange? exchange,
-  String? broker,
-}) async {
+Future<void> showPurchaseForm(BuildContext context, {String? symbol, Exchange? exchange, String? broker}) async {
   final saved = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => _PurchaseForm(
-      record: sl<RecordPurchase>(),
-      symbol: symbol,
-      exchange: exchange ?? Exchange.idx,
-      broker: broker,
-    ),
+    builder: (_) =>
+        _PurchaseForm(record: sl<RecordPurchase>(), symbol: symbol, exchange: exchange ?? Exchange.idx, broker: broker),
   );
   if (saved != true || !context.mounted) return;
   context.read<PortfolioBloc>().add(const PortfolioRequested());
@@ -192,10 +183,7 @@ class _PurchaseFormState extends State<_PurchaseForm> {
               const SizedBox(height: AppSpacing.md),
               AppTextField(label: 'Catatan (opsional)', controller: _note),
               const SizedBox(height: AppSpacing.lg),
-              InfoRow(
-                label: 'Nilai pembelian',
-                value: AmountText(draft == null ? null : Money(draft.total, currency)),
-              ),
+              InfoRow(label: 'Nilai pembelian', value: AmountText(draft == null ? null : Money(draft.total, currency))),
               if (_error != null) ...[
                 const SizedBox(height: AppSpacing.md),
                 Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),

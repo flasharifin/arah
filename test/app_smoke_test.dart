@@ -1,6 +1,7 @@
 import 'package:arah/app/app.dart';
 import 'package:arah/app/di.dart';
 import 'package:arah/core/notifications/push_notification_service.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -72,9 +73,44 @@ void main() {
     expect(find.text('Watchlist'), findsOneWidget);
   });
 
-  testWidgets('hapus akun: password salah ditolak, password benar kembali ke layar masuk (fixture)', (
-    tester,
-  ) async {
+  testWidgets('portofolio: kinerja dengan grafik & periode, riwayat jual per mata uang (fixture)', (tester) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const ArahApp());
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).at(0), 'demo@arah.id');
+    await tester.enterText(find.byType(TextFormField).at(1), 'password123');
+    await tester.tap(find.text('Masuk'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Portofolio').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Kinerja'));
+    await tester.pumpAndSettle();
+    expect(find.byType(LineChart), findsOneWidget);
+    expect(find.textContaining('dalam 1B'), findsOneWidget);
+    expect(find.textContaining('dari IHSG'), findsOneWidget);
+
+    await tester.tap(find.text('1T'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('dalam 1T'), findsOneWidget);
+
+    await tester.tap(find.text('Riwayat'));
+    await tester.pumpAndSettle();
+    expect(find.text('Realized PnL · 3 transaksi'), findsOneWidget);
+    expect(find.text('Rupiah'), findsOneWidget);
+    expect(find.text('Dolar AS'), findsOneWidget);
+
+    await tester.tap(find.text('1B'));
+    await tester.pumpAndSettle();
+    expect(find.text('Realized PnL · 1 transaksi'), findsOneWidget);
+    expect(find.text('Dolar AS'), findsNothing);
+  });
+
+  testWidgets('hapus akun: password salah ditolak, password benar kembali ke layar masuk (fixture)', (tester) async {
     FlutterSecureStorage.setMockInitialValues({}); // token dari tes sebelumnya membuat app langsung login
     tester.view.physicalSize = const Size(360, 800);
     tester.view.devicePixelRatio = 1;
@@ -110,9 +146,7 @@ void main() {
     expect(find.text('Masuk'), findsOneWidget);
   });
 
-  testWidgets('lupa password: kirim kode, kode salah ditolak, kode benar lalu masuk lagi (fixture)', (
-    tester,
-  ) async {
+  testWidgets('lupa password: kirim kode, kode salah ditolak, kode benar lalu masuk lagi (fixture)', (tester) async {
     FlutterSecureStorage.setMockInitialValues({});
     tester.view.physicalSize = const Size(360, 800);
     tester.view.devicePixelRatio = 1;

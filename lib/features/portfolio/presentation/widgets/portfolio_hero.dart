@@ -21,10 +21,7 @@ class PortfolioHero extends StatelessWidget {
           Text('Nilai portofolio', style: caption),
           for (final currency in portfolio.currencies) ...[
             const SizedBox(height: AppSpacing.sm),
-            AmountText(
-              portfolio.marketValue(currency),
-              style: AppTypography.amountLarge.copyWith(color: Colors.white),
-            ),
+            AmountText(portfolio.marketValue(currency), style: AppTypography.amountLarge.copyWith(color: Colors.white)),
             Wrap(
               children: [
                 Text('Unrealized ', style: caption),

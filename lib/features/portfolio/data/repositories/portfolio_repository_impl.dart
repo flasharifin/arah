@@ -13,6 +13,5 @@ class PortfolioRepositoryImpl implements PortfolioRepository {
   Future<Result<Portfolio>> getPortfolio() => guard(_remote.fetchPortfolio);
 
   @override
-  Future<Result<void>> recordPurchase(PositionPurchase purchase) =>
-      guard(() => _remote.recordPurchase(purchase));
+  Future<Result<void>> recordPurchase(PositionPurchase purchase) => guard(() => _remote.recordPurchase(purchase));
 }

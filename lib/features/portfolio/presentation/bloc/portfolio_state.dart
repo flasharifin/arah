@@ -20,12 +20,11 @@ class PortfolioState extends Equatable {
   Position? positionById(String id) => data.data?.positions.where((p) => p.id == id).firstOrNull;
 
   /// [filter] berupa fungsi agar bisa di-set ke `null` (Semua).
-  PortfolioState copyWith({ViewState<Portfolio>? data, Exchange? Function()? filter, String? query}) =>
-      PortfolioState(
-        data: data ?? this.data,
-        filter: filter != null ? filter() : this.filter,
-        query: query ?? this.query,
-      );
+  PortfolioState copyWith({ViewState<Portfolio>? data, Exchange? Function()? filter, String? query}) => PortfolioState(
+    data: data ?? this.data,
+    filter: filter != null ? filter() : this.filter,
+    query: query ?? this.query,
+  );
 
   @override
   List<Object?> get props => [data, filter, query];

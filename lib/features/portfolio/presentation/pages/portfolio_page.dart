@@ -1,10 +1,14 @@
+import 'package:arah/app/di.dart';
 import 'package:arah/core/theme/app_spacing.dart';
 import 'package:arah/core/widgets/widgets.dart';
 import 'package:arah/features/portfolio/domain/entities/portfolio.dart';
 import 'package:arah/features/portfolio/domain/entities/position.dart';
+import 'package:arah/features/portfolio/presentation/bloc/performance_cubit.dart';
 import 'package:arah/features/portfolio/presentation/bloc/portfolio_bloc.dart';
+import 'package:arah/features/portfolio/presentation/widgets/performance_tab.dart';
 import 'package:arah/features/portfolio/presentation/widgets/portfolio_hero.dart';
 import 'package:arah/features/portfolio/presentation/widgets/position_card.dart';
+import 'package:arah/features/portfolio/presentation/widgets/sales_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -28,20 +32,13 @@ class PortfolioPage extends StatelessWidget {
             ],
           ),
         ),
-        body: const TabBarView(
-          children: [
-            _PositionsTab(),
-            EmptyView(
-              icon: Icons.show_chart,
-              title: 'Kinerja belum tersedia',
-              message: 'Grafik return dan benchmark menyusul di tahap berikutnya.',
-            ),
-            EmptyView(
-              icon: Icons.history,
-              title: 'Riwayat belum tersedia',
-              message: 'Riwayat penjualan menyusul di tahap berikutnya.',
-            ),
+        // Kinerja & Riwayat dimuat saat tab pertama dibuka, lalu bertahan selama halaman hidup.
+        body: MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => sl<PerformanceCubit>()..load()),
+            BlocProvider(create: (_) => sl<SalesCubit>()..load()),
           ],
+          child: const TabBarView(children: [_PositionsTab(), PerformanceTab(), SalesTab()]),
         ),
       ),
     );
@@ -77,10 +74,7 @@ class _PositionsTab extends StatelessWidget {
                 const SizedBox(height: AppSpacing.lg),
                 PageBody(
                   child: TextField(
-                    decoration: const InputDecoration(
-                      hintText: 'Cari ticker',
-                      prefixIcon: Icon(Icons.search),
-                    ),
+                    decoration: const InputDecoration(hintText: 'Cari ticker', prefixIcon: Icon(Icons.search)),
                     onChanged: (q) => bloc.add(PortfolioQueryChanged(q)),
                   ),
                 ),

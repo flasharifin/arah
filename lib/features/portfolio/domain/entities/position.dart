@@ -11,8 +11,7 @@ enum Exchange {
   final String code;
   final String label;
 
-  static Exchange fromCode(String code) =>
-      values.firstWhere((e) => e.code == code, orElse: () => Exchange.idx);
+  static Exchange fromCode(String code) => values.firstWhere((e) => e.code == code, orElse: () => Exchange.idx);
 
   /// IDX dicatat dalam lot (100 lembar), US/Crypto dalam unit.
   String get quantityLabel => this == Exchange.idx ? 'lot' : 'unit';
@@ -47,8 +46,7 @@ class Position extends Equatable {
   double get units => quantity * exchange.unitsPerQuantity;
   Money get costBasis => Money(units * avgPrice.amount, currency);
   Money? get marketValue => lastPrice == null ? null : Money(units * lastPrice!.amount, currency);
-  Money? get unrealizedPnl =>
-      marketValue == null ? null : Money(marketValue!.amount - costBasis.amount, currency);
+  Money? get unrealizedPnl => marketValue == null ? null : Money(marketValue!.amount - costBasis.amount, currency);
   double? get unrealizedPercent =>
       unrealizedPnl == null || costBasis.amount == 0 ? null : unrealizedPnl!.amount / costBasis.amount * 100;
 

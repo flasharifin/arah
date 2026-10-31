@@ -38,10 +38,7 @@ class PositionDetailPage extends StatelessWidget {
               children: [
                 Text('Harga terakhir', style: text.bodySmall),
                 AmountText(position.lastPrice, style: AppTypography.amountLarge),
-                Text(
-                  '${position.exchange.label} · ${position.currency.name.toUpperCase()}',
-                  style: text.bodySmall,
-                ),
+                Text('${position.exchange.label} · ${position.currency.name.toUpperCase()}', style: text.bodySmall),
                 const SectionHeader('Kepemilikan'),
                 AppCard(
                   child: Column(

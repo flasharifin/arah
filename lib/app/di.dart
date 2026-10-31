@@ -25,11 +25,16 @@ import 'package:arah/features/networth/data/repositories/net_worth_repository_im
 import 'package:arah/features/networth/domain/repositories/net_worth_repository.dart';
 import 'package:arah/features/networth/domain/usecases/get_net_worth.dart';
 import 'package:arah/features/networth/presentation/bloc/net_worth_cubit.dart';
+import 'package:arah/features/portfolio/data/datasources/performance_remote_data_source.dart';
 import 'package:arah/features/portfolio/data/datasources/portfolio_remote_data_source.dart';
+import 'package:arah/features/portfolio/data/repositories/performance_repository_impl.dart';
 import 'package:arah/features/portfolio/data/repositories/portfolio_repository_impl.dart';
+import 'package:arah/features/portfolio/domain/repositories/performance_repository.dart';
 import 'package:arah/features/portfolio/domain/repositories/portfolio_repository.dart';
+import 'package:arah/features/portfolio/domain/usecases/performance_usecases.dart';
 import 'package:arah/features/portfolio/domain/usecases/get_portfolio.dart';
 import 'package:arah/features/portfolio/domain/usecases/record_purchase.dart';
+import 'package:arah/features/portfolio/presentation/bloc/performance_cubit.dart';
 import 'package:arah/features/portfolio/presentation/bloc/portfolio_bloc.dart';
 import 'package:arah/features/dca/data/datasources/dca_remote_data_source.dart';
 import 'package:arah/features/dca/data/repositories/dca_repository_impl.dart';
@@ -60,10 +65,7 @@ final sl = GetIt.instance;
 /// Backend lain: `--dart-define=API_BASE_URL=https://...` — `localhost` di HP/emulator menunjuk ke
 /// perangkat itu sendiri, dan `http://` diblokir Android/iOS; pakai URL https (mis. tunnel ke dev server).
 const _useFixtures = bool.fromEnvironment('USE_FIXTURES', defaultValue: true);
-const _baseUrl = String.fromEnvironment(
-  'API_BASE_URL',
-  defaultValue: 'https://dashboard-finance-tracker.vercel.app',
-);
+const _baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://dashboard-finance-tracker.vercel.app');
 
 /// Komposisi dependensi. Bloc didaftarkan sebagai factory: dibuat baru setiap login.
 /// [useFixtures] bisa dipaksa di tes supaya tidak bergantung pada `--dart-define`.
@@ -79,11 +81,7 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
       () => useFixtures ? AuthFixtureDataSource() : AuthApiDataSource(sl(), sl()),
     )
     ..registerLazySingleton<AuthRepository>(
-      () => AuthRepositoryImpl(
-        sl(),
-        sl(),
-        beforeSignOut: () => sl<PushNotificationService>().unregisterDevice(),
-      ),
+      () => AuthRepositoryImpl(sl(), sl(), beforeSignOut: () => sl<PushNotificationService>().unregisterDevice()),
     )
     ..registerFactory(
       () => AuthBloc(
@@ -109,6 +107,12 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
     )
     ..registerLazySingleton<PortfolioRepository>(() => PortfolioRepositoryImpl(sl()))
     ..registerFactory(() => PortfolioBloc(GetPortfolio(sl())))
+    ..registerLazySingleton<PerformanceRemoteDataSource>(
+      () => useFixtures ? PerformanceFixtureDataSource() : PerformanceApiDataSource(sl()),
+    )
+    ..registerLazySingleton<PerformanceRepository>(() => PerformanceRepositoryImpl(sl()))
+    ..registerFactory(() => PerformanceCubit(GetDailyPerformance(sl())))
+    ..registerFactory(() => SalesCubit(GetSales(sl())))
     ..registerFactory(() => RecordPurchase(sl()))
     // Assistant
     ..registerLazySingleton<AssistantRemoteDataSource>(
@@ -139,9 +143,7 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
       () => WatchlistCubit(get: GetWatchlist(sl()), save: SaveWatchItem(sl()), remove: RemoveWatchItem(sl())),
     )
     // DCA
-    ..registerLazySingleton<DcaRemoteDataSource>(
-      () => useFixtures ? DcaFixtureDataSource() : DcaApiDataSource(sl()),
-    )
+    ..registerLazySingleton<DcaRemoteDataSource>(() => useFixtures ? DcaFixtureDataSource() : DcaApiDataSource(sl()))
     ..registerLazySingleton<DcaRepository>(() => DcaRepositoryImpl(sl()))
     ..registerFactory(
       () => DcaCubit(

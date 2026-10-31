@@ -24,10 +24,7 @@ class PositionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(p.symbol, style: text.titleMedium),
-                Text(
-                  [p.exchange.label, if (p.broker.isNotEmpty) p.broker].join(' · '),
-                  style: text.bodySmall,
-                ),
+                Text([p.exchange.label, if (p.broker.isNotEmpty) p.broker].join(' · '), style: text.bodySmall),
                 const SizedBox(height: AppSpacing.xs),
                 Text('${Fmt.number(p.quantity)} ${p.exchange.quantityLabel}', style: text.bodySmall),
               ],
