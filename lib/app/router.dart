@@ -26,7 +26,17 @@ import 'package:arah/features/dca/presentation/pages/dca_page.dart';
 import 'package:arah/features/dividends/presentation/bloc/dividends_cubit.dart';
 import 'package:arah/features/dividends/presentation/pages/dividends_page.dart';
 import 'package:arah/features/journal/presentation/bloc/journal_cubit.dart';
+import 'package:arah/features/analysis/presentation/bloc/analysis_cubit.dart';
+import 'package:arah/features/analysis/presentation/pages/analysis_page.dart';
+import 'package:arah/features/calculator/presentation/bloc/insights_cubits.dart';
+import 'package:arah/features/calculator/presentation/pages/calculator_page.dart';
+import 'package:arah/features/calculator/presentation/pages/calculator_tool_page.dart';
+import 'package:arah/features/help/presentation/pages/help_page.dart';
 import 'package:arah/features/journal/presentation/pages/journal_page.dart';
+import 'package:arah/features/letter/presentation/bloc/letter_cubit.dart';
+import 'package:arah/features/letter/presentation/pages/investor_letter_page.dart';
+import 'package:arah/features/settings/presentation/bloc/settings_cubit.dart';
+import 'package:arah/features/settings/presentation/pages/settings_page.dart';
 import 'package:arah/features/watchlist/presentation/bloc/watchlist_cubit.dart';
 import 'package:arah/features/watchlist/presentation/pages/watchlist_page.dart';
 import 'package:flutter/foundation.dart';
@@ -46,8 +56,7 @@ GoRouter createRouter(AuthBloc auth) {
         AuthStatus.unknown => location == '/splash' ? null : '/splash',
         // Terkunci: layar masuk menampilkan tombol sidik jari, password tetap bisa dipakai.
         AuthStatus.unauthenticated || AuthStatus.locked => _publicRoutes.contains(location) ? null : '/login',
-        AuthStatus.authenticated =>
-          _publicRoutes.contains(location) || location == '/splash' ? '/home' : null,
+        AuthStatus.authenticated => _publicRoutes.contains(location) || location == '/splash' ? '/home' : null,
       };
     },
     routes: [
@@ -55,8 +64,7 @@ GoRouter createRouter(AuthBloc auth) {
       GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
       GoRoute(
         path: '/forgot-password',
-        builder: (_, _) =>
-            BlocProvider(create: (_) => sl<PasswordResetCubit>(), child: const ForgotPasswordPage()),
+        builder: (_, _) => BlocProvider(create: (_) => sl<PasswordResetCubit>(), child: const ForgotPasswordPage()),
       ),
       StatefulShellRoute.indexedStack(
         // Bloc fitur hidup selama sesi login: state & filter bertahan saat pindah tab,
@@ -125,27 +133,58 @@ GoRouter createRouter(AuthBloc auth) {
                   // Rute fitur didahulukan; slug lain jatuh ke :feature (halaman "segera hadir").
                   GoRoute(
                     path: 'watchlist',
-                    builder: (_, _) => BlocProvider(
-                      create: (_) => sl<WatchlistCubit>()..load(),
-                      child: const WatchlistPage(),
-                    ),
+                    builder: (_, _) =>
+                        BlocProvider(create: (_) => sl<WatchlistCubit>()..load(), child: const WatchlistPage()),
                   ),
                   GoRoute(
                     path: 'dca',
-                    builder: (_, _) =>
-                        BlocProvider(create: (_) => sl<DcaCubit>()..load(), child: const DcaPage()),
+                    builder: (_, _) => BlocProvider(create: (_) => sl<DcaCubit>()..load(), child: const DcaPage()),
                   ),
                   GoRoute(
                     path: 'dividends',
-                    builder: (_, _) => BlocProvider(
-                      create: (_) => sl<DividendsCubit>()..load(),
-                      child: const DividendsPage(),
-                    ),
+                    builder: (_, _) =>
+                        BlocProvider(create: (_) => sl<DividendsCubit>()..load(), child: const DividendsPage()),
                   ),
                   GoRoute(
                     path: 'journal',
                     builder: (_, _) =>
                         BlocProvider(create: (_) => sl<JournalCubit>()..load(), child: const JournalPage()),
+                  ),
+                  GoRoute(path: 'help', builder: (_, _) => const HelpPage()),
+                  GoRoute(
+                    path: 'calculator',
+                    builder: (_, _) => const CalculatorPage(),
+                    routes: [
+                      GoRoute(
+                        path: ':tool',
+                        builder: (_, state) => switch (CalculatorTool.fromSlug(state.pathParameters['tool']!)) {
+                          null => const UpcomingFeaturePage(title: 'Kalkulator'),
+                          // Cubit data server hanya untuk alat yang memakainya; lazy = tidak memanggil API alat lain.
+                          final tool => MultiBlocProvider(
+                            providers: [
+                              BlocProvider(create: (_) => sl<InvisibleCostCubit>()..load()),
+                              BlocProvider(create: (_) => sl<WealthTimelineCubit>()..load()),
+                            ],
+                            child: CalculatorToolPage(tool: tool),
+                          ),
+                        },
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'analysis',
+                    builder: (_, _) =>
+                        BlocProvider(create: (_) => sl<AnalysisCubit>()..load(), child: const AnalysisPage()),
+                  ),
+                  GoRoute(
+                    path: 'investor-letter',
+                    builder: (_, _) =>
+                        BlocProvider(create: (_) => sl<LetterCubit>()..load(), child: const InvestorLetterPage()),
+                  ),
+                  GoRoute(
+                    path: 'settings',
+                    builder: (_, _) =>
+                        BlocProvider(create: (_) => sl<SettingsCubit>()..load(), child: const SettingsPage()),
                   ),
                   GoRoute(
                     path: ':feature',

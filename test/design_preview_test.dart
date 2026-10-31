@@ -158,10 +158,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(router.routeInformationProvider.value.uri.path, '/more');
     expect(find.text('Semua kebutuhan, satu tempat.'), findsOneWidget);
+    await tester.ensureVisible(find.text('Semua kebutuhan, satu tempat.'));
+    await tester.pumpAndSettle();
     await capture('tablet-menu');
     tester.view.physicalSize = const Size(360, 800);
     tester.platformDispatcher.textScaleFactorTestValue = 2;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Semua kebutuhan, satu tempat.'));
     await tester.pumpAndSettle();
     await capture('aksesibilitas-menu');
     expect(find.byType(NavigationBar), findsOneWidget);

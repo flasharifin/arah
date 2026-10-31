@@ -51,6 +51,26 @@ import 'package:arah/features/journal/data/repositories/journal_repository_impl.
 import 'package:arah/features/journal/domain/repositories/journal_repository.dart';
 import 'package:arah/features/journal/domain/usecases/journal_usecases.dart';
 import 'package:arah/features/journal/presentation/bloc/journal_cubit.dart';
+import 'package:arah/features/analysis/data/datasources/analysis_remote_data_source.dart';
+import 'package:arah/features/analysis/data/repositories/analysis_repository_impl.dart';
+import 'package:arah/features/analysis/domain/repositories/analysis_repository.dart';
+import 'package:arah/features/analysis/domain/usecases/get_risk_analysis.dart';
+import 'package:arah/features/analysis/presentation/bloc/analysis_cubit.dart';
+import 'package:arah/features/calculator/data/datasources/insights_remote_data_source.dart';
+import 'package:arah/features/calculator/data/repositories/insights_repository_impl.dart';
+import 'package:arah/features/calculator/domain/repositories/insights_repository.dart';
+import 'package:arah/features/calculator/domain/usecases/insights_usecases.dart';
+import 'package:arah/features/calculator/presentation/bloc/insights_cubits.dart';
+import 'package:arah/features/letter/data/datasources/letter_remote_data_source.dart';
+import 'package:arah/features/letter/data/repositories/letter_repository_impl.dart';
+import 'package:arah/features/letter/domain/repositories/letter_repository.dart';
+import 'package:arah/features/letter/domain/usecases/get_investor_letter.dart';
+import 'package:arah/features/letter/presentation/bloc/letter_cubit.dart';
+import 'package:arah/features/settings/data/datasources/settings_remote_data_source.dart';
+import 'package:arah/features/settings/data/repositories/settings_repository_impl.dart';
+import 'package:arah/features/settings/domain/repositories/settings_repository.dart';
+import 'package:arah/features/settings/domain/usecases/settings_usecases.dart';
+import 'package:arah/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:arah/features/watchlist/data/datasources/watchlist_remote_data_source.dart';
 import 'package:arah/features/watchlist/data/repositories/watchlist_repository_impl.dart';
 import 'package:arah/features/watchlist/domain/repositories/watchlist_repository.dart';
@@ -140,6 +160,7 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
         remove: RemoveWealthEntry(sl()),
         snapshot: CreateNetWorthSnapshot(sl()),
         removeSnapshot: RemoveNetWorthSnapshot(sl()),
+        saveGoal: SaveWealthGoal(sl()),
       ),
     )
     // Watchlist
@@ -180,5 +201,30 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
       () => useFixtures ? JournalFixtureDataSource() : JournalApiDataSource(sl()),
     )
     ..registerLazySingleton<JournalRepository>(() => JournalRepositoryImpl(sl()))
-    ..registerFactory(() => JournalCubit(get: GetJournal(sl()), save: SaveJournalNote(sl())));
+    ..registerFactory(() => JournalCubit(get: GetJournal(sl()), save: SaveJournalNote(sl())))
+    // Pengaturan
+    ..registerLazySingleton<SettingsRemoteDataSource>(
+      () => useFixtures ? SettingsFixtureDataSource() : SettingsApiDataSource(sl()),
+    )
+    ..registerLazySingleton<SettingsRepository>(() => SettingsRepositoryImpl(sl()))
+    ..registerFactory(() => SettingsCubit(get: GetSettings(sl()), save: SaveSettings(sl())))
+    // Surat investor
+    ..registerLazySingleton<LetterRemoteDataSource>(
+      () => useFixtures ? LetterFixtureDataSource() : LetterApiDataSource(sl()),
+    )
+    ..registerLazySingleton<LetterRepository>(() => LetterRepositoryImpl(sl()))
+    ..registerFactory(() => LetterCubit(GetInvestorLetter(sl())))
+    // Analisis risiko
+    ..registerLazySingleton<AnalysisRemoteDataSource>(
+      () => useFixtures ? AnalysisFixtureDataSource() : AnalysisApiDataSource(sl()),
+    )
+    ..registerLazySingleton<AnalysisRepository>(() => AnalysisRepositoryImpl(sl()))
+    ..registerFactory(() => AnalysisCubit(GetRiskAnalysis(sl())))
+    // Kalkulator (biaya tersembunyi & wealth timeline dari server)
+    ..registerLazySingleton<InsightsRemoteDataSource>(
+      () => useFixtures ? InsightsFixtureDataSource() : InsightsApiDataSource(sl()),
+    )
+    ..registerLazySingleton<InsightsRepository>(() => InsightsRepositoryImpl(sl()))
+    ..registerFactory(() => InvisibleCostCubit(GetInvisibleCost(sl())))
+    ..registerFactory(() => WealthTimelineCubit(GetWealthTimeline(sl())));
 }
