@@ -47,6 +47,7 @@ class ManualEntry extends Equatable {
     required this.category,
     required this.amount,
     this.currency = 'IDR',
+    this.note,
   });
 
   final WealthKind kind;
@@ -61,8 +62,11 @@ class ManualEntry extends Equatable {
   /// Kunci [entryCurrencies]; utang selalu IDR.
   final String currency;
 
+  /// `null`/kosong = tanpa catatan.
+  final String? note;
+
   @override
-  List<Object?> get props => [kind, name, category, amount, currency];
+  List<Object?> get props => [kind, name, category, amount, currency, note];
 }
 
 class WealthItem extends Equatable {

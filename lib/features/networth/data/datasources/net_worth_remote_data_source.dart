@@ -58,6 +58,7 @@ class NetWorthApiDataSource implements NetWorthRemoteDataSource {
               category: a['category'] as String,
               amount: num_(a['value']),
               currency: a['currency'] as String? ?? 'IDR',
+              note: a['note'] as String?,
             ),
           ),
       ],
@@ -73,6 +74,7 @@ class NetWorthApiDataSource implements NetWorthRemoteDataSource {
               name: l['name'] as String,
               category: l['category'] as String,
               amount: num_(l['amountIDR']),
+              note: l['note'] as String?,
             ),
           ),
       ],
@@ -102,12 +104,13 @@ class NetWorthApiDataSource implements NetWorthRemoteDataSource {
     );
   }
 
-  /// Catatan (`note`) tidak dikirim: server mempertahankan catatan lama saat ubah.
+  /// `note` selalu dikirim: string kosong = hapus catatan (server tidak mengubah catatan bila `note` absen).
   @override
   Future<void> saveEntry(ManualEntry e, {String? id}) {
     final body = {
       'name': e.name.trim(),
       'category': e.category,
+      'note': e.note?.trim() ?? '',
       if (e.kind == WealthKind.asset) ...{'value': e.amount, 'currency': e.currency} else 'amount': e.amount,
     };
     return id == null ? _api.post(_path(e.kind), body: body) : _api.put('${_path(e.kind)}/$id', body: body);
@@ -141,7 +144,13 @@ class NetWorthFixtureDataSource implements NetWorthRemoteDataSource {
   static const _portfolio = Money.idr(98450000);
 
   final _entries = <String, ManualEntry>{
-    'cash': const ManualEntry(kind: WealthKind.asset, name: 'Tabungan', category: 'cash', amount: 30000000),
+    'cash': const ManualEntry(
+      kind: WealthKind.asset,
+      name: 'Tabungan',
+      category: 'cash',
+      amount: 30000000,
+      note: 'BCA',
+    ),
     'gold': const ManualEntry(kind: WealthKind.asset, name: 'Emas', category: 'gold', amount: 10, currency: 'GOLD'),
     'vehicle': const ManualEntry(
       kind: WealthKind.liability,
@@ -207,6 +216,7 @@ class NetWorthFixtureDataSource implements NetWorthRemoteDataSource {
     category: entry.category,
     amount: entry.amount,
     currency: entry.currency,
+    note: entry.note?.trim(),
   );
 
   @override

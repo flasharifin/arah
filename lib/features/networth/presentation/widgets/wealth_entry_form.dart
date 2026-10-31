@@ -29,6 +29,7 @@ class _WealthEntryForm extends StatefulWidget {
 class _WealthEntryFormState extends State<_WealthEntryForm> {
   final _formKey = GlobalKey<FormState>();
   late final _name = TextEditingController(text: widget.entry?.name);
+  late final _note = TextEditingController(text: widget.entry?.note);
   late final _amount = TextEditingController(
     text: switch (widget.entry?.amount) {
       null => '',
@@ -49,6 +50,7 @@ class _WealthEntryFormState extends State<_WealthEntryForm> {
   void dispose() {
     _name.dispose();
     _amount.dispose();
+    _note.dispose();
     super.dispose();
   }
 
@@ -88,6 +90,7 @@ class _WealthEntryFormState extends State<_WealthEntryForm> {
       category: _category,
       amount: _parse(_amount.text)!,
       currency: _isAsset ? _currency : 'IDR',
+      note: _note.text.trim(),
     );
     _run(() => context.read<NetWorthCubit>().save(entry, id: widget.id));
   }
@@ -179,6 +182,8 @@ class _WealthEntryFormState extends State<_WealthEntryForm> {
                   return n == null || n < 0 ? 'Isi angka 0 atau lebih' : null;
                 },
               ),
+              const SizedBox(height: AppSpacing.md),
+              AppTextField(label: 'Catatan (opsional)', controller: _note),
               if (_error != null) ...[
                 const SizedBox(height: AppSpacing.md),
                 Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),

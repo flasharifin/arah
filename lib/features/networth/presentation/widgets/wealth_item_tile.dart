@@ -22,7 +22,12 @@ class WealthItemTile extends StatelessWidget {
               children: [
                 Text(item.name, style: text.labelLarge),
                 Text(
-                  item.isAutomatic ? '${item.category.label} · otomatis' : item.category.label,
+                  // Sama dengan web: "Kategori · catatan".
+                  [
+                    item.category.label,
+                    if (item.isAutomatic) 'otomatis',
+                    if (item.entry?.note case final note? when note.isNotEmpty) note, // ignore: use_null_aware_elements
+                  ].join(' · '),
                   style: text.bodySmall,
                 ),
               ],
