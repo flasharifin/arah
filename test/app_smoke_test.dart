@@ -229,6 +229,16 @@ void main() {
     expect(find.text('Sinyal'), findsOneWidget);
     expect(find.text('Tutup Arah?'), findsNothing);
 
+    for (final (shortcut, page) in [('Kinerja', 'Portofolio'), ('Jurnal', 'Jurnal')]) {
+      await tester.tap(find.text(shortcut));
+      await tester.pumpAndSettle();
+      expect(find.byType(BackButton), findsOneWidget, reason: '$page dibuka di atas Beranda');
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Sinyal'), findsOneWidget, reason: 'back dari $shortcut kembali ke Beranda');
+      expect(find.text('Tutup Arah?'), findsNothing);
+    }
+
     // Sub-halaman: back kembali ke daftar, tanpa dialog.
     await tester.tap(find.text('Portofolio').last);
     await tester.pumpAndSettle();

@@ -51,6 +51,8 @@ const _publicRoutes = {'/login', '/forgot-password'};
 Widget _technicalRank() =>
     BlocProvider(create: (_) => sl<TechnicalRankCubit>()..load(), child: const TechnicalRankPage());
 
+Widget _journal() => BlocProvider(create: (_) => sl<JournalCubit>()..load(), child: const JournalPage());
+
 GoRouter createRouter(AuthBloc auth) {
   return GoRouter(
     initialLocation: '/home',
@@ -89,8 +91,15 @@ GoRouter createRouter(AuthBloc auth) {
               GoRoute(
                 path: '/home',
                 builder: (_, _) => const HomePage(),
-                // Juga di bawah Beranda supaya back dari pintasan kembali ke Beranda, bukan ke Lainnya.
-                routes: [GoRoute(path: 'technical-rank', builder: (_, _) => _technicalRank())],
+                // Pintasan Beranda juga terpasang di sini supaya back kembali ke Beranda, bukan ke tab lain.
+                routes: [
+                  GoRoute(path: 'technical-rank', builder: (_, _) => _technicalRank()),
+                  GoRoute(
+                    path: 'performance',
+                    builder: (_, _) => const PortfolioPage(initialTab: 'kinerja'),
+                  ),
+                  GoRoute(path: 'journal', builder: (_, _) => _journal()),
+                ],
               ),
             ],
           ),
@@ -157,11 +166,7 @@ GoRouter createRouter(AuthBloc auth) {
                     builder: (_, _) =>
                         BlocProvider(create: (_) => sl<DividendsCubit>()..load(), child: const DividendsPage()),
                   ),
-                  GoRoute(
-                    path: 'journal',
-                    builder: (_, _) =>
-                        BlocProvider(create: (_) => sl<JournalCubit>()..load(), child: const JournalPage()),
-                  ),
+                  GoRoute(path: 'journal', builder: (_, _) => _journal()),
                   GoRoute(path: 'help', builder: (_, _) => const HelpPage()),
                   GoRoute(
                     path: 'calculator',

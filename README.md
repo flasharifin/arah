@@ -6,6 +6,7 @@ Skeleton dari rancangan `dashboard-assets-app/doc/designapp`. Clean architecture
 flutter run                                   # data fixture (default)
 flutter run --dart-define=USE_FIXTURES=false --dart-define=API_BASE_URL=https://...
 flutter test
+flutter build apk --release --dart-define=USE_FIXTURES=false
 ```
 
 ## Struktur

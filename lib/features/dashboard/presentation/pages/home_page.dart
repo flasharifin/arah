@@ -111,13 +111,8 @@ class _HomeContent extends StatelessWidget {
                 onTap: () => context.go('/home/technical-rank'),
                 lime: false,
               ),
-              (
-                icon: Icons.show_chart,
-                label: 'Kinerja',
-                onTap: () => context.go('/portfolio?tab=kinerja'),
-                lime: false,
-              ),
-              (icon: Icons.edit_note_outlined, label: 'Jurnal', onTap: () => context.go('/more/journal'), lime: false),
+              (icon: Icons.show_chart, label: 'Kinerja', onTap: () => context.go('/home/performance'), lime: false),
+              (icon: Icons.edit_note_outlined, label: 'Jurnal', onTap: () => context.go('/home/journal'), lime: false),
             ].indexed) ...[
               if (i > 0) const SizedBox(width: AppSpacing.sm),
               Expanded(
