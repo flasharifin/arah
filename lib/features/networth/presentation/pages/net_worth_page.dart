@@ -7,6 +7,7 @@ import 'package:arah/core/theme/app_typography.dart';
 import 'package:arah/core/widgets/widgets.dart';
 import 'package:arah/features/networth/domain/entities/net_worth.dart';
 import 'package:arah/features/networth/presentation/bloc/net_worth_cubit.dart';
+import 'package:arah/features/networth/presentation/widgets/goal_form.dart';
 import 'package:arah/features/networth/presentation/widgets/wealth_entry_form.dart';
 import 'package:arah/features/networth/presentation/widgets/wealth_item_tile.dart';
 import 'package:flutter/material.dart';
@@ -249,7 +250,12 @@ class _GoalTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final goal = this.goal;
     if (goal == null) {
-      return const EmptyView(title: 'Belum ada target', message: 'Tetapkan target kekayaanmu.');
+      return EmptyView(
+        title: 'Belum ada target',
+        message: 'Tetapkan target kekayaanmu.',
+        actionLabel: 'Buat target',
+        onAction: () => showGoalForm(context, null),
+      );
     }
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
@@ -275,6 +281,14 @@ class _GoalTab extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        PageBody(
+          child: OutlinedButton.icon(
+            onPressed: () => showGoalForm(context, goal),
+            icon: const Icon(Icons.edit_outlined),
+            label: const Text('Ubah target'),
           ),
         ),
       ],

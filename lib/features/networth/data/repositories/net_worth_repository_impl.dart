@@ -22,4 +22,7 @@ class NetWorthRepositoryImpl implements NetWorthRepository {
 
   @override
   Future<Result<void>> removeSnapshot(String id) => guard(() => _remote.removeSnapshot(id));
+
+  @override
+  Future<Result<void>> saveGoal(WealthGoal goal) => guard(() => _remote.saveGoal(goal));
 }

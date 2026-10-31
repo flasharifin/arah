@@ -12,11 +12,13 @@ class NetWorthCubit extends Cubit<ViewState<NetWorth>> {
     required RemoveWealthEntry remove,
     required CreateNetWorthSnapshot snapshot,
     required RemoveNetWorthSnapshot removeSnapshot,
+    required SaveWealthGoal saveGoal,
   }) : _getNetWorth = get,
        _save = save,
        _remove = remove,
        _snapshot = snapshot,
        _removeSnapshot = removeSnapshot,
+       _saveGoal = saveGoal,
        super(const ViewState());
 
   final GetNetWorth _getNetWorth;
@@ -24,6 +26,7 @@ class NetWorthCubit extends Cubit<ViewState<NetWorth>> {
   final RemoveWealthEntry _remove;
   final CreateNetWorthSnapshot _snapshot;
   final RemoveNetWorthSnapshot _removeSnapshot;
+  final SaveWealthGoal _saveGoal;
 
   Future<void> load() async {
     emit(state.loading());
@@ -35,6 +38,7 @@ class NetWorthCubit extends Cubit<ViewState<NetWorth>> {
   Future<Result<void>> remove(WealthKind kind, String id) => _thenReload(_remove((kind: kind, id: id)));
   Future<Result<void>> createSnapshot() => _thenReload(_snapshot(const NoParams()));
   Future<Result<void>> removeSnapshot(String id) => _thenReload(_removeSnapshot(id));
+  Future<Result<void>> saveGoal(WealthGoal goal) => _thenReload(_saveGoal(goal));
 
   Future<Result<void>> _thenReload(Future<Result<void>> action) async {
     final result = await action;

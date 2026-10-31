@@ -1,5 +1,6 @@
 import 'package:arah/core/domain/money.dart';
 import 'package:arah/core/network/api_client.dart';
+import 'package:arah/features/journal/domain/entities/journal.dart' show dayKey;
 import 'package:arah/features/networth/domain/entities/net_worth.dart';
 
 abstract interface class NetWorthRemoteDataSource {
@@ -12,6 +13,9 @@ abstract interface class NetWorthRemoteDataSource {
   /// Total dihitung server dari data saat ini.
   Future<void> createSnapshot();
   Future<void> removeSnapshot(String id);
+
+  /// Target kekayaan di `/api/settings` (sama dengan form target web).
+  Future<void> saveGoal(WealthGoal goal);
 }
 
 String _path(WealthKind kind) => kind == WealthKind.asset ? '/api/networth/assets' : '/api/networth/liabilities';
@@ -125,6 +129,19 @@ class NetWorthApiDataSource implements NetWorthRemoteDataSource {
   @override
   Future<void> removeSnapshot(String id) => _api.delete('/api/networth/snapshot/$id');
 
+  /// Semua field dikirim supaya yang dikosongkan ikut terhapus (server: `null` = hapus).
+  @override
+  Future<void> saveGoal(WealthGoal g) => _api.put(
+    '/api/settings',
+    body: {
+      'goalName': g.name.trim(),
+      'wealthTarget': g.target.amount,
+      'goalDeadline': g.deadline == null ? null : dayKey(g.deadline!),
+      'goalMonthlyContrib': g.monthlyContribution?.amount,
+      'goalReturnPct': g.expectedReturnPercent,
+    },
+  );
+
   // Enum AssetCategory backend; stock/crypto manual (di luar portofolio) masuk Lainnya.
   static WealthCategory _category(String backend) => switch (backend) {
     'cash' => WealthCategory.cash,
@@ -194,14 +211,19 @@ class NetWorthFixtureDataSource implements NetWorthRemoteDataSource {
           WealthItem(id: id, name: e.name, category: WealthCategory.debt, value: Money.idr(e.amount), entry: e),
     ],
     snapshots: List.of(_snapshots),
-    goal: WealthGoal(
-      name: 'Road to 1M',
-      target: const Money.idr(1000000000),
-      deadline: DateTime(2035, 12, 31),
-      monthlyContribution: const Money.idr(5000000),
-      expectedReturnPercent: 10,
-    ),
+    goal: _goal,
   );
+
+  var _goal = WealthGoal(
+    name: 'Road to 1M',
+    target: const Money.idr(1000000000),
+    deadline: DateTime(2035, 12, 31),
+    monthlyContribution: const Money.idr(5000000),
+    expectedReturnPercent: 10,
+  );
+
+  @override
+  Future<void> saveGoal(WealthGoal goal) async => _goal = goal;
 
   @override
   Future<NetWorth> fetchNetWorth() async {

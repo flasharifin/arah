@@ -7,4 +7,5 @@ abstract interface class NetWorthRepository {
   Future<Result<void>> removeEntry(WealthKind kind, String id);
   Future<Result<void>> createSnapshot();
   Future<Result<void>> removeSnapshot(String id);
+  Future<Result<void>> saveGoal(WealthGoal goal);
 }

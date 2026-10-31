@@ -44,3 +44,11 @@ class RemoveNetWorthSnapshot implements UseCase<void, String> {
   @override
   Future<Result<void>> call(String id) => _repository.removeSnapshot(id);
 }
+
+class SaveWealthGoal implements UseCase<void, WealthGoal> {
+  const SaveWealthGoal(this._repository);
+  final NetWorthRepository _repository;
+
+  @override
+  Future<Result<void>> call(WealthGoal goal) => _repository.saveGoal(goal);
+}
