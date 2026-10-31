@@ -20,11 +20,18 @@ class HomePage extends StatelessWidget {
     final cubit = context.read<DashboardCubit>();
     return Scaffold(
       appBar: AppBar(
-        title: const Image(
-          image: AssetImage('assets/images/arah-logo.png'),
-          height: 36,
-          semanticLabel: 'Arah',
+        title: const Text(
+          'arah',
+          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -1.5, fontSize: 30),
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Pengaturan',
+            onPressed: () => context.go('/more/settings'),
+            icon: const Icon(Icons.settings_outlined),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+        ],
       ),
       body: BlocBuilder<DashboardCubit, ViewState<DashboardSummary>>(
         builder: (context, state) => ViewStateBuilder<DashboardSummary>(
@@ -78,7 +85,7 @@ class _HomeContent extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.md),
+        SectionHeader('Akses cepat', actionLabel: 'Semua menu', onAction: () => context.go('/more')),
         Row(
           children: [
             Expanded(
@@ -204,7 +211,11 @@ class _Shortcut extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.md, horizontal: AppSpacing.sm),
       child: Column(
         children: [
-          Icon(icon, color: AppColors.primary),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(color: AppColors.primarySoft, borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: AppColors.primary),
+          ),
           const SizedBox(height: AppSpacing.xs),
           Text(label, textAlign: TextAlign.center, style: Theme.of(context).textTheme.labelLarge),
         ],

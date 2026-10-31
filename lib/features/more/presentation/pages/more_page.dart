@@ -89,8 +89,27 @@ class MorePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                MenuGroup(title: 'Rencanakan', children: tiles(_plan)),
-                MenuGroup(title: 'Pahami', children: tiles(_understand)),
+                const SizedBox(height: AppSpacing.md),
+                Text('Semua kebutuhan, satu tempat.', style: Theme.of(context).textTheme.headlineSmall),
+                const SizedBox(height: AppSpacing.sm),
+                const Text('Pantau investasi, susun rencana, dan pahami keputusanmu.'),
+                for (final group in [
+                  (title: 'Rencanakan', entries: _plan),
+                  (title: 'Pahami', entries: _understand),
+                ]) ...[
+                  SectionHeader(group.title),
+                  FeatureMenu(
+                    children: [
+                      for (final e in group.entries)
+                        FeatureTile(
+                          icon: e.icon,
+                          title: e.title,
+                          subtitle: e.subtitle,
+                          onTap: () => context.go('/more/${e.slug}'),
+                        ),
+                    ],
+                  ),
+                ],
                 MenuGroup(
                   title: 'Akun',
                   children: [
