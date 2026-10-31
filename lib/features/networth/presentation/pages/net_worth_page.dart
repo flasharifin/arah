@@ -1,4 +1,5 @@
 import 'package:arah/core/domain/money.dart';
+import 'package:arah/core/error/result.dart';
 import 'package:arah/core/format/formatters.dart';
 import 'package:arah/core/state/view_state.dart';
 import 'package:arah/core/theme/app_spacing.dart';
@@ -6,11 +7,12 @@ import 'package:arah/core/theme/app_typography.dart';
 import 'package:arah/core/widgets/widgets.dart';
 import 'package:arah/features/networth/domain/entities/net_worth.dart';
 import 'package:arah/features/networth/presentation/bloc/net_worth_cubit.dart';
+import 'package:arah/features/networth/presentation/widgets/wealth_entry_form.dart';
 import 'package:arah/features/networth/presentation/widgets/wealth_item_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// S07 — Kekayaan: Aset / Utang / Target.
+/// S07 — Kekayaan: Aset / Utang / Target / Riwayat snapshot. Aset manual & utang bisa ditambah, diubah, dihapus.
 class NetWorthPage extends StatelessWidget {
   const NetWorthPage({super.key});
 
@@ -18,7 +20,7 @@ class NetWorthPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<NetWorthCubit>();
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(title: const Text('Kekayaan')),
         body: BlocBuilder<NetWorthCubit, ViewState<NetWorth>>(
@@ -41,15 +43,21 @@ class NetWorthPage extends StatelessWidget {
                       Tab(text: 'Aset'),
                       Tab(text: 'Utang'),
                       Tab(text: 'Target'),
+                      Tab(text: 'Riwayat'),
                     ],
                   ),
                 ),
               ],
               body: TabBarView(
                 children: [
-                  _ItemList(items: data.assets, emptyTitle: 'Belum ada aset'),
-                  _ItemList(items: data.liabilities, emptyTitle: 'Tidak ada utang tercatat'),
+                  _ItemList(kind: WealthKind.asset, items: data.assets, emptyTitle: 'Belum ada aset'),
+                  _ItemList(
+                    kind: WealthKind.liability,
+                    items: data.liabilities,
+                    emptyTitle: 'Tidak ada utang tercatat',
+                  ),
                   _GoalTab(goal: data.goal, current: data.netWorth),
+                  _SnapshotTab(snapshots: data.snapshots),
                 ],
               ),
             ),
@@ -92,19 +100,141 @@ class _NetWorthHero extends StatelessWidget {
 }
 
 class _ItemList extends StatelessWidget {
-  const _ItemList({required this.items, required this.emptyTitle});
+  const _ItemList({required this.kind, required this.items, required this.emptyTitle});
 
+  final WealthKind kind;
   final List<WealthItem> items;
   final String emptyTitle;
 
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) return EmptyView(title: emptyTitle);
-    return ListView.separated(
+    final add = OutlinedButton.icon(
+      onPressed: () => showWealthEntryForm(context, kind),
+      icon: const Icon(Icons.add),
+      label: Text(kind == WealthKind.asset ? 'Tambah aset' : 'Tambah utang'),
+    );
+    if (items.isEmpty) {
+      return EmptyView(
+        title: emptyTitle,
+        actionLabel: kind == WealthKind.asset ? 'Tambah aset' : 'Tambah utang',
+        onAction: () => showWealthEntryForm(context, kind),
+      );
+    }
+    return ListView(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-      itemCount: items.length,
-      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-      itemBuilder: (_, i) => PageBody(child: WealthItemTile(item: items[i])),
+      children: [
+        PageBody(child: add),
+        for (final item in items)
+          PageBody(
+            child: Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.md),
+              child: WealthItemTile(
+                item: item,
+                // Portofolio otomatis dari posisi saham; diubah lewat tab Portofolio.
+                onTap: item.isAutomatic ? null : () => showWealthEntryForm(context, kind, item: item),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Snapshot = catatan kekayaan bersih saat ini; total dihitung server (sama dengan web).
+class _SnapshotTab extends StatefulWidget {
+  const _SnapshotTab({required this.snapshots});
+  final List<NetWorthSnapshot> snapshots;
+
+  @override
+  State<_SnapshotTab> createState() => _SnapshotTabState();
+}
+
+class _SnapshotTabState extends State<_SnapshotTab> {
+  bool _busy = false;
+
+  Future<void> _run(Future<Result<void>> Function() action, String done) async {
+    setState(() => _busy = true);
+    final result = await action();
+    if (!mounted) return;
+    setState(() => _busy = false);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result.fold((f) => f.message, (_) => done))));
+  }
+
+  Future<void> _delete(NetWorthSnapshot s) async {
+    final cubit = context.read<NetWorthCubit>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hapus snapshot?'),
+        content: Text('Snapshot ${Fmt.date(s.date)} (${Fmt.money(s.netValue)}) dihapus dari web dan aplikasi.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Hapus')),
+        ],
+      ),
+    );
+    if (confirmed == true) await _run(() => cubit.removeSnapshot(s.id), 'Snapshot dihapus');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<NetWorthCubit>();
+    final text = Theme.of(context).textTheme;
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+      children: [
+        PageBody(
+          child: PrimaryButton(
+            label: 'Simpan snapshot sekarang',
+            busy: _busy,
+            onPressed: () => _run(cubit.createSnapshot, 'Snapshot tersimpan'),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        PageBody(
+          child: Text(
+            'Mencatat kekayaan bersih saat ini dengan harga & kurs terbaru. Web juga menyimpan snapshot otomatis tiap bulan.',
+            style: text.bodySmall,
+          ),
+        ),
+        if (widget.snapshots.isEmpty)
+          const EmptyView(icon: Icons.timeline, title: 'Belum ada snapshot')
+        else
+          for (final s in widget.snapshots)
+            PageBody(
+              child: Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: AppCard(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(Fmt.date(s.date), style: text.labelLarge),
+                            AmountText(s.netValue),
+                            Wrap(
+                              children: [
+                                Text('Aset ', style: text.bodySmall),
+                                AmountText(s.totalAssets, compact: true, style: text.bodySmall),
+                                Text(' · Utang ', style: text.bodySmall),
+                                AmountText(s.totalLiabilities, compact: true, style: text.bodySmall),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Hapus snapshot ${Fmt.date(s.date)}',
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: _busy ? null : () => _delete(s),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+      ],
     );
   }
 }

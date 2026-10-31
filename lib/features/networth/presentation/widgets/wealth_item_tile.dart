@@ -4,14 +4,16 @@ import 'package:arah/features/networth/domain/entities/net_worth.dart';
 import 'package:flutter/material.dart';
 
 class WealthItemTile extends StatelessWidget {
-  const WealthItemTile({super.key, required this.item});
+  const WealthItemTile({super.key, required this.item, this.onTap});
 
   final WealthItem item;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     return AppCard(
+      onTap: onTap,
       child: Row(
         children: [
           Expanded(

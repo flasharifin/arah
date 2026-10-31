@@ -10,4 +10,16 @@ class NetWorthRepositoryImpl implements NetWorthRepository {
 
   @override
   Future<Result<NetWorth>> getNetWorth() => guard(_remote.fetchNetWorth);
+
+  @override
+  Future<Result<void>> saveEntry(ManualEntry entry, {String? id}) => guard(() => _remote.saveEntry(entry, id: id));
+
+  @override
+  Future<Result<void>> removeEntry(WealthKind kind, String id) => guard(() => _remote.removeEntry(kind, id));
+
+  @override
+  Future<Result<void>> createSnapshot() => guard(_remote.createSnapshot);
+
+  @override
+  Future<Result<void>> removeSnapshot(String id) => guard(() => _remote.removeSnapshot(id));
 }
