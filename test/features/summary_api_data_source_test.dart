@@ -11,8 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Response per path (sudah di-unwrap dari `{ data }`, seperti ApiClient.get).
 class _FakeApi extends ApiClient {
-  _FakeApi(this.responses)
-    : super(baseUrl: 'http://test', tokenStorage: const TokenStorage(FlutterSecureStorage()));
+  _FakeApi(this.responses) : super(baseUrl: 'http://test', tokenStorage: const TokenStorage(FlutterSecureStorage()));
   final Map<String, Object?> responses;
 
   @override
@@ -33,23 +32,9 @@ final _summary = <String, dynamic>{
   },
   'portfolioSummary': {'totalCostIDR': 62998250, 'unrealizedPnl': -2313500, 'count': 4},
   'manualAssets': [
-    {
-      'id': 'a1',
-      'name': 'Kas',
-      'category': 'cash',
-      'currency': 'IDR',
-      'value': 30000000,
-      'valueIDR': 30000000,
-    },
+    {'id': 'a1', 'name': 'Kas', 'category': 'cash', 'currency': 'IDR', 'value': 30000000, 'valueIDR': 30000000},
     {'id': 'a2', 'name': 'Dolar', 'category': 'cash', 'currency': 'USD', 'value': 1000, 'valueIDR': 18125000},
-    {
-      'id': 'a3',
-      'name': 'Emas',
-      'category': 'gold',
-      'currency': 'GOLD',
-      'value': 10,
-      'valueIDR': 23587236.97,
-    },
+    {'id': 'a3', 'name': 'Emas', 'category': 'gold', 'currency': 'GOLD', 'value': 10, 'valueIDR': 23587236.97},
   ],
   'liabilityItems': [
     {'id': 'l1', 'name': 'Kartu kredit', 'category': 'credit_card', 'amountIDR': 5000000},
@@ -92,6 +77,22 @@ void main() {
   test('kekayaan: item rupiah dari server, total sama dengan totalAssetsAll', () async {
     final api = _FakeApi({
       '/api/summary': _summary,
+      '/api/networth/snapshot': [
+        {
+          'id': 'n1',
+          'snapshotDate': '2026-09-01T00:00:00.000Z',
+          'totalAssets': '120000000',
+          'totalLiabilities': '5000000',
+          'netValue': '115000000',
+        },
+        {
+          'id': 'n2',
+          'snapshotDate': '2026-10-01T00:00:00.000Z',
+          'totalAssets': '130000000',
+          'totalLiabilities': '5000000',
+          'netValue': '125000000',
+        },
+      ],
       '/api/settings': {
         'wealthTarget': 1000000000,
         'goalName': null,
@@ -115,6 +116,12 @@ void main() {
     expect(nw.goal!.deadline, DateTime.parse('2035-12-31T00:00:00.000Z'));
     expect(nw.goal!.monthlyContribution, isNull);
     expect(nw.goal!.expectedReturnPercent, 12);
+    // snapshot terbaru dulu; nilai asli aset untuk form ubah
+    expect(nw.snapshots.map((n) => (n.id, n.netValue.amount)), [('n2', 125000000), ('n1', 115000000)]);
+    expect(
+      nw.assets.firstWhere((a) => a.name == 'Dolar').entry,
+      const ManualEntry(kind: WealthKind.asset, name: 'Dolar', category: 'cash', amount: 1000, currency: 'USD'),
+    );
   });
 
   test('kekayaan: tanpa posisi tidak menampilkan baris portofolio Rp 0', () async {
@@ -124,77 +131,75 @@ void main() {
         'portfolioValueIDR': 0,
         'portfolioSummary': {'totalCostIDR': 0, 'unrealizedPnl': 0, 'count': 0},
       },
+      '/api/networth/snapshot': <dynamic>[],
       '/api/settings': {'wealthTarget': 100000000},
     });
     final nw = await NetWorthApiDataSource(api).fetchNetWorth();
     expect(nw.assets.any((a) => a.isAutomatic), isFalse);
   });
 
-  test(
-    'portofolio: posisi dari summary.positions, harga hilang tetap null, waktu harga paling lama',
-    () async {
-      final api = _FakeApi({
-        '/api/summary': {
-          ..._summary,
-          // bentuk PortfolioWithCalc dari backend (src/lib/summary.ts enrichPortfolios)
-          'positions': [
-            {
-              'id': 'p1',
-              'stockCode': 'ZBASEA',
-              'exchange': 'IDX',
-              'currency': 'IDR',
-              'lot': 10,
-              'avgPrice': 9000,
-              'platform': 'Stockbit',
-              'sector': 'Keuangan',
-              'marketPrice': 8500,
-              'marketValue': 8500000,
-              'priceFetchedAt': '2026-10-29T07:30:00.000Z',
-            },
-            {
-              'id': 'p2',
-              'stockCode': 'ZBASEB',
-              'exchange': 'US',
-              'currency': 'USD',
-              'lot': 3,
-              'avgPrice': 150,
-              'platform': '',
-              'sector': null,
-              'marketPrice': 200,
-              'marketValue': 600,
-              'priceFetchedAt': '2026-10-29T07:12:00.000Z',
-            },
-            {
-              'id': 'p3',
-              'stockCode': 'ZZZZFAKE',
-              'exchange': 'IDX',
-              'currency': 'IDR',
-              'lot': 5,
-              'avgPrice': 1000,
-              'platform': '',
-              'sector': null,
-              'marketPrice': null,
-              'marketValue': null,
-              'priceFetchedAt': null,
-            },
-          ],
-        },
-      });
-      final portfolio = await PortfolioApiDataSource(api).fetchPortfolio();
+  test('portofolio: posisi dari summary.positions, harga hilang tetap null, waktu harga paling lama', () async {
+    final api = _FakeApi({
+      '/api/summary': {
+        ..._summary,
+        // bentuk PortfolioWithCalc dari backend (src/lib/summary.ts enrichPortfolios)
+        'positions': [
+          {
+            'id': 'p1',
+            'stockCode': 'ZBASEA',
+            'exchange': 'IDX',
+            'currency': 'IDR',
+            'lot': 10,
+            'avgPrice': 9000,
+            'platform': 'Stockbit',
+            'sector': 'Keuangan',
+            'marketPrice': 8500,
+            'marketValue': 8500000,
+            'priceFetchedAt': '2026-10-29T07:30:00.000Z',
+          },
+          {
+            'id': 'p2',
+            'stockCode': 'ZBASEB',
+            'exchange': 'US',
+            'currency': 'USD',
+            'lot': 3,
+            'avgPrice': 150,
+            'platform': '',
+            'sector': null,
+            'marketPrice': 200,
+            'marketValue': 600,
+            'priceFetchedAt': '2026-10-29T07:12:00.000Z',
+          },
+          {
+            'id': 'p3',
+            'stockCode': 'ZZZZFAKE',
+            'exchange': 'IDX',
+            'currency': 'IDR',
+            'lot': 5,
+            'avgPrice': 1000,
+            'platform': '',
+            'sector': null,
+            'marketPrice': null,
+            'marketValue': null,
+            'priceFetchedAt': null,
+          },
+        ],
+      },
+    });
+    final portfolio = await PortfolioApiDataSource(api).fetchPortfolio();
 
-      final [a, b, missing] = portfolio.positions;
-      expect(
-        (a.symbol, a.exchange, a.quantity, a.broker, a.sector),
-        ('ZBASEA', Exchange.idx, 10, 'Stockbit', 'Keuangan'),
-      );
-      expect(a.lastPrice, const Money.idr(8500));
-      // nilai pasar dihitung entity = marketValue server
-      expect(a.marketValue, const Money.idr(8500000));
-      expect(b.currency, Currency.usd);
-      expect(b.marketValue, const Money.usd(600));
-      expect(missing.lastPrice, isNull);
-      expect(missing.marketValue, isNull);
-      expect(portfolio.priceAsOf, DateTime.parse('2026-10-29T07:12:00.000Z'));
-    },
-  );
+    final [a, b, missing] = portfolio.positions;
+    expect(
+      (a.symbol, a.exchange, a.quantity, a.broker, a.sector),
+      ('ZBASEA', Exchange.idx, 10, 'Stockbit', 'Keuangan'),
+    );
+    expect(a.lastPrice, const Money.idr(8500));
+    // nilai pasar dihitung entity = marketValue server
+    expect(a.marketValue, const Money.idr(8500000));
+    expect(b.currency, Currency.usd);
+    expect(b.marketValue, const Money.usd(600));
+    expect(missing.lastPrice, isNull);
+    expect(missing.marketValue, isNull);
+    expect(portfolio.priceAsOf, DateTime.parse('2026-10-29T07:12:00.000Z'));
+  });
 }

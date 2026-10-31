@@ -12,8 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 class _FixtureRepository implements PortfolioRepository {
   @override
-  Future<Result<Portfolio>> getPortfolio() async =>
-      Success(await PortfolioFixtureDataSource().fetchPortfolio());
+  Future<Result<Portfolio>> getPortfolio() async => Success(await PortfolioFixtureDataSource().fetchPortfolio());
 
   @override
   Future<Result<void>> recordPurchase(PositionPurchase purchase) => throw UnimplementedError();

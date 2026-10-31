@@ -133,7 +133,15 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
       () => useFixtures ? NetWorthFixtureDataSource() : NetWorthApiDataSource(sl()),
     )
     ..registerLazySingleton<NetWorthRepository>(() => NetWorthRepositoryImpl(sl()))
-    ..registerFactory(() => NetWorthCubit(GetNetWorth(sl())))
+    ..registerFactory(
+      () => NetWorthCubit(
+        get: GetNetWorth(sl()),
+        save: SaveWealthEntry(sl()),
+        remove: RemoveWealthEntry(sl()),
+        snapshot: CreateNetWorthSnapshot(sl()),
+        removeSnapshot: RemoveNetWorthSnapshot(sl()),
+      ),
+    )
     // Watchlist
     ..registerLazySingleton<WatchlistRemoteDataSource>(
       () => useFixtures ? WatchlistFixtureDataSource() : WatchlistApiDataSource(sl()),

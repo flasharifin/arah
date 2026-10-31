@@ -34,13 +34,7 @@ void main() {
   });
 
   test('harga hilang membuat nilai null, bukan nol', () {
-    const noPrice = Position(
-      id: 'x',
-      symbol: 'X',
-      exchange: Exchange.idx,
-      quantity: 1,
-      avgPrice: Money.idr(1),
-    );
+    const noPrice = Position(id: 'x', symbol: 'X', exchange: Exchange.idx, quantity: 1, avgPrice: Money.idr(1));
     expect(noPrice.marketValue, isNull);
     expect(const Portfolio(positions: [bbca, noPrice]).marketValue(Currency.idr), isNull);
   });

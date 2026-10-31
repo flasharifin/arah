@@ -14,8 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Membalas GET per path (sudah di-unwrap dari `{ data }`) dan mencatat mutasi.
 class _FakeApi extends ApiClient {
-  _FakeApi(this.gets)
-    : super(baseUrl: 'http://test', tokenStorage: const TokenStorage(FlutterSecureStorage()));
+  _FakeApi(this.gets) : super(baseUrl: 'http://test', tokenStorage: const TokenStorage(FlutterSecureStorage()));
   final Map<String, Object?> gets;
   final writes = <(String, String, Object?)>[];
 
@@ -68,12 +67,7 @@ void main() {
       (Exchange.us, const Money.usd(120), null, null),
     );
 
-    const draft = WatchDraft(
-      symbol: ' bbri ',
-      exchange: Exchange.idx,
-      status: WatchStatus.observe,
-      targetPrice: 4500,
-    );
+    const draft = WatchDraft(symbol: ' bbri ', exchange: Exchange.idx, status: WatchStatus.observe, targetPrice: 4500);
     await source.save(draft);
     await source.save(draft, id: 'w1');
     await source.remove('w1');
@@ -119,20 +113,11 @@ void main() {
     final source = DcaApiDataSource(api);
     final overview = await source.overview();
     final plan = overview.plans.single;
-    expect(
-      (plan.targetPrice, plan.budget, plan.frequencyLabel, plan.nextDate),
-      (9000.0, 2000000.0, 'Mingguan', null),
-    );
+    expect((plan.targetPrice, plan.budget, plan.frequencyLabel, plan.nextDate), (9000.0, 2000000.0, 'Mingguan', null));
     expect((overview.records.single.quantity, overview.records.single.total), (2.0, 1820000.0));
 
     await source.recordExecution(
-      DcaExecution(
-        plan: plan,
-        quantity: 1,
-        price: 8900,
-        date: DateTime.utc(2026, 10, 30),
-        requestId: 'uuid-1',
-      ),
+      DcaExecution(plan: plan, quantity: 1, price: 8900, date: DateTime.utc(2026, 10, 30), requestId: 'uuid-1'),
     );
     expect(api.writes.single.$2, '/api/dca/transactions');
     expect(api.writes.single.$3, {
@@ -265,21 +250,13 @@ void main() {
         {'date': '2026-10-29T00:00:00.000Z', 'note': 'IHSG koreksi'},
       ],
       '/api/pnl/daily': [
-        {
-          'date': '2026-10-29T00:00:00.000Z',
-          'portfolioValue': '98450000.00',
-          'pnl': '-450000.00',
-          'pnlPct': '-0.4500',
-        },
+        {'date': '2026-10-29T00:00:00.000Z', 'portfolioValue': '98450000.00', 'pnl': '-450000.00', 'pnlPct': '-0.4500'},
       ],
     });
     final source = JournalApiDataSource(api);
     final data = await source.load();
     expect(data.notes, {'2026-10-29': 'IHSG koreksi'});
-    expect(
-      (data.pnl['2026-10-29']!.pnl, data.pnl['2026-10-29']!.pnlPercent),
-      (const Money.idr(-450000), -0.45),
-    );
+    expect((data.pnl['2026-10-29']!.pnl, data.pnl['2026-10-29']!.pnlPercent), (const Money.idr(-450000), -0.45));
 
     await source.saveNote('2026-10-30', 'Catatan baru');
     expect(api.writes.single.$2, '/api/daily-note');

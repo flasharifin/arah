@@ -46,13 +46,7 @@ class _FakeApi extends ApiClient {
         'context': 'BBCA:IDX',
         'createdAt': '2026-10-29T07:59:00.000Z',
       },
-      {
-        'id': 'm2',
-        'role': 'assistant',
-        'content': '10 lot.',
-        'context': null,
-        'createdAt': '2026-10-29T08:00:00.000Z',
-      },
+      {'id': 'm2', 'role': 'assistant', 'content': '10 lot.', 'context': null, 'createdAt': '2026-10-29T08:00:00.000Z'},
     ];
   }
 
@@ -71,11 +65,7 @@ void main() {
     final list = await source.listConversations();
     expect(
       list.single,
-      ConversationSummary(
-        id: 'c1',
-        title: 'Soal BBCA',
-        updatedAt: DateTime.parse('2026-10-29T08:00:00.000Z'),
-      ),
+      ConversationSummary(id: 'c1', title: 'Soal BBCA', updatedAt: DateTime.parse('2026-10-29T08:00:00.000Z')),
     );
 
     final messages = await source.fetchMessages('c1');
@@ -117,9 +107,7 @@ void main() {
 
   test('pesan lanjutan ke /conversations/:id/messages, tanpa field context', () async {
     final api = _FakeApi();
-    await AssistantApiDataSource(
-      api,
-    ).sendMessage(conversationId: 'c1', requestId: 'r2', content: 'Kalau dijual?');
+    await AssistantApiDataSource(api).sendMessage(conversationId: 'c1', requestId: 'r2', content: 'Kalau dijual?');
 
     expect(api.calls.single.$1, '/api/mobile/conversations/c1/messages');
     expect(api.calls.single.$2, {'requestId': 'r2', 'content': 'Kalau dijual?'});

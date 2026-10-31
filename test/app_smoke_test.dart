@@ -110,6 +110,77 @@ void main() {
     expect(find.text('Dolar AS'), findsNothing);
   });
 
+  testWidgets('kekayaan: tambah aset USD, ubah, hapus, simpan snapshot (fixture)', (tester) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const ArahApp());
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).at(0), 'demo@arah.id');
+    await tester.enterText(find.byType(TextFormField).at(1), 'password123');
+    await tester.tap(find.text('Masuk'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Kekayaan'));
+    await tester.pumpAndSettle();
+    expect(find.text('Rp 128.450.000'), findsOneWidget);
+
+    // Item baru di bawah daftar; gulir daftar aset seperti pengguna.
+    Future<void> showDolar() => tester.scrollUntilVisible(
+      find.text('Dolar'),
+      100,
+      scrollable: find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first,
+    );
+
+    // Tambah US$100 → fixture mengonversi 16.000/US$ → kekayaan bersih +1,6 jt
+    await tester.tap(find.text('Tambah aset'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextFormField, 'Nama aset'), 'Dolar');
+    await tester.tap(find.text('Rupiah'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Dolar AS').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextFormField, 'Nilai (US\$)'), '100');
+    await tester.tap(find.text('Simpan'));
+    await tester.pumpAndSettle();
+    expect(find.text('Rp 130.050.000'), findsOneWidget);
+    await showDolar();
+
+    // Ubah jadi US$200
+    await tester.tap(find.text('Dolar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ubah aset'), findsOneWidget);
+    await tester.enterText(find.widgetWithText(TextFormField, 'Nilai (US\$)'), '200');
+    await tester.tap(find.text('Simpan'));
+    await tester.pumpAndSettle();
+    await showDolar();
+    expect(find.text('Rp 3.200.000'), findsOneWidget); // tile; hero sudah tergulir ke atas
+
+    // Hapus
+    await showDolar();
+    await tester.tap(find.text('Dolar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Hapus aset'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Hapus'));
+    await tester.pumpAndSettle();
+    expect(find.text('Dolar'), findsNothing);
+
+    // Snapshot — tab bar ikut tergulir (tidak di-pin); gulir kembali ke atas dulu.
+    await tester.drag(find.byType(ListView).first, const Offset(0, 600));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Riwayat'));
+    await tester.pumpAndSettle();
+    expect(find.text('Belum ada snapshot'), findsOneWidget);
+    await tester.tap(find.text('Simpan snapshot sekarang'));
+    await tester.pumpAndSettle();
+    expect(find.text('Snapshot tersimpan'), findsOneWidget);
+    expect(find.text('Rp 128.450.000'), findsWidgets); // snapshot (hero bisa tergulir)
+    expect(find.text('Belum ada snapshot'), findsNothing);
+  });
+
   testWidgets('hapus akun: password salah ditolak, password benar kembali ke layar masuk (fixture)', (tester) async {
     FlutterSecureStorage.setMockInitialValues({}); // token dari tes sebelumnya membuat app langsung login
     tester.view.physicalSize = const Size(360, 800);

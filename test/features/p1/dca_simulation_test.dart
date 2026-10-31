@@ -23,13 +23,7 @@ void main() {
   });
 
   test('simulasi DCA: US per unit, tanpa harga pasar → selisih pasar null', () {
-    const aapl = Position(
-      id: 'aapl',
-      symbol: 'AAPL',
-      exchange: Exchange.us,
-      quantity: 4,
-      avgPrice: Money.usd(150),
-    );
+    const aapl = Position(id: 'aapl', symbol: 'AAPL', exchange: Exchange.us, quantity: 4, avgPrice: Money.usd(150));
     final r = simulateDca(aapl, quantity: 1, price: 200);
     expect(r.newAvgPrice, 160); // (4×150 + 200) / 5
     expect(r.additionalCost, 200);

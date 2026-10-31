@@ -55,11 +55,7 @@ void main() {
 
   test('password salah: token tetap, push tidak dilepas, failure validation', () async {
     var hookCalled = false;
-    final repo = AuthRepositoryImpl(
-      _Remote(wrongPassword: true),
-      tokens,
-      beforeSignOut: () async => hookCalled = true,
-    );
+    final repo = AuthRepositoryImpl(_Remote(wrongPassword: true), tokens, beforeSignOut: () async => hookCalled = true);
 
     final result = await repo.deleteAccount(password: 'salah-123');
 

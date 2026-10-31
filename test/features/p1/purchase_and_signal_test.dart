@@ -20,16 +20,15 @@ class _FakeApi extends ApiClient {
   Future<dynamic> post(String path, {Object? body}) async => posts.add((path, body));
 }
 
-PositionPurchase _purchase({String requestId = 'req-1', double quantity = 10, double price = 8000}) =>
-    PositionPurchase(
-      symbol: ' bbca ',
-      exchange: Exchange.idx,
-      broker: 'Stockbit',
-      quantity: quantity,
-      price: price,
-      date: DateTime.utc(2026, 10, 30),
-      requestId: requestId,
-    );
+PositionPurchase _purchase({String requestId = 'req-1', double quantity = 10, double price = 8000}) => PositionPurchase(
+  symbol: ' bbca ',
+  exchange: Exchange.idx,
+  broker: 'Stockbit',
+  quantity: quantity,
+  price: price,
+  date: DateTime.utc(2026, 10, 30),
+  requestId: requestId,
+);
 
 void main() {
   test('watchlist: sinyal & rentang 52 minggu dipetakan; tanpa sinyal → null', () async {
@@ -53,14 +52,7 @@ void main() {
           'week52Pos': 18.75,
         },
       },
-      {
-        'id': 'w2',
-        'stockCode': 'NVDA',
-        'exchange': 'US',
-        'currency': 'USD',
-        'status': 'skip',
-        'signal': null,
-      },
+      {'id': 'w2', 'stockCode': 'NVDA', 'exchange': 'US', 'currency': 'USD', 'status': 'skip', 'signal': null},
     ]);
     final [tlkm, nvda] = await WatchlistApiDataSource(api).list();
     final s = tlkm.signal!;
@@ -71,38 +63,32 @@ void main() {
     expect(nvda.signal, isNull);
   });
 
-  test(
-    'catat pembelian: body POST /api/portfolio (kode dirapikan, mata uang dari bursa, requestId)',
-    () async {
-      final api = _FakeApi();
-      await PortfolioApiDataSource(api).recordPurchase(_purchase());
-      expect(api.posts.single.$1, '/api/portfolio');
-      expect(api.posts.single.$2, {
-        'stockCode': 'BBCA',
-        'exchange': 'IDX',
-        'currency': 'IDR',
-        'platform': 'Stockbit',
-        'lot': 10.0,
-        'avgPrice': 8000.0,
-        'purchaseDate': '2026-10-30T00:00:00.000Z',
-        'sector': null,
-        'note': null,
-        'requestId': 'req-1',
-      });
-      expect(_purchase().total, 8000000); // 10 lot × 100 lembar × 8000
-    },
-  );
+  test('catat pembelian: body POST /api/portfolio (kode dirapikan, mata uang dari bursa, requestId)', () async {
+    final api = _FakeApi();
+    await PortfolioApiDataSource(api).recordPurchase(_purchase());
+    expect(api.posts.single.$1, '/api/portfolio');
+    expect(api.posts.single.$2, {
+      'stockCode': 'BBCA',
+      'exchange': 'IDX',
+      'currency': 'IDR',
+      'platform': 'Stockbit',
+      'lot': 10.0,
+      'avgPrice': 8000.0,
+      'purchaseDate': '2026-10-30T00:00:00.000Z',
+      'sector': null,
+      'note': null,
+      'requestId': 'req-1',
+    });
+    expect(_purchase().total, 8000000); // 10 lot × 100 lembar × 8000
+  });
 
-  test(
-    'fixture: kode+broker sama → lot dijumlah & rata-rata tertimbang; requestId sama tidak dobel',
-    () async {
-      final source = PortfolioFixtureDataSource();
-      await source.recordPurchase(_purchase());
-      await source.recordPurchase(_purchase()); // kirim ulang
-      final bbca = (await source.fetchPortfolio()).positions.firstWhere((p) => p.symbol == 'BBCA');
-      expect(bbca.quantity, 110);
-      expect(bbca.avgPrice.amount, closeTo(980000 / 110, 1e-9)); // (100×9000 + 10×8000)/110
-      expect(bbca.avgPrice.currency, Currency.idr);
-    },
-  );
+  test('fixture: kode+broker sama → lot dijumlah & rata-rata tertimbang; requestId sama tidak dobel', () async {
+    final source = PortfolioFixtureDataSource();
+    await source.recordPurchase(_purchase());
+    await source.recordPurchase(_purchase()); // kirim ulang
+    final bbca = (await source.fetchPortfolio()).positions.firstWhere((p) => p.symbol == 'BBCA');
+    expect(bbca.quantity, 110);
+    expect(bbca.avgPrice.amount, closeTo(980000 / 110, 1e-9)); // (100×9000 + 10×8000)/110
+    expect(bbca.avgPrice.currency, Currency.idr);
+  });
 }

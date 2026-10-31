@@ -95,10 +95,7 @@ void main() {
     await openFromMore(tester, 'DCA');
     await tester.tap(find.text('Catat pelaksanaan'));
     await tester.pumpAndSettle();
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Jumlah (lot untuk IDX, unit untuk US/Crypto)'),
-      '3',
-    );
+    await tester.enterText(find.widgetWithText(TextFormField, 'Jumlah (lot untuk IDX, unit untuk US/Crypto)'), '3');
     await tester.enterText(find.widgetWithText(TextFormField, 'Harga beli'), '8900');
     await tapVisible(tester, find.text('Simpan'));
     await tester.pumpAndSettle();
