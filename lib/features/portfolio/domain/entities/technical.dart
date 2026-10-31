@@ -1,3 +1,4 @@
+import 'package:arah/core/format/formatters.dart';
 import 'package:equatable/equatable.dart';
 
 /// Satu hari data teknikal (`priceHistory` di `/api/portfolio/[id]/detail`), harga dalam mata uang posisi.
@@ -14,6 +15,8 @@ class TaPoint extends Equatable {
     this.macdSignal,
     this.macdHist,
     this.volumeMa20,
+    this.atr,
+    this.score,
   });
 
   final DateTime date;
@@ -27,8 +30,27 @@ class TaPoint extends Equatable {
   final double? macdHist;
   final double? volumeMa20;
 
+  /// Average True Range 14 hari, dalam satuan harga.
+  final double? atr;
+
+  /// Skor sinyal 1–5 hari itu (aturan sama dengan sinyal harian, tanpa Fear & Greed).
+  final int? score;
+
   @override
-  List<Object?> get props => [date, close, volume, ema20, ema50, rsi, macdLine, macdSignal, macdHist, volumeMa20];
+  List<Object?> get props => [
+    date,
+    close,
+    volume,
+    ema20,
+    ema50,
+    rsi,
+    macdLine,
+    macdSignal,
+    macdHist,
+    volumeMa20,
+    atr,
+    score,
+  ];
 }
 
 /// Sinyal gabungan yang dihitung cron briefing pagi (`SignalCache`).
@@ -136,4 +158,43 @@ TaReading? volumeReading(TaPoint p) {
       ? ('Volume sepi — pergerakan harga kurang meyakinkan', TaTone.neutral)
       : ('Volume normal', TaTone.neutral);
   return (title: 'Volume', value: x, meaning: meaning, tone: tone);
+}
+
+/// Volatilitas dari ATR 14: rata-rata rentang gerak harian, plus patokan stop umum 2×ATR di bawah harga.
+TaReading? volatilityReading(TaPoint p) {
+  final atr = p.atr;
+  if (atr == null || p.close <= 0) return null;
+  final pct = atr / p.close * 100;
+  final stop = p.close - 2 * atr;
+  return (
+    title: 'Volatilitas (ATR 14)',
+    value: '±${pct.toStringAsFixed(1).replaceAll('.', ',')}%/hari',
+    meaning:
+        '${pct >= 4
+            ? 'Bergerak liar'
+            : pct <= 1.5
+            ? 'Bergerak tenang'
+            : 'Gerak harian wajar'} · patokan stop umum 2×ATR di bawah harga: ${Fmt.number(stop > 0 ? stop.round() : 0)}',
+    tone: TaTone.neutral,
+  );
+}
+
+/// Untung/rugi posisimu dibaca bersama tren EMA. Informasi, bukan saran beli/jual.
+TaReading? positionReading(double? pnlPercent, TaPoint p) {
+  final pnl = pnlPercent;
+  final trend = trendReading(p);
+  if (pnl == null || trend == null) return null;
+  final up = trend.tone == TaTone.positive, down = trend.tone == TaTone.negative;
+  final (meaning, tone) = pnl >= 0
+      ? up
+            ? ('Untung dan tren masih naik', TaTone.positive)
+            : down
+            ? ('Untung, tapi tren mulai turun — pantau keuntunganmu', TaTone.negative)
+            : ('Untung, tren belum jelas', TaTone.neutral)
+      : up
+      ? ('Masih rugi, tapi tren sudah naik', TaTone.positive)
+      : down
+      ? ('Rugi dan tren masih turun — cek lagi alasan awal membeli', TaTone.negative)
+      : ('Rugi, tren belum jelas', TaTone.neutral);
+  return (title: 'Posisimu', value: Fmt.percent(pnl), meaning: meaning, tone: tone);
 }

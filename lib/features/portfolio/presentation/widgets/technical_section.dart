@@ -12,10 +12,13 @@ import 'package:intl/intl.dart';
 
 typedef _Line = ({String label, Color color, List<double?> values, double width});
 
-/// Teknikal posisi (Tahap 1): sinyal, grafik harga + EMA, bacaan 4 indikator, grafik RSI.
-/// Data harian dari cron pagi — informasi, bukan saran beli/jual.
+/// Teknikal posisi: sinyal, grafik harga + EMA, bacaan indikator (termasuk posisimu & volatilitas),
+/// riwayat skor, grafik RSI. Data harian dari cron pagi — informasi, bukan saran beli/jual.
 class TechnicalSection extends StatefulWidget {
-  const TechnicalSection({super.key});
+  const TechnicalSection({super.key, this.pnlPercent});
+
+  /// Untung/rugi posisi (%) untuk bacaan "Posisimu"; `null` = harga belum ada.
+  final double? pnlPercent;
 
   @override
   State<TechnicalSection> createState() => _TechnicalSectionState();
@@ -54,10 +57,12 @@ class _TechnicalSectionState extends State<TechnicalSection> {
           final from = last.date.subtract(Duration(days: _days));
           final points = ta.points.where((p) => !p.date.isBefore(from)).toList();
           final readings = [
+            positionReading(widget.pnlPercent, last),
             trendReading(last),
             rsiReading(last),
             macdReading(last, ta.signal),
             volumeReading(last),
+            volatilityReading(last),
           ].whereType<TaReading>().toList();
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -88,6 +93,28 @@ class _TechnicalSectionState extends State<TechnicalSection> {
                 trailing: Text(Fmt.date(last.date), style: text.bodySmall),
                 child: Column(children: [for (final r in readings) _ReadingRow(reading: r)]),
               ),
+              if (points.any((p) => p.score != null)) ...[
+                const SizedBox(height: AppSpacing.md),
+                ModuleCard(
+                  title: 'Riwayat skor (1–5)',
+                  child: _TaChart(
+                    dates: [for (final p in points) p.date],
+                    lines: [
+                      (
+                        label: 'Skor',
+                        color: AppColors.primary,
+                        values: [for (final p in points) p.score?.toDouble()],
+                        width: 2,
+                      ),
+                    ],
+                    minY: 1,
+                    maxY: 5,
+                    guides: const [2, 4],
+                    height: 120,
+                    interval: 1,
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.md),
               ModuleCard(
                 title: 'RSI (14)',

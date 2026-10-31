@@ -44,6 +44,7 @@ TaPoint _p({
   double? hist,
   double vol = 100,
   double? volMa,
+  double? atr,
 }) => TaPoint(
   date: DateTime(2026, 10, 30),
   close: close,
@@ -53,6 +54,7 @@ TaPoint _p({
   rsi: rsi,
   macdHist: hist,
   volumeMa20: volMa,
+  atr: atr,
 );
 
 void main() {
@@ -83,6 +85,19 @@ void main() {
     expect(volumeReading(_p(vol: 50, volMa: 100))!.meaning, startsWith('Volume sepi'));
   });
 
+  test('volatilitas ATR & posisimu: arti dan patokan stop', () {
+    final v = volatilityReading(_p(close: 10000, atr: 250))!;
+    expect(v.value, '±2,5%/hari');
+    expect(v.meaning, contains('2×ATR di bawah harga: 9.500'));
+    expect(volatilityReading(_p()), isNull);
+    final up = _p(close: 110, e20: 105, e50: 100), down = _p(close: 90, e20: 95, e50: 100);
+    expect(positionReading(-12, down)!.meaning, startsWith('Rugi dan tren masih turun'));
+    expect(positionReading(-12, down)!.value, '−12,00%');
+    expect(positionReading(8, up)!.tone, TaTone.positive);
+    expect(positionReading(8, down)!.tone, TaTone.negative);
+    expect(positionReading(null, up), isNull);
+  });
+
   test('API: priceHistory & signal dari /api/portfolio/[id]/detail', () async {
     final api = _FakeApi({
       'priceHistory': [
@@ -95,6 +110,8 @@ void main() {
           'rsi': 55.2,
           'macdHist': -2.1,
           'volumeMA20': 1000000,
+          'atr': 120.5,
+          'score': 4,
         },
       ],
       'signal': {
@@ -111,6 +128,8 @@ void main() {
     expect(api.path, '/api/portfolio/pos-1/detail');
     expect(ta.points.single.ema50, isNull);
     expect(ta.points.single.volumeMa20, 1000000);
+    expect(ta.points.single.atr, 120.5);
+    expect(ta.points.single.score, 4);
     expect(ta.signal!.score, 2);
     expect(ta.signal!.volumeSurge, isTrue);
   });
@@ -128,7 +147,7 @@ void main() {
         child: MaterialApp(
           theme: AppTheme.light,
           home: const Scaffold(
-            body: SingleChildScrollView(padding: EdgeInsets.all(20), child: TechnicalSection()),
+            body: SingleChildScrollView(padding: EdgeInsets.all(20), child: TechnicalSection(pnlPercent: -5)),
           ),
         ),
       ),
@@ -143,7 +162,10 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Sinyal Beli'), findsOneWidget);
     expect(find.text('4/5'), findsOneWidget);
-    expect(find.byType(LineChart), findsNWidgets(2));
+    expect(find.byType(LineChart), findsNWidgets(3)); // harga, riwayat skor, RSI
+    expect(find.text('Riwayat skor (1–5)'), findsOneWidget);
+    expect(find.text('Posisimu'), findsOneWidget);
+    expect(find.text('Volatilitas (ATR 14)'), findsOneWidget);
     expect(find.text('Bacaan indikator'), findsOneWidget);
     expect(find.text('RSI (14)'), findsWidgets);
     await tester.tap(find.text('1T'));

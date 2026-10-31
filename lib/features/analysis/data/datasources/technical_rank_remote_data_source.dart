@@ -34,9 +34,36 @@ class TechnicalRankApiDataSource implements TechnicalRankRemoteDataSource {
             price: _n(i['price']),
             week52High: _n(i['week52High']),
             week52Low: _n(i['week52Low']),
+            scoreWeekAgo: (i['scoreWeekAgo'] as num?)?.toInt(),
+            pnlPct: _n(i['pnlPct']),
+            relativeStrength: switch (i['relativeStrength']) {
+              final Map<String, dynamic> rs => (
+                benchmark: rs['benchmark'] as String,
+                days: (rs['days'] as num).toInt(),
+                stockPct: _n(rs['stockPct'])!,
+                benchmarkPct: _n(rs['benchmarkPct'])!,
+              ),
+              _ => null,
+            },
           ),
       ],
       missing: (d['missing'] as List<dynamic>).cast<String>(),
+      backtest: switch (d['backtest']) {
+        final Map<String, dynamic> b => ScoreBacktest(
+          horizonDays: (b['horizonDays'] as num).toInt(),
+          tickers: (b['tickers'] as num).toInt(),
+          groups: [
+            for (final g in (b['groups'] as List<dynamic>).cast<Map<String, dynamic>>())
+              (
+                score: (g['score'] as num?)?.toInt(),
+                samples: (g['samples'] as num).toInt(),
+                avgReturnPct: _n(g['avgReturnPct']),
+                winRatePct: _n(g['winRatePct']),
+              ),
+          ],
+        ),
+        _ => null,
+      },
     );
   }
 }
@@ -66,6 +93,9 @@ class TechnicalRankFixtureDataSource implements TechnicalRankRemoteDataSource {
           price: 9500,
           week52High: 10200,
           week52Low: 8400,
+          scoreWeekAgo: 3,
+          pnlPct: 8.4,
+          relativeStrength: (benchmark: 'IHSG', days: 90, stockPct: 6.2, benchmarkPct: 1.8),
         ),
         RankItem(
           symbol: 'AAPL',
@@ -113,9 +143,24 @@ class TechnicalRankFixtureDataSource implements TechnicalRankRemoteDataSource {
           price: 2950,
           week52High: 4250,
           week52Low: 2650,
+          scoreWeekAgo: 3,
+          pnlPct: -12.5,
+          relativeStrength: (benchmark: 'IHSG', days: 90, stockPct: -9.4, benchmarkPct: 1.8),
         ),
       ],
       missing: const ['BTC:CRYPTO'],
+      backtest: const ScoreBacktest(
+        horizonDays: 20,
+        tickers: 4,
+        groups: [
+          (score: null, samples: 820, avgReturnPct: 0.9, winRatePct: 52),
+          (score: 1, samples: 12, avgReturnPct: -3.1, winRatePct: 33),
+          (score: 2, samples: 140, avgReturnPct: -1.2, winRatePct: 41),
+          (score: 3, samples: 480, avgReturnPct: 0.8, winRatePct: 52),
+          (score: 4, samples: 170, avgReturnPct: 2.6, winRatePct: 63),
+          (score: 5, samples: 18, avgReturnPct: 3.4, winRatePct: 67),
+        ],
+      ),
     );
   }
 }

@@ -88,6 +88,13 @@ class _TechnicalRankPageState extends State<TechnicalRankPage> {
                         child: _RankCard(rank: ranked.indexOf(item) + 1, item: item),
                       ),
                     ),
+                  if (ranking.backtest case final b? when (b.group(null)?.samples ?? 0) > 0)
+                    PageBody(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: _BacktestCard(backtest: b),
+                      ),
+                    ),
                   if (ranking.missing.isNotEmpty)
                     PageBody(
                       child: Text(
@@ -173,14 +180,27 @@ class _RankCard extends StatelessWidget {
                       textAlign: TextAlign.end,
                       style: text.labelLarge?.copyWith(fontWeight: FontWeight.w800, color: tone),
                     ),
-                    Text('Skor ${item.score}/5', style: text.bodySmall),
+                    Text(
+                      'Skor ${item.score}/5${switch (item.scoreWeekAgo) {
+                        final w? when w < item.score => ' · naik dari $w',
+                        final w? when w > item.score => ' · turun dari $w',
+                        _ => '',
+                      }}',
+                      textAlign: TextAlign.end,
+                      style: text.bodySmall,
+                      semanticsLabel:
+                          'Skor ${item.score} dari 5${switch (item.scoreWeekAgo) {
+                            final w? when w != item.score => ', 5 hari bursa lalu $w',
+                            _ => '',
+                          }}',
+                    ),
                   ],
                 ),
               ),
             ],
           ),
           const Divider(height: AppSpacing.xl),
-          for (final r in rankReasons(item).take(4))
+          for (final r in rankReasons(item))
             Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.xs),
               child: Row(
@@ -205,6 +225,74 @@ class _RankCard extends StatelessWidget {
                 ],
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Uji skor: apakah skor tinggi memang diikuti kenaikan di saham-saham milik user.
+class _BacktestCard extends StatelessWidget {
+  const _BacktestCard({required this.backtest});
+  final ScoreBacktest backtest;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final rows = [
+      for (final s in [5, 4, 3, 2, 1]) ?backtest.group(s),
+      ?backtest.group(null),
+    ];
+    return ModuleCard(
+      title: 'Uji skor · 1 tahun',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Rata-rata perubahan harga ${backtest.horizonDays} hari bursa setelah tiap skor, '
+            'dari ${backtest.tickers} saham milikmu.',
+            style: text.bodySmall,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          for (final g in rows)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: AppColors.divider)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      g.score == null ? 'Semua hari' : 'Skor ${g.score}',
+                      style: g.score == null ? text.labelLarge : text.bodyMedium,
+                    ),
+                  ),
+                  Flexible(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: g.avgReturnPct == null
+                          ? Text('belum ada', style: text.bodySmall)
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                PnlText(percent: g.avgReturnPct),
+                                Text(
+                                  '${g.samples} hari · naik ${g.winRatePct!.round()}%',
+                                  textAlign: TextAlign.end,
+                                  style: text.bodySmall,
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(backtest.verdict, style: text.bodyMedium),
+          const SizedBox(height: AppSpacing.xs),
+          Text('Hasil masa lalu, bukan jaminan. Informasi, bukan saran beli/jual.', style: text.bodySmall),
         ],
       ),
     );

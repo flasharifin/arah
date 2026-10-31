@@ -32,6 +32,8 @@ RankItem _item(
   double? price,
   double? hi,
   double? lo,
+  double? pnl,
+  RelativeStrength? rs,
 }) => RankItem(
   symbol: symbol,
   exchange: 'IDX',
@@ -47,6 +49,8 @@ RankItem _item(
   price: price,
   week52High: hi,
   week52Low: lo,
+  pnlPct: pnl,
+  relativeStrength: rs,
 );
 
 void main() {
@@ -80,6 +84,33 @@ void main() {
     expect(_item('X', 3, price: 1000).week52Position, isNull);
   });
 
+  test('alasan: kekuatan relatif & posisi; peringatan tetap ikut', () {
+    final reasons = rankReasons(
+      _item('X', 2, trend: 'bearish', pnl: -12, rs: (benchmark: 'IHSG', days: 90, stockPct: -9.4, benchmarkPct: 1.8)),
+    ).map((r) => r.text);
+    expect(reasons, contains('Lebih lemah dari pasar: −9,40% vs IHSG +1,80% (3 bulan)'));
+    expect(reasons, contains('Posisimu rugi −12,00% dan tren masih turun'));
+    expect(
+      rankReasons(_item('Y', 4, rs: (benchmark: 'S&P 500', days: 90, stockPct: 8, benchmarkPct: 2))).first.text,
+      startsWith('Lebih kuat dari pasar'),
+    );
+  });
+
+  test('uji skor: kesimpulan butuh sampel cukup', () {
+    ScoreBacktest bt(int n, double hi, double lo) => ScoreBacktest(
+      horizonDays: 20,
+      tickers: 3,
+      groups: [
+        (score: 4, samples: n, avgReturnPct: hi, winRatePct: 60),
+        (score: 2, samples: n, avgReturnPct: lo, winRatePct: 40),
+      ],
+    );
+    expect(bt(40, 3, -1).verdict, contains('skor cukup membedakan'));
+    expect(bt(40, 0.5, 0.2).verdict, contains('jangan terlalu mengandalkan skor'));
+    expect(bt(5, 3, -1).verdict, startsWith('Data belum cukup'));
+    expect(bt(40, 3, -1).averageOf([4, 5]), 3);
+  });
+
   test('API: kontrak /api/signals/ranking', () async {
     final api = _FakeApi({
       'items': [
@@ -103,18 +134,34 @@ void main() {
           'week52Low': 800,
           'price': 1250,
           'updatedAt': '2026-10-31T01:00:00.000Z',
+          'scoreWeekAgo': 3,
+          'pnlPct': -11.5,
+          'relativeStrength': {'benchmark': 'IHSG', 'days': 90, 'stockPct': 6.7, 'benchmarkPct': 4.9},
         },
       ],
       'missing': ['ZRD:IDX'],
+      'backtest': {
+        'horizonDays': 20,
+        'tickers': 3,
+        'groups': [
+          {'score': null, 'samples': 780, 'avgReturnPct': 0.42, 'winRatePct': 49.7},
+          {'score': 5, 'samples': 0, 'avgReturnPct': null, 'winRatePct': null},
+        ],
+      },
     });
     final r = await TechnicalRankApiDataSource(api).fetch();
     expect(r.items.single.positionId, 'p1');
     expect(r.items.single.week52Position, 90);
     expect(r.missing, ['ZRD:IDX']);
+    expect(r.items.single.scoreWeekAgo, 3);
+    expect(r.items.single.pnlPct, -11.5);
+    expect(r.items.single.relativeGap, closeTo(1.8, 1e-9));
+    expect(r.backtest!.group(null)!.samples, 780);
+    expect(r.backtest!.group(5)!.avgReturnPct, isNull);
   });
 
   testWidgets('halaman: urutan, nomor peringkat tetap saat difilter, ticker tanpa data', (tester) async {
-    tester.view.physicalSize = const Size(390, 2000);
+    tester.view.physicalSize = const Size(390, 3600); // semua kartu + uji skor ter-render (ListView lazy)
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
@@ -140,6 +187,9 @@ void main() {
     expect(y['BBCA']! < y['AAPL']! && y['AAPL']! < y['NVDA']! && y['NVDA']! < y['TLKM']!, isTrue);
     expect(find.text('#1'), findsOneWidget);
     expect(find.textContaining('Belum ada data teknikal: BTC'), findsOneWidget);
+    expect(find.text('Skor 4/5 · naik dari 3'), findsOneWidget); // BBCA
+    expect(find.text('Uji skor · 1 tahun'), findsOneWidget);
+    expect(find.textContaining('skor cukup membedakan'), findsOneWidget);
 
     await tester.ensureVisible(find.text('Watchlist 2')); // chip terakhir di bar yang bisa digulir
     await tester.pumpAndSettle();

@@ -32,6 +32,8 @@ class TechnicalApiDataSource implements TechnicalRemoteDataSource {
             macdSignal: _n(p['macdSignal']),
             macdHist: _n(p['macdHist']),
             volumeMa20: _n(p['volumeMA20']),
+            atr: _n(p['atr']),
+            score: (p['score'] as num?)?.toInt(),
           ),
       ],
       signal: s == null
@@ -85,6 +87,13 @@ class TechnicalFixtureDataSource implements TechnicalRemoteDataSource {
             macdSignal: macdSignal[i],
             macdHist: macd[i] == null || macdSignal[i] == null ? null : macd[i]! - macdSignal[i]!,
             volumeMa20: volMa[i],
+            atr: closes[i] * 0.018,
+            // Ilustrasi: skor ikut tren EMA (data asli memakai aturan skor backend).
+            score: ema20[i] == null || ema50[i] == null
+                ? null
+                : ema20[i]! > ema50[i]!
+                ? (rsi[i] != null && rsi[i]! > 70 ? 3 : 4)
+                : (rsi[i] != null && rsi[i]! < 30 ? 3 : 2),
           ),
       ],
       signal: TaSignal(

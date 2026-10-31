@@ -100,7 +100,7 @@ class PositionDetailPage extends StatelessWidget {
                 const SectionHeader('Teknikal'),
                 BlocProvider(
                   create: (_) => sl<TechnicalCubit>(param1: position.id)..load(),
-                  child: const TechnicalSection(),
+                  child: TechnicalSection(pnlPercent: position.unrealizedPercent),
                 ),
               ],
             ),
