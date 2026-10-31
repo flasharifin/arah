@@ -29,6 +29,13 @@ void main() {
       ..registerSingleton<PushNotificationService>(_FakePush());
   });
 
+  // Tombol di bawah sheet bisa berada di luar layar uji 360×800; gulir dulu seperti pengguna.
+  Future<void> tapVisible(WidgetTester tester, Finder finder) async {
+    await tester.ensureVisible(finder);
+    await tester.pumpAndSettle();
+    await tester.tap(finder);
+  }
+
   Future<void> openFromMore(WidgetTester tester, String menu) async {
     await tester.tap(find.text('Lainnya'));
     await tester.pumpAndSettle();
@@ -57,7 +64,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.widgetWithText(TextFormField, 'Kode saham'), 'bbri');
     await tester.enterText(find.widgetWithText(TextFormField, 'Harga target (opsional)'), '4500');
-    await tester.tap(find.text('Simpan'));
+    await tapVisible(tester, find.text('Simpan'));
     await tester.pumpAndSettle();
     expect(find.textContaining('BBRI'), findsOneWidget);
     // sinyal & rentang 52 minggu dari data fixture TLKM
@@ -66,7 +73,10 @@ void main() {
 
     // Catat pembelian dari watchlist: kode terisi, tersimpan ke portofolio
     final tlkmCard = find.ancestor(of: find.textContaining('TLKM'), matching: find.byType(AppCard));
-    await tester.tap(find.descendant(of: tlkmCard, matching: find.text('Catat pembelian')));
+    final buyButton = find.descendant(of: tlkmCard, matching: find.text('Catat pembelian'));
+    await tester.ensureVisible(buyButton);
+    await tester.pumpAndSettle();
+    await tester.tap(buyButton);
     await tester.pumpAndSettle();
     await tester.enterText(find.widgetWithText(TextFormField, 'Lot (100 lembar)'), '5');
     await tester.enterText(find.widgetWithText(TextFormField, 'Harga beli per lembar'), '2900');
@@ -76,6 +86,8 @@ void main() {
     await tester.tap(find.text('Simpan pencatatan'));
     await tester.pumpAndSettle();
     expect(find.text('Pembelian tercatat'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5)); // SnackBar (4 dtk) hilang, tidak menutupi sheet berikutnya
+    await tester.pumpAndSettle();
     await tester.pageBack();
     await tester.pumpAndSettle();
 
@@ -88,7 +100,7 @@ void main() {
       '3',
     );
     await tester.enterText(find.widgetWithText(TextFormField, 'Harga beli'), '8900');
-    await tester.tap(find.text('Simpan'));
+    await tapVisible(tester, find.text('Simpan'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Riwayat'));
     await tester.pumpAndSettle();
@@ -101,7 +113,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.widgetWithText(TextFormField, 'Budget per periode'), '1000000');
     await tester.enterText(find.widgetWithText(TextFormField, 'Target harga beli'), '8800');
-    await tester.tap(find.text('Simpan'));
+    await tapVisible(tester, find.text('Simpan'));
     await tester.pumpAndSettle();
     expect(find.text('Catat pelaksanaan'), findsNWidgets(2));
 
@@ -121,7 +133,7 @@ void main() {
     await tester.tap(find.byTooltip('Tambah dividen'));
     await tester.pumpAndSettle();
     await tester.enterText(find.widgetWithText(TextFormField, 'Dividen per saham (DPS)'), '200');
-    await tester.tap(find.text('Simpan'));
+    await tapVisible(tester, find.text('Simpan'));
     await tester.pumpAndSettle();
     expect(find.textContaining('200 per saham'), findsOneWidget); // tanpa tanggal bayar → Mendatang
     await tester.tap(find.text('Diterima'));
@@ -135,9 +147,18 @@ void main() {
     await tester.enterText(find.byType(TextField).last, 'Pasar sepi hari ini');
     await tester.pump();
     expect(find.text('Belum disimpan'), findsOneWidget);
-    await tester.tap(find.text('Simpan'));
+    await tapVisible(tester, find.text('Simpan'));
     await tester.pumpAndSettle();
     expect(find.text('Belum disimpan'), findsNothing);
+    expect(find.text('Kontribusi hari ini'), findsOneWidget); // rincian per saham untuk hari ini
+
+    // Kosongkan catatan lalu simpan → catatan dihapus
+    await tester.enterText(find.byType(TextField).last, '');
+    await tester.pump();
+    expect(find.text('Belum disimpan · catatan akan dihapus saat disimpan'), findsOneWidget);
+    await tapVisible(tester, find.text('Simpan'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Belum disimpan'), findsNothing);
 
     await tester.enterText(find.byType(TextField).last, 'Pasar sepi hari ini, lanjut besok');
     await tester.pump();

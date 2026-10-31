@@ -20,8 +20,11 @@ class JournalApiDataSource implements JournalRemoteDataSource {
     final results = await Future.wait([
       _api.get('/api/daily-note', query: {'days': '30'}),
       _api.get('/api/pnl/daily'),
+      // Rincian per saham opsional: gagal dimuat tidak boleh menggagalkan jurnal.
+      _api.get('/api/summary').then<Object?>((v) => v, onError: (_) => null),
     ]);
     return JournalData(
+      today: _contributions(results[2] as Map<String, dynamic>?),
       notes: {
         for (final n in (results[0] as List<dynamic>).cast<Map<String, dynamic>>())
           (n['date'] as String).substring(0, 10): n['note'] as String,
@@ -37,6 +40,21 @@ class JournalApiDataSource implements JournalRemoteDataSource {
     );
   }
 
+  /// `dailyRows` /api/summary; persen terhadap nilai porto sebelum perubahan hari ini.
+  static List<StockContribution> _contributions(Map<String, dynamic>? summary) {
+    if (summary == null) return const [];
+    final previousValue = _num(summary['portfolioValueIDR']) - _num(summary['totalDailyChangeIDR']);
+    return [
+      for (final r in (summary['dailyRows'] as List<dynamic>).cast<Map<String, dynamic>>())
+        StockContribution(
+          symbol: r['stockCode'] as String,
+          change: Money.idr(_num(r['dailyChangeIDR'])),
+          contributionPercent: previousValue > 0 ? _num(r['dailyChangeIDR']) / previousValue * 100 : 0,
+        ),
+    ];
+  }
+
+  /// Catatan kosong → server menghapus catatan tanggal itu.
   @override
   Future<void> saveNote(String day, String note) =>
       _api.post('/api/daily-note', body: {'date': day, 'note': note});
@@ -52,6 +70,10 @@ class JournalFixtureDataSource implements JournalRemoteDataSource {
     final yesterday = dayKey(DateTime.now().subtract(const Duration(days: 1)));
     return JournalData(
       notes: Map.of(_notes),
+      today: const [
+        StockContribution(symbol: 'BBCA', change: Money.idr(-300000), contributionPercent: -0.3),
+        StockContribution(symbol: 'TLKM', change: Money.idr(-150000), contributionPercent: -0.15),
+      ],
       pnl: {
         yesterday: const DailyPnl(
           portfolioValue: Money.idr(98450000),
@@ -63,5 +85,6 @@ class JournalFixtureDataSource implements JournalRemoteDataSource {
   }
 
   @override
-  Future<void> saveNote(String day, String note) async => _notes[day] = note;
+  Future<void> saveNote(String day, String note) async =>
+      note.isEmpty ? _notes.remove(day) : (_notes[day] = note);
 }

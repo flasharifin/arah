@@ -148,6 +148,27 @@ class _JournalPageState extends State<JournalPage> {
                                 ),
                         ),
                         const SizedBox(height: AppSpacing.lg),
+                        // Server hanya menyimpan total PnL harian; rincian per saham dihitung dari harga hari ini.
+                        if (_key != dayKey(DateTime.now()))
+                          Text('Rincian per saham hanya tersedia untuk hari ini.', style: text.bodySmall)
+                        else
+                          AppCard(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text('Kontribusi hari ini', style: text.titleSmall),
+                                const SizedBox(height: AppSpacing.sm),
+                                if (data.today.isEmpty)
+                                  Text('Belum ada perubahan harga posisi hari ini.', style: text.bodySmall),
+                                for (final c in data.today)
+                                  InfoRow(
+                                    label: c.symbol,
+                                    value: PnlText(amount: c.change, percent: c.contributionPercent),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        const SizedBox(height: AppSpacing.lg),
                         TextField(
                           controller: _note,
                           minLines: 4,
@@ -160,15 +181,15 @@ class _JournalPageState extends State<JournalPage> {
                         ),
                         if (_dirty) ...[
                           const SizedBox(height: AppSpacing.sm),
-                          Text('Belum disimpan', style: text.bodySmall),
+                          Text(
+                            _note.text.trim().isEmpty
+                                ? 'Belum disimpan · catatan akan dihapus saat disimpan'
+                                : 'Belum disimpan',
+                            style: text.bodySmall,
+                          ),
                         ],
                         const SizedBox(height: AppSpacing.lg),
-                        PrimaryButton(
-                          label: 'Simpan',
-                          busy: _busy,
-                          // Backend menolak catatan kosong, jadi catatan tidak bisa dikosongkan dari sini.
-                          onPressed: _dirty && _note.text.trim().isNotEmpty ? _save : null,
-                        ),
+                        PrimaryButton(label: 'Simpan', busy: _busy, onPressed: _dirty ? _save : null),
                       ],
                     ),
                   ),

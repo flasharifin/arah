@@ -125,7 +125,7 @@ class _WatchCard extends StatelessWidget {
               LinearProgressIndicator(
                 value: (pos / 100).clamp(0, 1),
                 semanticsLabel: 'Posisi harga dalam rentang 52 minggu',
-                semanticsValue: '${pos.round()}%',
+                semanticsValue: '${pos.round()}', // progress bar: harus angka (0–100), bukan '19%'
               ),
               Row(
                 children: [

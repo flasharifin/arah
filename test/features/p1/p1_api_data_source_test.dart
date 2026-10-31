@@ -240,6 +240,25 @@ void main() {
     expect((api.writes[2].$1, api.writes[2].$2), ('DELETE', '/api/dividends/d1'));
   });
 
+  test('jurnal: kontribusi per saham = perubahan hari ini / nilai porto sebelum perubahan', () async {
+    final api = _FakeApi({
+      '/api/daily-note': <dynamic>[],
+      '/api/pnl/daily': <dynamic>[],
+      '/api/summary': {
+        'portfolioValueIDR': 100000000,
+        'totalDailyChangeIDR': -450000,
+        'dailyRows': [
+          {'stockCode': 'BBCA', 'exchange': 'IDX', 'dailyChangeIDR': -300000},
+          {'stockCode': 'TLKM', 'exchange': 'IDX', 'dailyChangeIDR': -150000},
+        ],
+      },
+    });
+    final [bbca, tlkm] = (await JournalApiDataSource(api).load()).today;
+    expect((bbca.symbol, bbca.change), ('BBCA', const Money.idr(-300000)));
+    expect(bbca.contributionPercent, closeTo(-300000 / 100450000 * 100, 1e-9)); // ≈ −0,2987%
+    expect(tlkm.contributionPercent, closeTo(-150000 / 100450000 * 100, 1e-9));
+  });
+
   test('jurnal: catatan & PnL dikunci per YYYY-MM-DD, simpan mengirim tanggal yang sama', () async {
     final api = _FakeApi({
       '/api/daily-note': [
