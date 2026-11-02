@@ -81,6 +81,11 @@ import 'package:arah/features/settings/data/repositories/settings_repository_imp
 import 'package:arah/features/settings/domain/repositories/settings_repository.dart';
 import 'package:arah/features/settings/domain/usecases/settings_usecases.dart';
 import 'package:arah/features/settings/presentation/bloc/settings_cubit.dart';
+import 'package:arah/features/notifications/data/datasources/notification_remote_data_source.dart';
+import 'package:arah/features/notifications/data/repositories/notification_repository_impl.dart';
+import 'package:arah/features/notifications/domain/repositories/notification_repository.dart';
+import 'package:arah/features/notifications/domain/usecases/notification_usecases.dart';
+import 'package:arah/features/notifications/presentation/bloc/notifications_cubit.dart';
 import 'package:arah/features/watchlist/data/datasources/watchlist_remote_data_source.dart';
 import 'package:arah/features/watchlist/data/repositories/watchlist_repository_impl.dart';
 import 'package:arah/features/watchlist/domain/repositories/watchlist_repository.dart';
@@ -178,6 +183,19 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
         saveGoal: SaveWealthGoal(sl()),
       ),
     )
+    // Notifikasi
+    ..registerLazySingleton<NotificationRemoteDataSource>(
+      () => useFixtures ? NotificationFixtureDataSource() : NotificationApiDataSource(sl()),
+    )
+    ..registerLazySingleton<NotificationRepository>(() => NotificationRepositoryImpl(sl()))
+    ..registerFactory(() => NotificationsCubit(get: GetNotifications(sl()), mark: MarkNotificationRead(sl())))
+    ..registerFactory(
+      () => UnreadNotificationsCubit(
+        get: GetUnreadNotificationCount(sl()),
+        pushes: sl<PushNotificationService>().pushes,
+      ),
+    )
+    ..registerFactory(() => NotificationPrefsCubit(get: GetNotificationPrefs(sl()), save: SaveNotificationPrefs(sl())))
     // Watchlist
     ..registerLazySingleton<WatchlistRemoteDataSource>(
       () => useFixtures ? WatchlistFixtureDataSource() : WatchlistApiDataSource(sl()),

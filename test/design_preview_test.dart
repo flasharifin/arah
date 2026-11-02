@@ -23,6 +23,10 @@ class _PreviewPush implements PushNotificationService {
   Future<void> unregisterDevice() async {}
   @override
   Stream<String> get openedRoutes => const Stream.empty();
+  @override
+  Stream<void> get pushes => const Stream.empty();
+  @override
+  Future<bool> isPermissionGranted() async => true;
 }
 
 void main() {

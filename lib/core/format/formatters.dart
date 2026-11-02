@@ -55,6 +55,9 @@ abstract final class Fmt {
   static String date(DateTime? value) =>
       value == null ? missing : DateFormat('d MMM yyyy', 'id').format(value.toLocal());
 
+  /// `09.30`, untuk daftar yang sudah dikelompokkan per hari.
+  static String time(DateTime value) => DateFormat('HH.mm', 'id').format(value.toLocal());
+
   /// `28 Okt, 09.30 WIB` — waktu selalu tampil dengan zona.
   static String dateTime(DateTime? value) {
     if (value == null) return missing;

@@ -18,6 +18,10 @@ class _FakePush implements PushNotificationService {
 
   @override
   Stream<String> get openedRoutes => const Stream.empty();
+  @override
+  Stream<void> get pushes => const Stream.empty();
+  @override
+  Future<bool> isPermissionGranted() async => true;
 
   @override
   Future<void> unregisterDevice() async {}

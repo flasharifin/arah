@@ -73,7 +73,7 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     const Image(image: AssetImage('assets/images/arah-logo.png'), height: 120, semanticLabel: 'Arah'),
                     const SizedBox(height: AppSpacing.xxl),
-                    Text('Kenali asetmu.\nTentukan langkahmu.', style: text.headlineSmall),
+                    Text('Kenali asetmu.\nTentukan arahmu.', style: text.headlineSmall),
                     const SizedBox(height: AppSpacing.sm),
                     Text('Catat investasi, pantau kekayaan, dan tanyakan datamu ke AI.', style: text.bodySmall),
                     const SizedBox(height: AppSpacing.xxl),

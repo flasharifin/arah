@@ -39,6 +39,9 @@ import 'package:arah/features/letter/presentation/bloc/letter_cubit.dart';
 import 'package:arah/features/letter/presentation/pages/investor_letter_page.dart';
 import 'package:arah/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:arah/features/settings/presentation/pages/settings_page.dart';
+import 'package:arah/features/notifications/presentation/bloc/notifications_cubit.dart';
+import 'package:arah/features/notifications/presentation/pages/notification_settings_page.dart';
+import 'package:arah/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:arah/features/watchlist/presentation/bloc/watchlist_cubit.dart';
 import 'package:arah/features/watchlist/presentation/pages/watchlist_page.dart';
 import 'package:flutter/widgets.dart';
@@ -95,6 +98,7 @@ GoRouter createRouter(AuthBloc auth) {
             BlocProvider(create: (_) => sl<PortfolioBloc>()..add(const PortfolioRequested())),
             BlocProvider(create: (_) => sl<ChatBloc>()),
             BlocProvider(create: (_) => sl<NetWorthCubit>()..load()),
+            BlocProvider(create: (_) => sl<UnreadNotificationsCubit>()..load()),
           ],
           child: AppShell(shell: shell),
         ),
@@ -112,6 +116,22 @@ GoRouter createRouter(AuthBloc auth) {
                     builder: (_, _) => const PortfolioPage(initialTab: 'kinerja'),
                   ),
                   GoRoute(path: 'journal', builder: (_, _) => _journal()),
+                  GoRoute(
+                    path: 'notifications',
+                    builder: (_, _) => BlocProvider(
+                      create: (_) => sl<NotificationsCubit>()..load(),
+                      child: const NotificationsPage(),
+                    ),
+                    routes: [
+                      GoRoute(
+                        path: 'settings',
+                        builder: (_, _) => BlocProvider(
+                          create: (_) => sl<NotificationPrefsCubit>()..load(),
+                          child: const NotificationSettingsPage(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ],

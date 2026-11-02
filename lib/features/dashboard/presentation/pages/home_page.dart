@@ -10,6 +10,8 @@ import 'package:arah/features/dashboard/domain/entities/dashboard_summary.dart';
 import 'package:arah/features/dashboard/presentation/bloc/dashboard_cubit.dart';
 import 'package:arah/features/networth/domain/entities/net_worth.dart';
 import 'package:arah/features/networth/presentation/bloc/net_worth_cubit.dart';
+import 'package:arah/features/notifications/presentation/bloc/notifications_cubit.dart';
+import 'package:arah/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:arah/features/portfolio/domain/entities/portfolio.dart';
 import 'package:arah/features/portfolio/presentation/bloc/portfolio_bloc.dart';
 import 'package:arah/features/portfolio/presentation/widgets/currency_totals.dart';
@@ -60,6 +62,8 @@ class HomePage extends StatelessWidget {
             icon: Icon(hidden ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
           ),
           const SizedBox(width: AppSpacing.sm),
+          const NotificationBell(),
+          const SizedBox(width: AppSpacing.sm),
           const AskAiButton(),
           const SizedBox(width: AppSpacing.lg),
         ],
@@ -71,7 +75,11 @@ class HomePage extends StatelessWidget {
           builder: (context, data) => RefreshIndicator(
             onRefresh: () async {
               context.read<PortfolioBloc>().add(const PortfolioRequested());
-              await Future.wait([cubit.load(), context.read<NetWorthCubit>().load()]);
+              await Future.wait([
+                cubit.load(),
+                context.read<NetWorthCubit>().load(),
+                context.read<UnreadNotificationsCubit>().load(),
+              ]);
             },
             child: ListView(
               padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.xxl),

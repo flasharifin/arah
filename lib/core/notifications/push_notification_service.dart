@@ -42,6 +42,11 @@ class PushNotificationService {
     importance: Importance.high,
   );
 
+  final _pushes = StreamController<void>.broadcast();
+
+  /// Push diterima saat app terbuka atau dibuka dari notifikasi; dipakai untuk memperbarui lonceng.
+  Stream<void> get pushes => _pushes.stream;
+
   /// Rute dari notifikasi yang di-tap: dari FCM, notifikasi lokal, dan yang membuka app dari kondisi tertutup.
   Stream<String> get openedRoutes => _routes.stream;
 
@@ -53,10 +58,21 @@ class PushNotificationService {
     if (launch?.didNotificationLaunchApp ?? false) _addRoute(launch!.notificationResponse?.payload);
     final initial = await _fcm.getInitialMessage();
     if (initial != null) _addRoute(initial.data['route']);
-    FirebaseMessaging.onMessageOpenedApp.listen((m) => _addRoute(m.data['route']));
+    FirebaseMessaging.onMessageOpenedApp.listen((m) {
+      _addRoute(m.data['route']);
+      _pushes.add(null);
+    });
 
     // Sistem tidak menampilkan notifikasi FCM saat app terbuka; tampilkan sebagai notifikasi lokal.
-    FirebaseMessaging.onMessage.listen((m) => _show(_local, m));
+    FirebaseMessaging.onMessage.listen((m) {
+      _show(_local, m);
+      _pushes.add(null);
+    });
+  }
+
+  Future<bool> isPermissionGranted() async {
+    final status = (await _fcm.getNotificationSettings()).authorizationStatus;
+    return status == AuthorizationStatus.authorized || status == AuthorizationStatus.provisional;
   }
 
   /// Minta izin notifikasi lalu daftarkan perangkat ke FCM dan backend (`PUT /api/mobile/devices`).
