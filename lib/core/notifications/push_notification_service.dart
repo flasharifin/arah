@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:app_settings/app_settings.dart';
 import 'package:arah/core/network/api_client.dart';
 import 'package:arah/core/theme/app_colors.dart';
 import 'package:firebase_app_installations/firebase_app_installations.dart';
@@ -74,6 +75,8 @@ class PushNotificationService {
     final status = (await _fcm.getNotificationSettings()).authorizationStatus;
     return status == AuthorizationStatus.authorized || status == AuthorizationStatus.provisional;
   }
+
+  Future<void> openNotificationSettings() => AppSettings.openAppSettings(type: AppSettingsType.notification);
 
   /// Minta izin notifikasi lalu daftarkan perangkat ke FCM dan backend (`PUT /api/mobile/devices`).
   /// Dipanggil setiap sesi login aktif (login & app dibuka dengan sesi tersimpan).

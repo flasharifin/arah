@@ -31,8 +31,13 @@ class _FakeApi extends ApiClient {
 }
 
 class _FakePush implements PushNotificationService {
+  bool granted = true;
+  int opened = 0;
+
   @override
-  Future<bool> isPermissionGranted() async => true;
+  Future<bool> isPermissionGranted() async => granted;
+  @override
+  Future<void> openNotificationSettings() async => opened++;
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -158,7 +163,8 @@ void main() {
 
     testWidgets('pengaturan: ganti cara kirim dan saklar tersimpan, perkiraan berubah', (tester) async {
       sl.allowReassignment = true;
-      sl.registerSingleton<PushNotificationService>(_FakePush());
+      final push = _FakePush();
+      sl.registerSingleton<PushNotificationService>(push);
       addTearDown(sl.reset);
       // Layar tinggi supaya semua saklar terlihat tanpa menggulir.
       tester.view
@@ -176,11 +182,27 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Izin notifikasi aktif'), findsOneWidget);
-      expect(find.textContaining('Maksimal 5 push'), findsOneWidget);
+      await tester.tap(find.text('Buka'));
+      expect(push.opened, 1);
+      // Izin dimatikan di pengaturan HP → terbaca lagi saat kembali ke app.
+      push.granted = false;
+      tester.binding
+        ..handleAppLifecycleStateChanged(AppLifecycleState.inactive)
+        ..handleAppLifecycleStateChanged(AppLifecycleState.hidden)
+        ..handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding
+        ..handleAppLifecycleStateChanged(AppLifecycleState.hidden)
+        ..handleAppLifecycleStateChanged(AppLifecycleState.inactive)
+        ..handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(find.text('Izin notifikasi mati'), findsOneWidget);
+      expect(find.text('5'), findsOneWidget);
+      expect(find.text('push maksimal di hari biasa, ditambah Penting kalau terjadi'), findsOneWidget);
 
       await tester.tap(find.text('Gabung jadi satu push pagi'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Maksimal 1 push'), findsOneWidget);
+      expect(find.text('1'), findsOneWidget);
+      expect(find.text('push gabungan pagi di hari biasa, ditambah Penting kalau terjadi'), findsOneWidget);
       final saved = await GetNotificationPrefs(repo)(const NoParams());
       expect(saved.fold((_) => null, (p) => p.mode), NotificationMode.combined);
 

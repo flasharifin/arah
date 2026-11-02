@@ -15,7 +15,7 @@ class NotificationSettingsPage extends StatelessWidget {
   const NotificationSettingsPage({super.key});
 
   static const _hints = {
-    NotificationGroup.important: 'Selalu dikirim sebagai push tersendiri.',
+    NotificationGroup.important: 'Selalu masuk sebagai push tersendiri.',
     NotificationGroup.daily: 'Bisa digabung jadi satu push pagi.',
     NotificationGroup.report: 'Bisa digabung jadi satu push pagi.',
   };
@@ -52,47 +52,28 @@ class NotificationSettingsPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text('Cara kirim', style: text.titleMedium),
-                          RadioGroup<NotificationMode>(
-                            groupValue: prefs.mode,
-                            onChanged: (mode) => mode == null ? null : _save(context, prefs.copyWith(mode: mode)),
-                            child: const Column(
-                              children: [
-                                RadioListTile<NotificationMode>(
-                                  contentPadding: EdgeInsets.zero,
-                                  value: NotificationMode.separate,
-                                  title: Text('Kirim terpisah'),
-                                  subtitle: Text('Satu push per pesan, sebagian masuk sekitar 00.00 WIB'),
-                                ),
-                                RadioListTile<NotificationMode>(
-                                  contentPadding: EdgeInsets.zero,
-                                  value: NotificationMode.combined,
-                                  title: Text('Gabung jadi satu push pagi'),
-                                  subtitle: Text('Masuk sekitar 08.00 WIB. Yang penting tetap dikirim sendiri'),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SwitchListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text('Tahan push tengah malam'),
-                            subtitle: const Text('Yang dicek sekitar 00.00 WIB baru masuk ke HP sekitar 08.00 WIB'),
-                            value: prefs.holdNight,
-                            onChanged: (on) => _save(context, prefs.copyWith(holdNight: on)),
+                          const SizedBox(height: AppSpacing.md),
+                          _ModeOption(
+                            label: 'Gabung jadi satu push pagi',
+                            hint: 'Isi lengkap tiap notifikasi tetap ada di daftar',
+                            selected: prefs.mode == NotificationMode.combined,
+                            onTap: () => _save(context, prefs.copyWith(mode: NotificationMode.combined)),
                           ),
                           const SizedBox(height: AppSpacing.sm),
-                          Container(
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            decoration: BoxDecoration(
-                              color: AppColors.accent,
-                              borderRadius: BorderRadius.circular(AppRadius.field),
-                            ),
-                            child: Text(
-                              prefs.maxDailyPushes == 0
-                                  ? 'Tidak ada push rutin harian'
-                                  : 'Maksimal ${prefs.maxDailyPushes} push rutin di hari biasa, '
-                                        'ditambah laporan dan yang penting kalau ada',
-                              style: text.labelLarge?.copyWith(color: AppColors.onAccent),
-                            ),
+                          _ModeOption(
+                            label: 'Kirim terpisah',
+                            hint: 'Satu push untuk tiap pesan',
+                            selected: prefs.mode == NotificationMode.separate,
+                            onTap: () => _save(context, prefs.copyWith(mode: NotificationMode.separate)),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          _PushEstimate(prefs),
+                          const SizedBox(height: AppSpacing.xs),
+                          _SwitchRow(
+                            label: 'Tahan push tengah malam',
+                            hint: 'Yang dicek sekitar 00.00 WIB baru masuk ke HP sekitar 08.00 WIB',
+                            value: prefs.holdNight,
+                            onChanged: (on) => _save(context, prefs.copyWith(holdNight: on)),
                           ),
                         ],
                       ),
@@ -105,14 +86,16 @@ class NotificationSettingsPage extends StatelessWidget {
                           children: [
                             Text(group.label, style: text.titleMedium),
                             Text(_hints[group]!, style: text.bodySmall),
-                            for (final type in NotificationType.values.where((t) => t.group == group))
-                              SwitchListTile(
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(type.label),
-                                subtitle: Text(type.hint),
+                            const SizedBox(height: AppSpacing.xs),
+                            for (final type in NotificationType.values.where((t) => t.group == group)) ...[
+                              const Divider(height: 1, color: AppColors.divider),
+                              _SwitchRow(
+                                label: type.label,
+                                hint: type.hint,
                                 value: prefs.isEnabled(type),
                                 onChanged: (on) => _save(context, prefs.withType(type, enabled: on)),
                               ),
+                            ],
                           ],
                         ),
                       ),
@@ -135,6 +118,141 @@ class NotificationSettingsPage extends StatelessWidget {
   }
 }
 
+/// Satu pilihan cara kirim: kartu kecil dengan titik pilihan.
+class _ModeOption extends StatelessWidget {
+  const _ModeOption({required this.label, required this.hint, required this.selected, required this.onTap});
+  final String label;
+  final String hint;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final radius = BorderRadius.circular(AppRadius.field);
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected ? AppColors.primarySoft : AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: radius,
+          side: BorderSide(color: selected ? AppColors.primary : AppColors.border),
+        ),
+        child: InkWell(
+          borderRadius: radius,
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 64),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
+              child: Row(
+                children: [
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      shape: BoxShape.circle,
+                      border: selected
+                          ? Border.all(color: AppColors.primary, width: 6)
+                          : Border.all(color: AppColors.textSecondary, width: 2),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(label, style: text.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                        Text(hint, style: text.bodySmall),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Perkiraan jumlah push yang langsung berubah mengikuti pilihan di layar ini.
+class _PushEstimate extends StatelessWidget {
+  const _PushEstimate(this.prefs);
+  final NotificationPrefs prefs;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final base = prefs.mode == NotificationMode.combined
+        ? 'push gabungan pagi di hari biasa'
+        : 'push maksimal di hari biasa';
+    final importantOn = NotificationType.values.any((t) => t.group == NotificationGroup.important && prefs.isEnabled(t));
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(color: AppColors.accent, borderRadius: BorderRadius.circular(AppRadius.field)),
+      child: Row(
+        children: [
+          Text(
+            '${prefs.maxDailyPushes}',
+            style: text.headlineMedium?.copyWith(
+              color: AppColors.onAccent,
+              fontWeight: FontWeight.w700,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              importantOn ? '$base, ditambah Penting kalau terjadi' : base,
+              style: text.labelLarge?.copyWith(color: AppColors.onAccent, fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SwitchRow extends StatelessWidget {
+  const _SwitchRow({required this.label, required this.hint, required this.value, required this.onChanged});
+  final String label;
+  final String hint;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return MergeSemantics(
+      child: InkWell(
+        onTap: () => onChanged(!value),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+                    Text(hint, style: text.bodySmall),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Switch(value: value, onChanged: onChanged),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _PermissionCard extends StatefulWidget {
   const _PermissionCard();
 
@@ -144,22 +262,26 @@ class _PermissionCard extends StatefulWidget {
 
 class _PermissionCardState extends State<_PermissionCard> {
   final _push = sl<PushNotificationService>();
+  // Izin diubah di luar app: cek lagi saat pengguna kembali dari pengaturan HP.
+  late final _lifecycle = AppLifecycleListener(onResume: _check);
   bool? _granted;
 
   @override
   void initState() {
     super.initState();
+    _lifecycle;
     _check();
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
   }
 
   Future<void> _check() async {
     final granted = await _push.isPermissionGranted();
     if (mounted) setState(() => _granted = granted);
-  }
-
-  Future<void> _request() async {
-    await _push.requestPermissionAndRegister();
-    await _check();
   }
 
   @override
@@ -175,9 +297,18 @@ class _PermissionCardState extends State<_PermissionCard> {
       ),
       child: Row(
         children: [
-          Icon(
-            granted ? Icons.notifications_active_outlined : Icons.notifications_off_outlined,
-            color: granted ? AppColors.primary : AppColors.warning,
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: granted ? AppColors.primary : AppColors.warning,
+              borderRadius: BorderRadius.circular(AppRadius.field),
+            ),
+            child: Icon(
+              granted ? Icons.notifications_none : Icons.notifications_off_outlined,
+              size: 20,
+              color: AppColors.surface,
+            ),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -185,14 +316,23 @@ class _PermissionCardState extends State<_PermissionCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(granted ? 'Izin notifikasi aktif' : 'Izin notifikasi mati', style: text.titleSmall),
-                Text(
-                  granted ? 'Push bisa masuk ke HP ini' : 'Kalau tidak muncul pilihan, aktifkan dari pengaturan HP',
-                  style: text.bodySmall,
-                ),
+                Text(granted ? 'Diatur dari pengaturan HP' : 'Aktifkan dari pengaturan HP', style: text.bodySmall),
               ],
             ),
           ),
-          if (!granted) TextButton(onPressed: _request, child: const Text('Izinkan')),
+          const SizedBox(width: AppSpacing.md),
+          OutlinedButton(
+            onPressed: _push.openNotificationSettings,
+            // Tema memberi lebar minimum tak hingga; di dalam Row tombol ini harus selebar isinya.
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 44),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              foregroundColor: AppColors.primary,
+              side: const BorderSide(color: AppColors.primary),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.field)),
+            ),
+            child: const Text('Buka', semanticsLabel: 'Buka pengaturan notifikasi HP'),
+          ),
         ],
       ),
     );

@@ -22,6 +22,8 @@ class _FakePush implements PushNotificationService {
   Stream<void> get pushes => const Stream.empty();
   @override
   Future<bool> isPermissionGranted() async => true;
+  @override
+  Future<void> openNotificationSettings() async {}
 
   @override
   Future<void> unregisterDevice() async {}

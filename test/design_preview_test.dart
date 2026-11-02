@@ -27,6 +27,8 @@ class _PreviewPush implements PushNotificationService {
   Stream<void> get pushes => const Stream.empty();
   @override
   Future<bool> isPermissionGranted() async => true;
+  @override
+  Future<void> openNotificationSettings() async {}
 }
 
 void main() {
