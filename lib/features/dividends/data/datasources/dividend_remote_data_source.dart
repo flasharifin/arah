@@ -41,11 +41,14 @@ class DividendApiDataSource implements DividendRemoteDataSource {
       'cumDate': d.cumDate?.toIso8601String(),
       'exDate': d.exDate?.toIso8601String(),
       'paymentDate': d.paymentDate?.toIso8601String(),
-      'note': d.note,
     };
+    // POST menolak note null; PUT butuh null untuk menghapus catatan lama.
     return id == null
-        ? _api.post('/api/dividends', body: {...body, 'portfolioId': d.portfolioId, 'stockCode': d.symbol})
-        : _api.put('/api/dividends/$id', body: body);
+        ? _api.post(
+            '/api/dividends',
+            body: {...body, 'note': ?d.note, 'portfolioId': d.portfolioId, 'stockCode': d.symbol},
+          )
+        : _api.put('/api/dividends/$id', body: {...body, 'note': d.note});
   }
 
   @override

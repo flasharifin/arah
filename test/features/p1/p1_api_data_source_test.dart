@@ -216,12 +216,11 @@ void main() {
       'cumDate': null,
       'exDate': '2026-11-03T00:00:00.000Z',
       'paymentDate': null,
-      'note': null,
     };
     expect((api.writes[0].$1, api.writes[0].$2), ('POST', '/api/dividends'));
     expect(api.writes[0].$3, {...common, 'portfolioId': 'pf1', 'stockCode': 'BBCA'});
     expect((api.writes[1].$1, api.writes[1].$2), ('PUT', '/api/dividends/d1'));
-    expect(api.writes[1].$3, common);
+    expect(api.writes[1].$3, {...common, 'note': null}); // null = hapus catatan lama
     expect((api.writes[2].$1, api.writes[2].$2), ('DELETE', '/api/dividends/d1'));
   });
 

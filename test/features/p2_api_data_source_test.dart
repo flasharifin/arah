@@ -100,6 +100,18 @@ void main() {
           'days': 25,
           'ihsgDays': 25,
           'sp500Days': 0,
+          'var95Pct': null,
+          'cvar95Pct': null,
+          'varDays': 25,
+        },
+        'exposure': {
+          'sectors': [
+            {'name': 'Bank', 'valueIDR': 9e6, 'weight': 60},
+            {'name': 'Kripto', 'valueIDR': 6e6, 'weight': 40},
+          ],
+          'currencies': [
+            {'name': 'IDR', 'valueIDR': 15e6, 'weight': 100},
+          ],
         },
         'asOf': {'computedAt': '2026-10-31T00:00:00.000Z', 'usdToIdr': 16000},
       },
@@ -110,6 +122,9 @@ void main() {
     expect(a.positions.last.volatility, isNull);
     expect(a.correlations.single.r, isNull);
     expect(a.scenarios.single.drops, (idx: -10.0, us: -8.0, crypto: -15.0));
+    expect(a.sectors.map((s) => s.name), ['Bank', 'Kripto']);
+    expect(a.currencies.single.weight, 100);
+    expect(a.totalValue.amount, 15e6);
   });
 
   test('stress test: nilai × (1 + penurunan bursa)', () {

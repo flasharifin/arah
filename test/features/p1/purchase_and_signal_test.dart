@@ -75,8 +75,6 @@ void main() {
       'lot': 10.0,
       'avgPrice': 8000.0,
       'purchaseDate': '2026-10-30T00:00:00.000Z',
-      'sector': null,
-      'note': null,
       'requestId': 'req-1',
     });
     expect(_purchase().total, 8000000); // 10 lot × 100 lembar × 8000

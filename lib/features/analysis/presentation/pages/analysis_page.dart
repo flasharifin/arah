@@ -84,7 +84,12 @@ class _SummaryTab extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (analysis.portfolio case final risk?) ...[_PortfolioRiskCard(risk: risk), gap],
+              if (analysis.portfolio case final risk?) ...[
+                _PortfolioRiskCard(risk: risk),
+                gap,
+                _VarCard(risk: risk, total: analysis.totalValue),
+                gap,
+              ],
               ModuleCard(
                 title: 'Konsentrasi',
                 child: Column(
@@ -129,6 +134,10 @@ class _SummaryTab extends StatelessWidget {
                   ],
                 ),
               ),
+              if (analysis.sectors.isNotEmpty || analysis.currencies.isNotEmpty) ...[
+                gap,
+                _ExposureCard(analysis: analysis),
+              ],
               gap,
               ModuleCard(
                 title: 'Risiko per posisi · 1 bulan',
@@ -588,6 +597,136 @@ class _Heatmap extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// VaR historis 95% 1 hari dari catatan PnL harian, dalam persen dan rupiah.
+class _VarCard extends StatelessWidget {
+  const _VarCard({required this.risk, required this.total});
+  final PortfolioRisk risk;
+  final Money total;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final v = risk.var95Percent, cv = risk.cvar95Percent;
+    Money rupiah(double pct) => Money.idr((total.amount * pct / 100).abs());
+    return ModuleCard(
+      title: 'Hari buruk (VaR 95%)',
+      trailing: Text('${risk.days} hari PnL', style: text.bodySmall),
+      child: v == null || cv == null
+          ? Text(
+              'Butuh minimal $minVarDays hari catatan PnL harian (sekarang ${risk.days} hari).',
+              style: text.bodySmall,
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (v >= 0)
+                  Text('Bahkan di 5% hari terburuk, portomu tidak turun.', style: text.bodyMedium)
+                else ...[
+                  Text('Pada 1 dari 20 hari terburuk, portomu bisa turun', style: text.bodyMedium),
+                  const SizedBox(height: AppSpacing.xs),
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    crossAxisAlignment: WrapCrossAlignment.end,
+                    children: [
+                      Text(
+                        Fmt.percent(v),
+                        style: text.headlineSmall?.copyWith(color: AppColors.negative, fontWeight: FontWeight.w800),
+                      ),
+                      AmountText(rupiah(v), style: text.titleMedium),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text('atau lebih dalam sehari.', style: text.bodyMedium),
+                  const SizedBox(height: AppSpacing.md),
+                  InfoRow(
+                    label: 'Rata-rata di hari-hari itu',
+                    value: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        PnlText(percent: cv),
+                        AmountText(rupiah(cv), style: text.bodySmall),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Perkiraan dari ${risk.days} hari PnL terakhir, dikali nilai portofolio sekarang. Hari yang lebih buruk tetap '
+                  'bisa terjadi — ini gambaran, bukan batas.',
+                  style: text.bodySmall,
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+/// Porsi nilai per sektor dan per mata uang.
+class _ExposureCard extends StatelessWidget {
+  const _ExposureCard({required this.analysis});
+  final RiskAnalysis analysis;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    Widget group(String title, List<ExposureSlice> slices, int color) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(title, style: text.labelMedium?.copyWith(color: AppColors.textSecondary)),
+        const SizedBox(height: AppSpacing.xs),
+        for (final s in slices)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: Text(s.name, style: text.labelLarge)),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(Fmt.percent(s.weight, signed: false), style: text.labelLarge),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: (s.weight / 100).clamp(0, 1),
+                    minHeight: 8,
+                    color: AppColors.series[color],
+                    backgroundColor: AppColors.divider,
+                    semanticsLabel: '$title ${s.name}',
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+    final top = analysis.sectors.where((s) => s.name != 'Tanpa sektor' && s.name != 'Kripto').firstOrNull;
+    return ModuleCard(
+      title: 'Eksposur',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (top != null && top.weight >= 40) ...[
+            Text(
+              'Sektor ${top.name} = ${Fmt.percent(top.weight, signed: false)} — porsi besar di satu sektor.',
+              style: text.labelLarge?.copyWith(color: AppColors.warning),
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+          if (analysis.sectors.isNotEmpty) group('Sektor', analysis.sectors, 0),
+          if (analysis.sectors.isNotEmpty && analysis.currencies.isNotEmpty) const SizedBox(height: AppSpacing.sm),
+          if (analysis.currencies.isNotEmpty) group('Mata uang', analysis.currencies, 1),
+          if (analysis.sectors.any((s) => s.name == 'Tanpa sektor'))
+            Text('"Tanpa sektor" = sektor belum diisi di posisi.', style: text.bodySmall),
+        ],
+      ),
     );
   }
 }

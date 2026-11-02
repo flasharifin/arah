@@ -15,7 +15,7 @@ void main() {
   setUpAll(() => initializeDateFormatting('id'));
 
   Future<void> pump(WidgetTester tester, {double textScale = 1}) async {
-    tester.view.physicalSize = const Size(390, 1400);
+    tester.view.physicalSize = const Size(390, 2600); // ringkasan lengkap ter-render (ListView lazy)
     tester.view.devicePixelRatio = 1;
     tester.platformDispatcher.textScaleFactorTestValue = textScale;
     addTearDown(tester.view.reset);
@@ -51,5 +51,19 @@ void main() {
     expect(find.byKey(const ValueKey('beta-list')), findsOneWidget);
     expect(find.byKey(const ValueKey('beta-tiles')), findsNothing);
     expect(find.text('0,18'), findsOneWidget);
+  });
+
+  testWidgets('VaR & eksposur: persen, rupiah dari nilai porto, peringatan sektor besar', (tester) async {
+    for (final scale in [1.0, 2.0]) {
+      await pump(tester, textScale: scale);
+      expect(tester.takeException(), isNull, reason: 'teks $scale');
+    }
+    expect(find.text('Hari buruk (VaR 95%)'), findsOneWidget);
+    expect(find.text('−2,10%'), findsOneWidget);
+    // 2,1% × total fixture Rp147.975.000 ≈ Rp3,1 jt.
+    expect(find.textContaining('3.107.475'), findsOneWidget);
+    expect(find.text('Eksposur'), findsOneWidget);
+    expect(find.textContaining('Sektor Keuangan = 64,20%'), findsOneWidget);
+    expect(find.text('Mata uang'), findsOneWidget);
   });
 }

@@ -58,6 +58,8 @@ class PortfolioRisk extends Equatable {
     this.betaIhsg,
     this.betaSp500,
     this.betaBtc,
+    this.var95Percent,
+    this.cvar95Percent,
   });
   final double? sharpe;
 
@@ -68,9 +70,21 @@ class PortfolioRisk extends Equatable {
   final double? betaBtc;
   final int days;
 
+  /// VaR historis 95% 1 hari: batas 5% hari terburuk (negatif = turun); `null` = PnL < 60 hari.
+  final double? var95Percent;
+
+  /// Rata-rata hari-hari di 5% terburuk itu.
+  final double? cvar95Percent;
+
   @override
-  List<Object?> get props => [sharpe, riskFreePercent, betaIhsg, betaSp500, betaBtc, days];
+  List<Object?> get props => [sharpe, riskFreePercent, betaIhsg, betaSp500, betaBtc, days, var95Percent, cvar95Percent];
 }
+
+/// Porsi nilai satu kelompok (sektor / mata uang), [weight] persen dari total.
+typedef ExposureSlice = ({String name, Money value, double weight});
+
+/// Minimal hari PnL untuk VaR (sama dengan server).
+const minVarDays = 60;
 
 class RiskAnalysis extends Equatable {
   const RiskAnalysis({
@@ -79,6 +93,8 @@ class RiskAnalysis extends Equatable {
     required this.scenarios,
     required this.historyDays,
     this.portfolio,
+    this.sectors = const [],
+    this.currencies = const [],
   });
 
   /// `null` bila server belum mengirim (versi lama).
@@ -93,10 +109,16 @@ class RiskAnalysis extends Equatable {
   /// Hari perdagangan bersama untuk korelasi; 0 = belum bisa dihitung.
   final int historyDays;
 
+  /// Urut terbesar; kosong bila server belum mengirim (versi lama).
+  final List<ExposureSlice> sectors;
+  final List<ExposureSlice> currencies;
+
+  Money get totalValue => Money.idr(positions.fold(0.0, (s, p) => s + p.value.amount));
+
   RiskPosition? get largest => positions.isEmpty ? null : positions.reduce((a, b) => a.weight >= b.weight ? a : b);
 
   @override
-  List<Object?> get props => [positions, correlations, scenarios, historyDays, portfolio];
+  List<Object?> get props => [positions, correlations, scenarios, historyDays, portfolio, sectors, currencies];
 }
 
 /// Label tingkat sama dengan web (volLevel / ddLevel).

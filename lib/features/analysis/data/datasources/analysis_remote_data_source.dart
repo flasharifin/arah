@@ -13,9 +13,15 @@ class AnalysisApiDataSource implements AnalysisRemoteDataSource {
   static double _n(Object? v) => (v as num).toDouble();
   static double? _nOrNull(Object? v) => (v as num?)?.toDouble();
 
+  static List<ExposureSlice> _slices(Object? list) => [
+    for (final e in ((list as List<dynamic>?) ?? const []).cast<Map<String, dynamic>>())
+      (name: e['name'] as String, value: Money.idr(_n(e['valueIDR'])), weight: _n(e['weight'])),
+  ];
+
   @override
   Future<RiskAnalysis> fetch() async {
     final r = await _api.get('/api/analysis/risk') as Map<String, dynamic>;
+    final exposure = r['exposure'] as Map<String, dynamic>?;
     return RiskAnalysis(
       positions: [
         for (final p in (r['positions'] as List<dynamic>).cast<Map<String, dynamic>>())
@@ -51,9 +57,13 @@ class AnalysisApiDataSource implements AnalysisRemoteDataSource {
           betaSp500: _nOrNull(p['betaSp500']),
           betaBtc: _nOrNull(p['betaBtc']),
           days: (p['days'] as num).toInt(),
+          var95Percent: _nOrNull(p['var95Pct']),
+          cvar95Percent: _nOrNull(p['cvar95Pct']),
         ),
         _ => null,
       },
+      sectors: _slices(exposure?['sectors']),
+      currencies: _slices(exposure?['currencies']),
     );
   }
 }
@@ -133,7 +143,19 @@ class AnalysisFixtureDataSource implements AnalysisRemoteDataSource {
         betaSp500: 0.31,
         betaBtc: 0.18,
         days: 180,
+        var95Percent: -2.1,
+        cvar95Percent: -3.0,
       ),
+      sectors: [
+        (name: 'Keuangan', value: Money.idr(95000000), weight: 64.2),
+        (name: 'Kripto', value: Money.idr(33720000), weight: 22.8),
+        (name: 'Teknologi', value: Money.idr(13355000), weight: 9),
+        (name: 'Tanpa sektor', value: Money.idr(5900000), weight: 4),
+      ],
+      currencies: [
+        (name: 'IDR', value: Money.idr(100900000), weight: 68.2),
+        (name: 'USD', value: Money.idr(47075000), weight: 31.8),
+      ],
     );
   }
 }

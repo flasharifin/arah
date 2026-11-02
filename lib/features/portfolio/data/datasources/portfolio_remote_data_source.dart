@@ -40,8 +40,9 @@ class PortfolioApiDataSource implements PortfolioRemoteDataSource {
       'lot': p.quantity,
       'avgPrice': p.price,
       'purchaseDate': p.date.toIso8601String(),
-      'sector': p.sector,
-      'note': p.note,
+      // Validasi server menolak null: isian opsional yang kosong tidak dikirim.
+      'sector': ?p.sector,
+      'note': ?p.note,
       'requestId': p.requestId,
     },
   );
