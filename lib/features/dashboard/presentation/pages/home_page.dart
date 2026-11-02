@@ -36,7 +36,6 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<DashboardCubit>();
-    final hidden = context.select<PrivacyCubit, bool>((c) => c.state);
     final text = Theme.of(context).textTheme;
     return Scaffold(
       appBar: AppBar(
@@ -50,18 +49,6 @@ class HomePage extends StatelessWidget {
           ],
         ),
         actions: [
-          IconButton.outlined(
-            tooltip: hidden ? 'Tampilkan nominal' : 'Sembunyikan nominal',
-            onPressed: context.read<PrivacyCubit>().toggle,
-            style: IconButton.styleFrom(
-              side: const BorderSide(color: AppColors.border),
-              backgroundColor: AppColors.surface,
-              minimumSize: const Size.square(44),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            ),
-            icon: Icon(hidden ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
-          ),
-          const SizedBox(width: AppSpacing.sm),
           const NotificationBell(),
           const SizedBox(width: AppSpacing.sm),
           const AskAiButton(),
@@ -180,6 +167,7 @@ class _NetWorthHero extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final caption = text.bodySmall?.copyWith(color: AppColors.heroMuted);
     final change = data.dailyChange;
+    final hidden = context.select<PrivacyCubit, bool>((c) => c.state);
     return HeroCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,7 +179,30 @@ class _NetWorthHero extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
-          AmountText(data.netWorth, style: AppTypography.amountLarge.copyWith(color: Colors.white)),
+          Row(
+            children: [
+              // Mengecil bila panjang (ratusan juta ke atas), tidak terpotong atau mendorong tombol keluar kartu.
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: AmountText(data.netWorth, style: AppTypography.amountLarge.copyWith(color: Colors.white)),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              IconButton(
+                tooltip: hidden ? 'Tampilkan nominal' : 'Sembunyikan nominal',
+                onPressed: context.read<PrivacyCubit>().toggle,
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.heroTile,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.square(44),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                icon: Icon(hidden ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 20),
+              ),
+            ],
+          ),
           if (change != null) ...[
             const SizedBox(height: AppSpacing.sm),
             Container(

@@ -7,8 +7,13 @@ import 'package:arah/core/theme/app_spacing.dart';
 import 'package:arah/core/widgets/widgets.dart';
 import 'package:arah/features/notifications/domain/entities/app_notification.dart';
 import 'package:arah/features/notifications/presentation/bloc/notifications_cubit.dart';
+import 'package:arah/features/settings/presentation/bloc/settings_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
+/// Pengaturan akun dari sini: back kembali ke Pengaturan notifikasi, bukan ke tab Lainnya.
+const accountSettingsRoute = '/home/notifications/settings/account';
 
 /// Yang bisa diatur: cara kirim dan jenis yang masuk sebagai push. Riwayat dan Telegram tidak terpengaruh.
 class NotificationSettingsPage extends StatelessWidget {
@@ -89,12 +94,18 @@ class NotificationSettingsPage extends StatelessWidget {
                             const SizedBox(height: AppSpacing.xs),
                             for (final type in NotificationType.values.where((t) => t.group == group)) ...[
                               const Divider(height: 1, color: AppColors.divider),
-                              _SwitchRow(
-                                label: type.label,
-                                hint: type.hint,
-                                value: prefs.isEnabled(type),
-                                onChanged: (on) => _save(context, prefs.withType(type, enabled: on)),
-                              ),
+                              if (type == NotificationType.drawdown)
+                                _DrawdownRow(
+                                  value: prefs.isEnabled(type),
+                                  onChanged: (on) => _save(context, prefs.withType(type, enabled: on)),
+                                )
+                              else
+                                _SwitchRow(
+                                  label: type.label,
+                                  hint: type.hint,
+                                  value: prefs.isEnabled(type),
+                                  onChanged: (on) => _save(context, prefs.withType(type, enabled: on)),
+                                ),
                             ],
                           ],
                         ),
@@ -253,6 +264,45 @@ class _SwitchRow extends StatelessWidget {
   }
 }
 
+/// Saklar drawdown dengan ambang yang berlaku dan pintasan untuk mengubahnya.
+class _DrawdownRow extends StatelessWidget {
+  const _DrawdownRow({required this.value, required this.onChanged});
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  static String _percent(double v) => (v == v.roundToDouble() ? v.toInt().toString() : '$v').replaceAll('.', ',');
+
+  Future<void> _openSettings(BuildContext context) async {
+    final settings = context.read<SettingsCubit>();
+    await context.push(accountSettingsRoute);
+    await settings.load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final threshold = context.select<SettingsCubit, double?>((c) => c.state.data?.drawdownThreshold);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SwitchRow(
+          label: NotificationType.drawdown.label,
+          hint: threshold == null ? NotificationType.drawdown.hint : 'Saat porto turun ${_percent(threshold)}% dari puncak',
+          value: value,
+          onChanged: onChanged,
+        ),
+        TextButton.icon(
+          onPressed: () => _openSettings(context),
+          // Tema memberi lebar minimum tak hingga; tombol ini cukup selebar isinya.
+          style: TextButton.styleFrom(minimumSize: const Size(0, 44), padding: EdgeInsets.zero),
+          iconAlignment: IconAlignment.end,
+          icon: const Icon(Icons.chevron_right, size: 20),
+          label: const Text('Ubah ambang'),
+        ),
+      ],
+    );
+  }
+}
+
 class _PermissionCard extends StatefulWidget {
   const _PermissionCard();
 
@@ -282,6 +332,18 @@ class _PermissionCardState extends State<_PermissionCard> {
   Future<void> _check() async {
     final granted = await _push.isPermissionGranted();
     if (mounted) setState(() => _granted = granted);
+  }
+
+  Future<void> _openSettings() async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await _push.openNotificationSettings();
+    } on Exception catch (e) {
+      debugPrint('[push] buka pengaturan gagal: $e');
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Tidak bisa membuka pengaturan. Buka manual: Pengaturan HP → Aplikasi → Arah → Notifikasi.')),
+      );
+    }
   }
 
   @override
@@ -322,7 +384,7 @@ class _PermissionCardState extends State<_PermissionCard> {
           ),
           const SizedBox(width: AppSpacing.md),
           OutlinedButton(
-            onPressed: _push.openNotificationSettings,
+            onPressed: _openSettings,
             // Tema memberi lebar minimum tak hingga; di dalam Row tombol ini harus selebar isinya.
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(0, 44),

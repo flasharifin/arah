@@ -1,9 +1,11 @@
 import 'package:arah/app/di.dart';
 import 'package:arah/core/network/api_client.dart';
 import 'package:arah/core/notifications/push_notification_service.dart';
+import 'package:arah/core/state/privacy_cubit.dart';
 import 'package:arah/core/storage/token_storage.dart';
 import 'package:arah/core/theme/app_theme.dart';
 import 'package:arah/core/usecase/usecase.dart';
+import 'package:arah/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:arah/features/notifications/data/datasources/notification_remote_data_source.dart';
 import 'package:arah/features/notifications/data/repositories/notification_repository_impl.dart';
 import 'package:arah/features/notifications/domain/entities/app_notification.dart';
@@ -11,10 +13,17 @@ import 'package:arah/features/notifications/domain/usecases/notification_usecase
 import 'package:arah/features/notifications/presentation/bloc/notifications_cubit.dart';
 import 'package:arah/features/notifications/presentation/pages/notification_settings_page.dart';
 import 'package:arah/features/notifications/presentation/pages/notifications_page.dart';
+import 'package:arah/features/settings/data/datasources/settings_remote_data_source.dart';
+import 'package:arah/features/settings/data/repositories/settings_repository_impl.dart';
+import 'package:arah/features/settings/domain/usecases/settings_usecases.dart';
+import 'package:arah/features/settings/presentation/bloc/settings_cubit.dart';
+import 'package:arah/features/settings/presentation/pages/settings_page.dart';
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 class _FakeApi extends ApiClient {
@@ -33,13 +42,24 @@ class _FakeApi extends ApiClient {
 class _FakePush implements PushNotificationService {
   bool granted = true;
   int opened = 0;
+  bool openFails = false;
 
   @override
   Future<bool> isPermissionGranted() async => granted;
   @override
-  Future<void> openNotificationSettings() async => opened++;
+  Future<void> openNotificationSettings() async {
+    if (openFails) throw Exception('plugin belum terpasang');
+    opened++;
+  }
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+
+SettingsCubit settingsCubit(SettingsRemoteDataSource source) {
+  final repository = SettingsRepositoryImpl(source);
+  return SettingsCubit(get: GetSettings(repository), save: SaveSettings(repository));
 }
 
 void main() {
@@ -161,6 +181,74 @@ void main() {
       expect(unread.state, 0);
     });
 
+    testWidgets('drawdown: ambang tampil, Ubah ambang membuka Pengaturan, nilai baru terbaca saat kembali', (tester) async {
+      sl.allowReassignment = true;
+      sl.registerSingleton<PushNotificationService>(_FakePush());
+      addTearDown(sl.reset);
+      tester.view
+        ..devicePixelRatio = 1
+        ..physicalSize = const Size(800, 2400);
+      addTearDown(tester.view.reset);
+      final source = SettingsFixtureDataSource();
+      final router = GoRouter(
+        initialLocation: '/home/notifications/settings',
+        routes: [
+          GoRoute(
+            path: '/home/notifications/settings',
+            builder: (_, _) => MultiBlocProvider(
+              providers: [
+                BlocProvider(
+                  create: (_) =>
+                      NotificationPrefsCubit(get: GetNotificationPrefs(repo), save: SaveNotificationPrefs(repo))..load(),
+                ),
+                BlocProvider(create: (_) => settingsCubit(source)..load()),
+              ],
+              child: const NotificationSettingsPage(),
+            ),
+            routes: [
+              GoRoute(
+                path: 'account',
+                builder: (_, _) => BlocProvider(create: (_) => settingsCubit(source)..load(), child: const SettingsPage()),
+              ),
+            ],
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      final auth = _MockAuthBloc();
+      whenListen(auth, const Stream<AuthState>.empty(), initialState: const AuthState(status: AuthStatus.authenticated));
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<AuthBloc>.value(value: auth),
+            BlocProvider(create: (_) => PrivacyCubit()),
+          ],
+          child: MaterialApp.router(theme: AppTheme.light, routerConfig: router),
+        ),
+      );
+      Future<void> settle() async {
+        await tester.pump(const Duration(milliseconds: 400)); // jeda data contoh
+        await tester.pumpAndSettle();
+      }
+
+      await settle();
+      await settle(); // SettingsCubit dibuat saat baris drawdown pertama kali tampil
+      expect(find.text('Saat porto turun 10% dari puncak'), findsOneWidget);
+
+      await tester.tap(find.text('Ubah ambang'));
+      await settle();
+      expect(find.text('Pengaturan'), findsOneWidget);
+      await tester.enterText(find.byType(TextField).last, '7,5');
+      await tester.tap(find.text('Simpan'));
+      await settle();
+      await tester.pageBack();
+      await settle();
+      expect(find.text('Saat porto turun 7,5% dari puncak'), findsOneWidget);
+      // Ketuk tautan tidak boleh ikut mengubah saklarnya.
+      final prefs = await GetNotificationPrefs(repo)(const NoParams());
+      expect(prefs.fold((_) => null, (p) => p.isEnabled(NotificationType.drawdown)), isTrue);
+    });
+
     testWidgets('pengaturan: ganti cara kirim dan saklar tersimpan, perkiraan berubah', (tester) async {
       sl.allowReassignment = true;
       final push = _FakePush();
@@ -174,8 +262,14 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.light,
-          home: BlocProvider(
-            create: (_) => NotificationPrefsCubit(get: GetNotificationPrefs(repo), save: SaveNotificationPrefs(repo))..load(),
+          home: MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (_) =>
+                    NotificationPrefsCubit(get: GetNotificationPrefs(repo), save: SaveNotificationPrefs(repo))..load(),
+              ),
+              BlocProvider(create: (_) => settingsCubit(SettingsFixtureDataSource())..load()),
+            ],
             child: const NotificationSettingsPage(),
           ),
         ),
@@ -215,6 +309,12 @@ void main() {
       await tester.pumpAndSettle();
       final after = await GetNotificationPrefs(repo)(const NoParams());
       expect(after.fold((_) => null, (p) => p.disabled), {NotificationType.signals});
+
+      // Gagal membuka pengaturan HP tidak boleh diam saja.
+      push.openFails = true;
+      await tester.tap(find.text('Buka'));
+      await tester.pump();
+      expect(find.textContaining('Arah → Notifikasi'), findsOneWidget);
     });
   });
 }

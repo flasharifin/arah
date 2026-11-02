@@ -125,10 +125,20 @@ GoRouter createRouter(AuthBloc auth) {
                     routes: [
                       GoRoute(
                         path: 'settings',
-                        builder: (_, _) => BlocProvider(
-                          create: (_) => sl<NotificationPrefsCubit>()..load(),
+                        builder: (_, _) => MultiBlocProvider(
+                          providers: [
+                            BlocProvider(create: (_) => sl<NotificationPrefsCubit>()..load()),
+                            BlocProvider(create: (_) => sl<SettingsCubit>()..load()),
+                          ],
                           child: const NotificationSettingsPage(),
                         ),
+                        routes: [
+                          GoRoute(
+                            path: 'account',
+                            builder: (_, _) =>
+                                BlocProvider(create: (_) => sl<SettingsCubit>()..load(), child: const SettingsPage()),
+                          ),
+                        ],
                       ),
                     ],
                   ),
