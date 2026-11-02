@@ -45,12 +45,16 @@ void main() {
       const all = NotificationPrefs();
       expect(all.maxDailyPushes, 5); // briefing + ringkasan + 3 sinyal
       expect(all.withType(NotificationType.signals, enabled: false).maxDailyPushes, 2);
-      expect(all.withMode(NotificationMode.combined).maxDailyPushes, 1);
+      expect(all.copyWith(mode: NotificationMode.combined).maxDailyPushes, 1);
       const noDaily = NotificationPrefs(
         mode: NotificationMode.combined,
         disabled: {NotificationType.briefing, NotificationType.dailySummary, NotificationType.signals},
       );
       expect(noDaily.maxDailyPushes, 0);
+      // Mengubah satu pengaturan tidak boleh mereset yang lain.
+      const held = NotificationPrefs(holdNight: true);
+      expect(held.copyWith(mode: NotificationMode.combined).holdNight, isTrue);
+      expect(held.withType(NotificationType.signals, enabled: false).holdNight, isTrue);
       // Jenis penting tidak dihitung sebagai push rutin.
       expect(all.withType(NotificationType.priceAlert, enabled: false).maxDailyPushes, 5);
     });
@@ -89,13 +93,14 @@ void main() {
       expect(api.writes[0].$3, {'id': 'a'});
       expect(api.writes[1].$3, {'all': true});
       expect((api.writes[2].$1, api.writes[2].$2), ('PUT', '/api/mobile/notifications/preferences'));
-      expect(api.writes[2].$3, {'mode': 'combined', 'disabledTypes': ['daily_summary']});
+      expect(api.writes[2].$3, {'mode': 'combined', 'disabledTypes': ['daily_summary'], 'holdNight': false});
     });
 
     test('preferensi dari server: jenis asing diabaikan', () async {
-      final prefs = await NotificationApiDataSource(_FakeApi({'mode': 'combined', 'disabledTypes': ['signals', 'lain']})).getPrefs();
+      final prefs = await NotificationApiDataSource(_FakeApi({'mode': 'combined', 'disabledTypes': ['signals', 'lain'], 'holdNight': true})).getPrefs();
       expect(prefs.mode, NotificationMode.combined);
       expect(prefs.disabled, {NotificationType.signals});
+      expect(prefs.holdNight, isTrue);
     });
   });
 
@@ -178,6 +183,11 @@ void main() {
       expect(find.textContaining('Maksimal 1 push'), findsOneWidget);
       final saved = await GetNotificationPrefs(repo)(const NoParams());
       expect(saved.fold((_) => null, (p) => p.mode), NotificationMode.combined);
+
+      await tester.tap(find.text('Tahan push tengah malam'));
+      await tester.pumpAndSettle();
+      final held = await GetNotificationPrefs(repo)(const NoParams());
+      expect(held.fold((_) => null, (p) => p.holdNight), isTrue);
 
       await tester.tap(find.text('Sinyal teknikal'));
       await tester.pumpAndSettle();

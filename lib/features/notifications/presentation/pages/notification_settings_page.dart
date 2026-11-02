@@ -54,7 +54,7 @@ class NotificationSettingsPage extends StatelessWidget {
                           Text('Cara kirim', style: text.titleMedium),
                           RadioGroup<NotificationMode>(
                             groupValue: prefs.mode,
-                            onChanged: (mode) => mode == null ? null : _save(context, prefs.withMode(mode)),
+                            onChanged: (mode) => mode == null ? null : _save(context, prefs.copyWith(mode: mode)),
                             child: const Column(
                               children: [
                                 RadioListTile<NotificationMode>(
@@ -67,10 +67,17 @@ class NotificationSettingsPage extends StatelessWidget {
                                   contentPadding: EdgeInsets.zero,
                                   value: NotificationMode.combined,
                                   title: Text('Gabung jadi satu push pagi'),
-                                  subtitle: Text('Masuk sekitar 08.00 WIB. Yang penting tetap langsung dikirim'),
+                                  subtitle: Text('Masuk sekitar 08.00 WIB. Yang penting tetap dikirim sendiri'),
                                 ),
                               ],
                             ),
+                          ),
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('Tahan push tengah malam'),
+                            subtitle: const Text('Yang dicek sekitar 00.00 WIB baru masuk ke HP sekitar 08.00 WIB'),
+                            value: prefs.holdNight,
+                            onChanged: (on) => _save(context, prefs.copyWith(holdNight: on)),
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           Container(

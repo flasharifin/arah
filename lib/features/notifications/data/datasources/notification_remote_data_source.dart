@@ -42,13 +42,18 @@ class NotificationApiDataSource implements NotificationRemoteDataSource {
     return NotificationPrefs(
       mode: NotificationMode.fromCode(data['mode'] as String?),
       disabled: NotificationType.values.where((t) => disabled.contains(t.code)).toSet(),
+      holdNight: data['holdNight'] == true,
     );
   }
 
   @override
   Future<void> savePrefs(NotificationPrefs prefs) => _api.put(
     '/api/mobile/notifications/preferences',
-    body: {'mode': prefs.mode.code, 'disabledTypes': [for (final t in prefs.disabled) t.code]},
+    body: {
+      'mode': prefs.mode.code,
+      'disabledTypes': [for (final t in prefs.disabled) t.code],
+      'holdNight': prefs.holdNight,
+    },
   );
 }
 

@@ -71,19 +71,25 @@ enum NotificationMode {
 }
 
 class NotificationPrefs extends Equatable {
-  const NotificationPrefs({this.mode = NotificationMode.separate, this.disabled = const {}});
+  const NotificationPrefs({this.mode = NotificationMode.separate, this.disabled = const {}, this.holdNight = false});
 
   final NotificationMode mode;
   final Set<NotificationType> disabled;
 
+  /// Yang muncul tengah malam, termasuk yang penting, baru dikirim sekitar 08.00 WIB.
+  final bool holdNight;
+
   bool isEnabled(NotificationType type) => !disabled.contains(type);
 
-  NotificationPrefs withMode(NotificationMode mode) => NotificationPrefs(mode: mode, disabled: disabled);
+  NotificationPrefs copyWith({NotificationMode? mode, Set<NotificationType>? disabled, bool? holdNight}) =>
+      NotificationPrefs(
+        mode: mode ?? this.mode,
+        disabled: disabled ?? this.disabled,
+        holdNight: holdNight ?? this.holdNight,
+      );
 
-  NotificationPrefs withType(NotificationType type, {required bool enabled}) => NotificationPrefs(
-    mode: mode,
-    disabled: enabled ? (disabled.difference({type})) : {...disabled, type},
-  );
+  NotificationPrefs withType(NotificationType type, {required bool enabled}) =>
+      copyWith(disabled: enabled ? disabled.difference({type}) : {...disabled, type});
 
   /// Push rutin paling banyak di hari biasa, tanpa yang penting. Mode gabung selalu satu push pagi.
   int get maxDailyPushes {
@@ -93,5 +99,5 @@ class NotificationPrefs extends Equatable {
   }
 
   @override
-  List<Object?> get props => [mode, disabled];
+  List<Object?> get props => [mode, disabled, holdNight];
 }
