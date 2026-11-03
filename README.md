@@ -5,6 +5,7 @@ Skeleton dari rancangan `dashboard-assets-app/doc/designapp`. Clean architecture
 ```bash
 flutter run                                   # backend produksi (default)
 flutter run --dart-define=USE_FIXTURES=true   # data contoh, tanpa backend
+flutter run --dart-define=USE_FIXTURES=false  # data real dengan backed
 flutter run --dart-define=API_BASE_URL=https://...
 flutter test
 flutter build apk --release
