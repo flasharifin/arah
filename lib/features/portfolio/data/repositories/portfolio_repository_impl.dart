@@ -3,6 +3,7 @@ import 'package:arah/core/error/result.dart';
 import 'package:arah/features/portfolio/data/datasources/portfolio_remote_data_source.dart';
 import 'package:arah/features/portfolio/domain/entities/portfolio.dart';
 import 'package:arah/features/portfolio/domain/entities/purchase.dart';
+import 'package:arah/features/portfolio/domain/entities/sale.dart';
 import 'package:arah/features/portfolio/domain/repositories/portfolio_repository.dart';
 
 class PortfolioRepositoryImpl implements PortfolioRepository {
@@ -14,4 +15,7 @@ class PortfolioRepositoryImpl implements PortfolioRepository {
 
   @override
   Future<Result<void>> recordPurchase(PositionPurchase purchase) => guard(() => _remote.recordPurchase(purchase));
+
+  @override
+  Future<Result<void>> recordSale(PositionSale sale) => guard(() => _remote.recordSale(sale));
 }

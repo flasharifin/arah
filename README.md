@@ -3,10 +3,11 @@
 Skeleton dari rancangan `dashboard-assets-app/doc/designapp`. Clean architecture per fitur, BLoC untuk state.
 
 ```bash
-flutter run                                   # data fixture (default)
-flutter run --dart-define=USE_FIXTURES=false --dart-define=API_BASE_URL=https://...
+flutter run                                   # backend produksi (default)
+flutter run --dart-define=USE_FIXTURES=true   # data contoh, tanpa backend
+flutter run --dart-define=API_BASE_URL=https://...
 flutter test
-flutter build apk --release --dart-define=USE_FIXTURES=false
+flutter build apk --release
 ```
 
 ## Struktur

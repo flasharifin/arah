@@ -51,12 +51,10 @@ class PortfolioPage extends StatelessWidget {
           ],
           bottom: const SegmentedTabBar(tabs: _tabs),
         ),
-        // Kinerja & Riwayat dimuat saat tab pertama dibuka, lalu bertahan selama halaman hidup.
-        body: MultiBlocProvider(
-          providers: [
-            BlocProvider(create: (_) => sl<PerformanceCubit>()..load()),
-            BlocProvider(create: (_) => sl<SalesCubit>()..load()),
-          ],
+        // Kinerja dimuat saat tab pertama dibuka, lalu bertahan selama halaman hidup.
+        // Riwayat (SalesCubit) ada di shell supaya form penjualan bisa memuat ulang dari layar mana pun.
+        body: BlocProvider(
+          create: (_) => sl<PerformanceCubit>()..load(),
           child: const TabBarView(children: [_PositionsTab(), PerformanceTab(), SalesTab()]),
         ),
       ),

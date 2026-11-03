@@ -4,10 +4,12 @@ import 'package:arah/features/portfolio/data/models/position_model.dart';
 import 'package:arah/features/portfolio/domain/entities/portfolio.dart';
 import 'package:arah/features/portfolio/domain/entities/position.dart';
 import 'package:arah/features/portfolio/domain/entities/purchase.dart';
+import 'package:arah/features/portfolio/domain/entities/sale.dart';
 
 abstract interface class PortfolioRemoteDataSource {
   Future<Portfolio> fetchPortfolio();
   Future<void> recordPurchase(PositionPurchase purchase);
+  Future<void> recordSale(PositionSale sale);
 }
 
 /// Posisi + harga dari `/api/summary`: satu request, sumber yang sama dengan Beranda & dashboard web.
@@ -44,6 +46,20 @@ class PortfolioApiDataSource implements PortfolioRemoteDataSource {
       'sector': ?p.sector,
       'note': ?p.note,
       'requestId': p.requestId,
+    },
+  );
+
+  /// `POST /api/portfolio/sell`: lot berkurang, realized PnL dihitung server dari harga rata-rata.
+  @override
+  Future<void> recordSale(PositionSale s) => _api.post(
+    '/api/portfolio/sell',
+    body: {
+      'portfolioId': s.positionId,
+      'lotSold': s.quantity,
+      'salePrice': s.price,
+      'saleDate': s.date.toIso8601String(),
+      'note': ?s.note,
+      'requestId': s.requestId,
     },
   );
 }
@@ -89,6 +105,30 @@ class PortfolioFixtureDataSource implements PortfolioRemoteDataSource {
       sector: old.sector,
       quantity: quantity,
       avgPrice: Money((old.quantity * old.avgPrice.amount + p.quantity * p.price) / quantity, old.currency),
+      lastPrice: old.lastPrice,
+    );
+  }
+
+  /// Sama seperti server: lot berkurang, harga rata-rata tetap, habis → hilang dari daftar.
+  @override
+  Future<void> recordSale(PositionSale s) async {
+    if (!_seen.add(s.requestId)) return;
+    final i = _positions.indexWhere((x) => x.id == s.positionId);
+    if (i < 0) throw StateError('Posisi tidak ditemukan');
+    final old = _positions[i];
+    final remaining = old.quantity - s.quantity;
+    if (remaining < 0.000001) {
+      _positions.removeAt(i);
+      return;
+    }
+    _positions[i] = Position(
+      id: old.id,
+      symbol: old.symbol,
+      exchange: old.exchange,
+      broker: old.broker,
+      sector: old.sector,
+      quantity: remaining,
+      avgPrice: old.avgPrice,
       lastPrice: old.lastPrice,
     );
   }

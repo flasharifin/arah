@@ -22,6 +22,7 @@ Future<void> showPurchaseForm(
   double? quantity,
   double? price,
 }) async {
+  ScaffoldMessenger.of(context).removeCurrentSnackBar(); // snackbar shell tampil di atas sheet, bisa menutupi Simpan
   final saved = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
@@ -39,6 +40,16 @@ Future<void> showPurchaseForm(
   context.read<DashboardCubit>().load();
   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pembelian tercatat')));
 }
+
+/// Angka dari form transaksi: koma desimal diterima.
+double? parseNumberInput(String v) => double.tryParse(v.trim().replaceAll(',', '.'));
+
+/// Isian awal form: tanpa `.0` dan tanpa pemisah ribuan, supaya mudah diedit.
+String plainNumber(double? v) => switch (v) {
+  null => '',
+  final v when v == v.roundToDouble() => v.toInt().toString(),
+  final v => v.toString(),
+};
 
 class _PurchaseForm extends StatefulWidget {
   const _PurchaseForm({
@@ -64,8 +75,8 @@ class _PurchaseFormState extends State<_PurchaseForm> {
   final _formKey = GlobalKey<FormState>();
   late final _symbol = TextEditingController(text: widget.symbol);
   late final _broker = TextEditingController(text: widget.broker);
-  late final _quantity = TextEditingController(text: _plain(widget.quantity));
-  late final _price = TextEditingController(text: _plain(widget.price));
+  late final _quantity = TextEditingController(text: plainNumber(widget.quantity));
+  late final _price = TextEditingController(text: plainNumber(widget.price));
   final _sector = TextEditingController();
   final _note = TextEditingController();
   late Exchange _exchange = widget.exchange;
@@ -90,22 +101,16 @@ class _PurchaseFormState extends State<_PurchaseForm> {
     super.dispose();
   }
 
-  static double? _parse(String v) => double.tryParse(v.trim().replaceAll(',', '.'));
-  static String _plain(double? v) => switch (v) {
-    null => '',
-    final v when v == v.roundToDouble() => v.toInt().toString(),
-    final v => v.toString(),
-  };
   static String? _positive(String? v) {
-    final n = _parse(v ?? '');
+    final n = parseNumberInput(v ?? '');
     return n == null || n <= 0 ? 'Masukkan angka lebih dari 0' : null;
   }
 
   String? _optional(TextEditingController c) => c.text.trim().isEmpty ? null : c.text.trim();
 
   PositionPurchase? _draft() {
-    final quantity = _parse(_quantity.text);
-    final price = _parse(_price.text);
+    final quantity = parseNumberInput(_quantity.text);
+    final price = parseNumberInput(_price.text);
     if (quantity == null || quantity <= 0 || price == null || price <= 0) return null;
     return PositionPurchase(
       symbol: _symbol.text,

@@ -7,6 +7,7 @@ import 'package:arah/features/portfolio/domain/entities/position.dart';
 import 'package:arah/features/portfolio/presentation/bloc/portfolio_bloc.dart';
 import 'package:arah/features/portfolio/presentation/bloc/technical_cubit.dart';
 import 'package:arah/features/portfolio/presentation/widgets/purchase_form.dart';
+import 'package:arah/features/portfolio/presentation/widgets/sale_form.dart';
 import 'package:arah/features/portfolio/presentation/widgets/technical_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,6 +18,17 @@ class PositionDetailPage extends StatelessWidget {
   const PositionDetailPage({super.key, required this.positionId});
 
   final String positionId;
+
+  /// Terjual habis: posisi hilang dari daftar, jadi kembali sebelum layar ini kehilangan datanya.
+  Future<void> _recordSale(BuildContext context, Position position) async {
+    final soldOut = await showSaleForm(context, position);
+    if (!soldOut || !context.mounted) return;
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/portfolio');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,8 +76,12 @@ class PositionDetailPage extends StatelessWidget {
                 const SizedBox(height: AppSpacing.lg),
                 Row(
                   children: [
-                    // Form penjualan belum dibuat; tombol nonaktif agar tidak mengklaim fitur aktif.
-                    const Expanded(child: OutlinedButton(onPressed: null, child: Text('Catat penjualan'))),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => _recordSale(context, position),
+                        child: const Text('Catat penjualan'),
+                      ),
+                    ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: FilledButton(

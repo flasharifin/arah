@@ -4,12 +4,14 @@ import 'package:arah/core/widgets/widgets.dart';
 import 'package:arah/features/networth/domain/entities/net_worth.dart';
 import 'package:arah/features/networth/presentation/widgets/wealth_entry_form.dart';
 import 'package:arah/features/portfolio/presentation/widgets/purchase_form.dart';
+import 'package:arah/features/portfolio/presentation/widgets/sale_form.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 /// Sheet tombol Catat (navigasi tengah): semua pencatatan dari satu tempat.
 /// [context] = konteks shell, yang punya bloc sesi (Portofolio, Beranda, Kekayaan) untuk form.
 Future<void> showRecordSheet(BuildContext context) async {
+  ScaffoldMessenger.of(context).removeCurrentSnackBar();
   final action = await showModalBottomSheet<void Function()>(
     context: context,
     isScrollControlled: true,
@@ -56,8 +58,12 @@ class _RecordSheet extends StatelessWidget {
                   primary: true,
                   onTap: () => pick(() => showPurchaseForm(shell)),
                 ),
-                // Form penjualan belum ada di HP: tampil nonaktif, tidak mengklaim fitur aktif.
-                const _Tile(icon: Icons.south, title: 'Penjualan', subtitle: 'Segera tersedia'),
+                _Tile(
+                  icon: Icons.south,
+                  title: 'Penjualan',
+                  subtitle: 'Pilih posisi',
+                  onTap: () => pick(() => showSalePicker(shell)),
+                ),
                 _Tile(
                   icon: Icons.event_repeat_outlined,
                   title: 'Pelaksanaan DCA',

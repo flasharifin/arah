@@ -18,6 +18,7 @@ import 'package:arah/features/more/presentation/pages/more_page.dart';
 import 'package:arah/features/more/presentation/pages/upcoming_feature_page.dart';
 import 'package:arah/features/networth/presentation/bloc/net_worth_cubit.dart';
 import 'package:arah/features/networth/presentation/pages/net_worth_page.dart';
+import 'package:arah/features/portfolio/presentation/bloc/performance_cubit.dart';
 import 'package:arah/features/portfolio/presentation/bloc/portfolio_bloc.dart';
 import 'package:arah/features/portfolio/presentation/pages/portfolio_page.dart';
 import 'package:arah/features/portfolio/presentation/pages/position_detail_page.dart';
@@ -99,6 +100,7 @@ GoRouter createRouter(AuthBloc auth) {
             BlocProvider(create: (_) => sl<ChatBloc>()),
             BlocProvider(create: (_) => sl<NetWorthCubit>()..load()),
             BlocProvider(create: (_) => sl<UnreadNotificationsCubit>()..load()),
+            BlocProvider(create: (_) => sl<SalesCubit>()..load()),
           ],
           child: AppShell(shell: shell),
         ),

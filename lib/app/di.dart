@@ -39,6 +39,7 @@ import 'package:arah/features/portfolio/domain/repositories/portfolio_repository
 import 'package:arah/features/portfolio/domain/usecases/performance_usecases.dart';
 import 'package:arah/features/portfolio/domain/usecases/get_portfolio.dart';
 import 'package:arah/features/portfolio/domain/usecases/record_purchase.dart';
+import 'package:arah/features/portfolio/domain/usecases/record_sale.dart';
 import 'package:arah/features/portfolio/presentation/bloc/performance_cubit.dart';
 import 'package:arah/features/portfolio/presentation/bloc/portfolio_bloc.dart';
 import 'package:arah/features/dca/data/datasources/dca_remote_data_source.dart';
@@ -96,10 +97,11 @@ import 'package:get_it/get_it.dart';
 
 final sl = GetIt.instance;
 
-/// `--dart-define=USE_FIXTURES=false` memakai backend (default URL produksi).
+/// Default memakai backend (URL produksi): build yang lupa diberi flag tidak boleh menampilkan portofolio palsu.
+/// `--dart-define=USE_FIXTURES=true` memakai data contoh.
 /// Backend lain: `--dart-define=API_BASE_URL=https://...` — `localhost` di HP/emulator menunjuk ke
 /// perangkat itu sendiri, dan `http://` diblokir Android/iOS; pakai URL https (mis. tunnel ke dev server).
-const _useFixtures = bool.fromEnvironment('USE_FIXTURES', defaultValue: true);
+const _useFixtures = bool.fromEnvironment('USE_FIXTURES');
 const _baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://dashboard-finance-tracker.vercel.app');
 
 /// Komposisi dependensi. Bloc didaftarkan sebagai factory: dibuat baru setiap login.
@@ -154,6 +156,7 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
     ..registerLazySingleton<TechnicalRepository>(() => TechnicalRepositoryImpl(sl()))
     ..registerFactoryParam<TechnicalCubit, String, void>((id, _) => TechnicalCubit(GetTechnical(sl()), id))
     ..registerFactory(() => RecordPurchase(sl()))
+    ..registerFactory(() => RecordSale(sl()))
     // Assistant
     ..registerLazySingleton<AssistantRemoteDataSource>(
       () => useFixtures ? AssistantFixtureDataSource() : AssistantApiDataSource(sl()),
