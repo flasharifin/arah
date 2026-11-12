@@ -28,7 +28,13 @@ class DividendApiDataSource implements DividendRemoteDataSource {
         cumDate: _date(d['cumDate']),
         exDate: _date(d['exDate']),
         paymentDate: _date(d['paymentDate']),
-        received: d['receivedAmount'] == null ? null : Money.idr(_num(d['receivedAmount'])!),
+        // Server lama belum mengirim mata uang: rupiah, seperti sebelumnya.
+        received: d['receivedAmount'] == null
+            ? null
+            : Money(
+                _num(d['receivedAmount'])!,
+                (d['portfolio'] as Map<String, dynamic>?)?['currency'] == 'USD' ? Currency.usd : Currency.idr,
+              ),
         note: d['note'] as String?,
       ),
   ];
@@ -72,6 +78,15 @@ class DividendFixtureDataSource implements DividendRemoteDataSource {
       dps: 175,
       paymentDate: DateTime(DateTime.now().year, 1, 15),
       received: const Money.idr(1575000),
+    ),
+    Dividend(
+      id: 'd3',
+      portfolioId: 'aapl',
+      symbol: 'AAPL',
+      dps: 0.26,
+      taxPercent: 10,
+      paymentDate: DateTime(DateTime.now().year, 2, 13),
+      received: const Money.usd(1.05),
     ),
   ];
   int _seq = 3;

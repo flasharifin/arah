@@ -27,7 +27,7 @@ class Dividend extends Equatable {
   final DateTime? exDate;
   final DateTime? paymentDate;
 
-  /// Jumlah bersih yang diterima (dihitung server dari lot × DPS − pajak); dijumlah sebagai rupiah.
+  /// Jumlah bersih yang diterima (dihitung server dari lot × DPS − pajak), dalam mata uang saham.
   final Money? received;
   final String? note;
 
@@ -36,6 +36,16 @@ class Dividend extends Equatable {
 
   @override
   List<Object?> get props => [id, portfolioId, symbol, dps, taxPercent, cumDate, exDate, paymentDate, received, note];
+}
+
+/// Total per mata uang dan gabungannya dalam rupiah. [combinedIdr] null bila ada dolar tapi kurs belum tersedia,
+/// supaya dolar tidak terhitung dengan kurs tebakan.
+({double idr, double usd, double? combinedIdr}) dividendTotals(Iterable<Dividend> items, double? usdToIdr) {
+  double sumIn(Currency c) =>
+      items.where((d) => d.received?.currency == c).fold(0, (sum, d) => sum + d.received!.amount);
+  final idr = sumIn(Currency.idr);
+  final usd = sumIn(Currency.usd);
+  return (idr: idr, usd: usd, combinedIdr: usd == 0 ? idr : (usdToIdr == null ? null : idr + usd * usdToIdr));
 }
 
 /// Isian form tambah/ubah. Posisi hanya dipilih saat tambah.

@@ -208,15 +208,39 @@ class _Records extends StatelessWidget {
     if (records.isEmpty) {
       return const EmptyView(icon: Icons.history, title: 'Belum ada pelaksanaan DCA');
     }
+    final text = Theme.of(context).textTheme;
+    // shortcut: riwayat DCA belum membawa mata uang, jadi angka tanpa Rp/$; tambahkan bila API mengirim currency.
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       children: [
-        for (final r in records)
-          ListTile(
-            title: Text('${r.symbol} · ${Fmt.quantity(r.quantity)} @ ${Fmt.number(r.price)}'),
-            subtitle: Text(Fmt.date(r.date)),
-            trailing: Text(Fmt.number(r.total)),
+        PageBody(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final r in records)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: AppCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(child: Text(r.symbol, style: text.titleMedium)),
+                            Text(Fmt.date(r.date), style: text.bodySmall),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        InfoRow(label: 'Jumlah', value: Text(Fmt.quantity(r.quantity))),
+                        InfoRow(label: 'Harga', value: Text(Fmt.number(r.price))),
+                        InfoRow(label: 'Total', value: Text(Fmt.number(r.total), style: text.titleSmall)),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
           ),
+        ),
       ],
     );
   }

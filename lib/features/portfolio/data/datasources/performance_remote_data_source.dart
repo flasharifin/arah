@@ -6,7 +6,7 @@ import 'package:arah/features/portfolio/domain/entities/performance.dart';
 import 'package:arah/features/portfolio/domain/entities/position.dart';
 
 abstract interface class PerformanceRemoteDataSource {
-  /// Urut tanggal naik, maksimal 1 tahun terakhir.
+  /// Urut tanggal naik, seluruh riwayat (sampai ±10 tahun).
   Future<List<DailyPerformance>> fetchDaily();
 
   /// Urut tanggal jual terbaru dulu.
@@ -23,10 +23,10 @@ class PerformanceApiDataSource implements PerformanceRemoteDataSource {
   const PerformanceApiDataSource(this._api);
   final ApiClient _api;
 
-  /// `?limit=366` cukup untuk periode 1T (server membatasi 366).
+  /// `?limit=3660` untuk kalender & riwayat per tahun. Server lama membatasi 366 baris tanpa error.
   @override
   Future<List<DailyPerformance>> fetchDaily() async {
-    final rows = await _api.get('/api/pnl/daily', query: {'limit': '366'}) as List<dynamic>;
+    final rows = await _api.get('/api/pnl/daily', query: {'limit': '3660'}) as List<dynamic>;
     return [
       for (final p in rows.cast<Map<String, dynamic>>())
         DailyPerformance(

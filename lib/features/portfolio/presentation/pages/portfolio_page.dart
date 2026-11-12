@@ -2,6 +2,7 @@ import 'package:arah/app/di.dart';
 import 'package:arah/core/format/formatters.dart';
 import 'package:arah/core/theme/app_spacing.dart';
 import 'package:arah/core/widgets/widgets.dart';
+import 'package:arah/features/dividends/presentation/bloc/dividends_cubit.dart';
 import 'package:arah/features/portfolio/domain/entities/portfolio.dart';
 import 'package:arah/features/portfolio/domain/entities/position.dart';
 import 'package:arah/features/portfolio/presentation/bloc/performance_cubit.dart';
@@ -53,8 +54,11 @@ class PortfolioPage extends StatelessWidget {
         ),
         // Kinerja dimuat saat tab pertama dibuka, lalu bertahan selama halaman hidup.
         // Riwayat (SalesCubit) ada di shell supaya form penjualan bisa memuat ulang dari layar mana pun.
-        body: BlocProvider(
-          create: (_) => sl<PerformanceCubit>()..load(),
+        body: MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => sl<PerformanceCubit>()..load()),
+            BlocProvider(create: (_) => sl<DividendsCubit>()..load()), // untuk total return di tab Kinerja
+          ],
           child: const TabBarView(children: [_PositionsTab(), PerformanceTab(), SalesTab()]),
         ),
       ),

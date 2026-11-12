@@ -186,6 +186,7 @@ void main() {
         ],
         'dividendsThisWeek': [
           {'stockCode': 'BBCA', 'receivedAmount': 270000, 'date': null},
+          {'stockCode': 'NVDA', 'receivedAmount': 5.5, 'currency': 'USD', 'date': null},
         ],
         'totalRealizedThisWeek': -31,
         'positionCount': 4,
@@ -193,7 +194,8 @@ void main() {
     });
     final l = await LetterApiDataSource(api).fetch();
     expect(l.sales.single.realizedPnl, const Money.usd(-31.4));
-    expect(l.dividends.single.date, isNull);
+    expect(l.dividends.first.date, isNull);
+    expect(l.dividends.map((d) => d.received), [const Money.idr(270000), const Money.usd(5.5)]);
     expect(l.weekEnd, DateTime(2026, 10, 31));
   });
 }

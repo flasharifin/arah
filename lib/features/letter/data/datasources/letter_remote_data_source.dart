@@ -41,12 +41,12 @@ class LetterApiDataSource implements LetterRemoteDataSource {
             date: DateTime.parse(s['date'] as String),
           ),
       ],
-      // shortcut: dividen dianggap rupiah (tabel dividen tanpa kolom mata uang); ubah bila dividen US dicatat.
       dividends: [
         for (final d in (l['dividendsThisWeek'] as List<dynamic>).cast<Map<String, dynamic>>())
           (
             symbol: d['stockCode'] as String,
-            received: Money.idr(_n(d['receivedAmount'])),
+            // Server lama belum mengirim mata uang: rupiah, seperti sebelumnya.
+            received: Money(_n(d['receivedAmount']), d['currency'] == 'USD' ? Currency.usd : Currency.idr),
             date: switch (d['date']) {
               final String s => DateTime.parse(s),
               _ => null,

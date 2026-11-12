@@ -107,7 +107,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Riwayat'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('BBCA · 3 @ 8.900'), findsOneWidget);
+    expect(find.text('8.900'), findsOneWidget); // harga pelaksanaan di kartu riwayat
 
     // DCA: rencana baru dari posisi yang ada → kartu rencana bertambah
     await tester.tap(find.text('Rencana'));
@@ -132,16 +132,20 @@ void main() {
 
     // Dividen: jadwal mendatang & total diterima tahun ini
     await openFromMore(tester, 'Dividen');
-    expect(find.textContaining('270 per saham'), findsOneWidget);
+    expect(find.text('Rp 270'), findsOneWidget); // DPS di kartu dividen
     await tester.tap(find.byTooltip('Tambah dividen'));
     await tester.pumpAndSettle();
     await tester.enterText(find.widgetWithText(TextFormField, 'Dividen per saham (DPS)'), '200');
     await tapVisible(tester, find.text('Simpan'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('200 per saham'), findsOneWidget); // tanpa tanggal bayar → Mendatang
+    expect(find.text('Rp 200'), findsOneWidget);
+    expect(find.text('Belum dijadwalkan'), findsWidgets); // tanpa tanggal bayar
     await tester.tap(find.text('Diterima'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Diterima tahun'), findsOneWidget);
+    // Data contoh punya dividen rupiah dan dolar: keduanya dirinci, lalu digabung dalam rupiah.
+    expect(find.text('Dolar AS'), findsOneWidget);
+    expect(find.textContaining('kurs sekarang'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
 

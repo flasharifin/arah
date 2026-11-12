@@ -144,6 +144,26 @@ void main() {
       await tester.tap(find.text(tab));
       await tester.pumpAndSettle();
       await capture('portofolio-${tab.toLowerCase()}');
+      if (tab == 'Kinerja') {
+        for (final (card, name) in [
+          ('Total return', 'total-return'),
+          ('Ringkasan kinerja', 'ringkasan'),
+          ('Kalender PnL', 'kalender'),
+          ('Nilai portofolio', 'nilai'),
+        ]) {
+          await tester.scrollUntilVisible(find.text(card), 300, scrollable: find.byType(Scrollable).last);
+          await tester.ensureVisible(find.text(card));
+          await tester.pump(const Duration(seconds: 1)); // dividen fixture tertunda
+          await tester.pumpAndSettle();
+          if (card == 'Total return') expect(find.text('Posisi yang masih dipegang'), findsWidgets);
+          await capture('portofolio-$name');
+        }
+        for (final g in ['Kuartal', 'Tahun']) {
+          await tester.tap(find.text(g));
+          await tester.pumpAndSettle();
+          await capture('portofolio-nilai-${g.toLowerCase()}');
+        }
+      }
     }
     await open('/portfolio/bbca', 'portofolio-detail');
     await tester.pump(const Duration(seconds: 1)); // data teknikal fixture tertunda

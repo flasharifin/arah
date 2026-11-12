@@ -33,4 +33,9 @@ abstract final class AppColors {
 
   /// Kategori grafik, urutan tetap (palet dataviz tervalidasi): portofolio, pembanding 1–3.
   static const series = [Color(0xFF2A78D6), Color(0xFFEB6834), Color(0xFF1BAF7A), Color(0xFFEDA100)];
+
+  /// Kalender PnL: terang → gelap mengikuti besar perubahan. Terang sulit dibedakan saat buta warna,
+  /// jadi kotak rugi juga diberi tanda minus.
+  static const heatPositive = [Color(0xFFCFE5D8), Color(0xFF8FC4A6), positive];
+  static const heatNegative = [Color(0xFFF3D9D5), Color(0xFFE2A49D), negative];
 }

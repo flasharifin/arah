@@ -3,10 +3,13 @@ import 'package:arah/core/error/result.dart';
 import 'package:arah/core/format/formatters.dart';
 import 'package:arah/core/state/view_state.dart';
 import 'package:arah/core/theme/app_spacing.dart';
+import 'package:arah/core/theme/app_typography.dart';
+import 'package:arah/core/theme/app_colors.dart';
 import 'package:arah/core/widgets/widgets.dart';
 import 'package:arah/features/dividends/domain/entities/dividend.dart';
 import 'package:arah/features/dividends/presentation/bloc/dividends_cubit.dart';
 import 'package:arah/features/portfolio/domain/entities/position.dart';
+import 'package:arah/features/portfolio/presentation/bloc/portfolio_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -44,9 +47,7 @@ class DividendsPage extends StatelessWidget {
               final now = DateTime.now();
               final paid = items.where((d) => d.isPaid(now)).toList();
               final upcoming = items.where((d) => !d.isPaid(now)).toList();
-              final thisYear = paid
-                  .where((d) => d.paymentDate!.year == now.year)
-                  .fold<double>(0, (sum, d) => sum + (d.received?.amount ?? 0));
+              final thisYear = paid.where((d) => d.paymentDate!.year == now.year).toList();
               return TabBarView(
                 children: [
                   RefreshIndicator(
@@ -58,9 +59,7 @@ class DividendsPage extends StatelessWidget {
                     child: _DividendList(
                       items: paid,
                       empty: 'Belum ada dividen diterima',
-                      header: AppCard(
-                        child: InfoRow(label: 'Diterima tahun ${now.year}', value: AmountText(Money.idr(thisYear))),
-                      ),
+                      header: _ReceivedSummary(year: now.year, items: thisYear),
                     ),
                   ),
                 ],
@@ -87,20 +86,155 @@ class _DividendList extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
       children: [
-        if (header != null) PageBody(child: header!),
-        if (items.isEmpty)
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: Text(empty, textAlign: TextAlign.center),
+        PageBody(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (header != null) ...[header!, const SizedBox(height: AppSpacing.md)],
+              if (items.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  child: Text(empty, textAlign: TextAlign.center),
+                ),
+              for (final d in items)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: _DividendCard(dividend: d, onTap: () => DividendsPage._openForm(context, d)),
+                ),
+            ],
           ),
-        for (final d in items)
-          ListTile(
-            title: Text('${d.symbol} · ${Fmt.number(d.dps)} per saham'),
-            subtitle: Text('Ex-date: ${_dateOrUnset(d.exDate)} · Bayar: ${_dateOrUnset(d.paymentDate)}'),
-            trailing: d.received == null ? null : AmountText(d.received),
-            onTap: () => DividendsPage._openForm(context, d),
-          ),
+        ),
       ],
+    );
+  }
+}
+
+/// Total diterima tahun ini: rupiah dan dolar dirinci, lalu gabungan dalam rupiah dengan kurs server.
+class _ReceivedSummary extends StatelessWidget {
+  const _ReceivedSummary({required this.year, required this.items});
+  final int year;
+  final List<Dividend> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final usdToIdr = context.select<PortfolioBloc, double?>((b) => b.state.data.data?.usdToIdr);
+    final t = dividendTotals(items, usdToIdr);
+    return HeroCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Diterima tahun $year', style: text.bodySmall?.copyWith(color: AppColors.heroMuted)),
+          const SizedBox(height: AppSpacing.xs),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: t.combinedIdr == null
+                ? Text('—', style: AppTypography.amountLarge.copyWith(color: Colors.white))
+                : AmountText(Money.idr(t.combinedIdr!), style: AppTypography.amountLarge.copyWith(color: Colors.white)),
+          ),
+          if (t.usd != 0) ...[
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Expanded(child: StatTile(label: 'Rupiah', value: AmountText(Money.idr(t.idr)), onHero: true)),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(child: StatTile(label: 'Dolar AS', value: AmountText(Money.usd(t.usd)), onHero: true)),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              usdToIdr == null
+                  ? 'Kurs belum tersedia, total gabungan menunggu data portofolio'
+                  : 'Dolar dihitung dengan kurs sekarang ${Fmt.money(Money.idr(usdToIdr))} per USD',
+              style: text.bodySmall?.copyWith(color: AppColors.heroMuted),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Status dividen dari tanggal bayar: tanpa tanggal = belum dijadwalkan, bukan "mendatang".
+enum _Status {
+  paid('Diterima', AppColors.primarySoft, AppColors.primary),
+  upcoming('Mendatang', AppColors.accent, AppColors.onAccent),
+  unscheduled('Belum dijadwalkan', AppColors.warningSoft, AppColors.warning);
+
+  const _Status(this.label, this.background, this.foreground);
+  final String label;
+  final Color background;
+  final Color foreground;
+}
+
+/// "hari ini", "besok", "4 hari lagi"; tanggal yang sudah lewat tidak diberi keterangan.
+String? _countdown(DateTime date, DateTime now) {
+  final days = DateTime(date.year, date.month, date.day).difference(DateTime(now.year, now.month, now.day)).inDays;
+  return switch (days) {
+    < 0 => null,
+    0 => 'hari ini',
+    1 => 'besok',
+    _ => '$days hari lagi',
+  };
+}
+
+class _DividendCard extends StatelessWidget {
+  const _DividendCard({required this.dividend, required this.onTap});
+  final Dividend dividend;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final d = dividend;
+    final now = DateTime.now();
+    final currency = d.received?.currency ?? Currency.idr;
+    final status = d.paymentDate == null ? _Status.unscheduled : (d.isPaid(now) ? _Status.paid : _Status.upcoming);
+    String dateLine(DateTime? date) {
+      if (date == null) return 'Belum ditentukan';
+      final left = status == _Status.paid ? null : _countdown(date, now);
+      return left == null ? Fmt.date(date) : '${Fmt.date(date)} · $left';
+    }
+
+    return AppCard(
+      onTap: onTap,
+      semanticLabel: 'Ubah dividen ${d.symbol}',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(d.symbol, style: text.titleMedium)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
+                decoration: BoxDecoration(color: status.background, borderRadius: BorderRadius.circular(999)),
+                child: Text(status.label, style: text.labelSmall?.copyWith(color: status.foreground)),
+              ),
+            ],
+          ),
+          // Wrap: teks besar / layar sempit turun baris, tidak meluber.
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text('DPS ', style: text.bodySmall),
+              AmountText(Money(d.dps, currency), style: text.bodySmall),
+              Text(' per saham · pajak ${Fmt.number(d.taxPercent)}%', style: text.bodySmall),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          InfoRow(label: 'Ex-date', value: Text(dateLine(d.exDate))),
+          InfoRow(label: 'Tanggal bayar', value: Text(dateLine(d.paymentDate))),
+          InfoRow(
+            label: status == _Status.paid ? 'Diterima bersih' : 'Perkiraan bersih',
+            value: AmountText(d.received, style: text.titleSmall),
+          ),
+          if (d.note case final note? when note.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(note, style: text.bodySmall),
+          ],
+        ],
+      ),
     );
   }
 }
