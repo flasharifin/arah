@@ -66,6 +66,16 @@ class TimelineEvent extends Equatable {
   List<Object?> get props => [date, kind, label, amount];
 }
 
+/// Kejadian per bulan, urutan dari server dipertahankan (terbaru dulu). Bulan yang sama tidak terpecah
+/// walau kejadiannya tidak berurutan.
+List<({DateTime month, List<TimelineEvent> events})> groupTimelineByMonth(List<TimelineEvent> events) {
+  final groups = <DateTime, List<TimelineEvent>>{};
+  for (final e in events) {
+    groups.putIfAbsent(DateTime(e.date.year, e.date.month), () => []).add(e);
+  }
+  return [for (final g in groups.entries) (month: g.key, events: g.value)];
+}
+
 /// `/api/portfolio/wealth-timeline`: nilai porto harian + kejadian investasi (terbaru dulu).
 class WealthTimeline extends Equatable {
   const WealthTimeline({required this.points, required this.events});

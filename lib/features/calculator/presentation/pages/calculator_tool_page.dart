@@ -15,6 +15,7 @@ import 'package:arah/features/portfolio/presentation/widgets/purchase_form.dart'
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 /// Layar fokus satu alat: input di atas, asumsi, hasil, penjelasan.
 class CalculatorToolPage extends StatelessWidget {
@@ -535,6 +536,65 @@ class _InvisibleCostTool extends StatelessWidget {
 
 // ── Wealth timeline ──────────────────────────────────────────────────────────
 
+/// Satu kejadian: ikon jenis, nama & tanggal, nominal. Jual dan dividen memakai tanda +/− (PnL & uang masuk).
+class _TimelineRow extends StatelessWidget {
+  const _TimelineRow({required this.event, required this.kindLabel});
+  final TimelineEvent event;
+  final String kindLabel;
+
+  static const _style = {
+    TimelineKind.buy: (icon: Icons.north_east, background: AppColors.primarySoft, foreground: AppColors.primary),
+    TimelineKind.sell: (icon: Icons.south_west, background: AppColors.warningSoft, foreground: AppColors.warning),
+    TimelineKind.dividend: (icon: Icons.payments_outlined, background: AppColors.accent, foreground: AppColors.onAccent),
+  };
+  static const _amountLabel = {
+    TimelineKind.buy: 'Modal',
+    TimelineKind.sell: 'Realized PnL',
+    TimelineKind.dividend: 'Diterima',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final e = event;
+    final style = _style[e.kind]!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(color: style.background, borderRadius: BorderRadius.circular(AppRadius.field)),
+            child: Icon(style.icon, size: 20, color: style.foreground, semanticLabel: kindLabel),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(e.label, style: text.titleSmall),
+                Text('${Fmt.date(e.date)} · ${_amountLabel[e.kind]}', style: text.bodySmall),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Flexible(
+            // Align melebar mengisi slot Flexible, jadi nominal menempel ke tepi kanan kartu.
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: e.kind == TimelineKind.buy ? AmountText(e.amount) : PnlText(amount: e.amount),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TimelineTool extends StatefulWidget {
   const _TimelineTool();
 
@@ -610,16 +670,31 @@ class _TimelineToolState extends State<_TimelineTool> {
             ChoiceChipBar<TimelineKind?>(
               options: const [null, ...TimelineKind.values],
               selected: _kind,
-              labelOf: (k) => k == null ? 'Semua' : _labels[k]!,
+              labelOf: (k) {
+                final count = k == null ? t.events.length : t.events.where((e) => e.kind == k).length;
+                return '${k == null ? 'Semua' : _labels[k]!} · $count';
+              },
               onSelected: (k) => setState(() => _kind = k),
             ),
             const SizedBox(height: AppSpacing.md),
             if (events.isEmpty) _hint(context, 'Tidak ada kejadian.'),
-            for (final e in events)
-              InfoRow(
-                label: '${Fmt.date(e.date)} · ${e.label}',
-                value: e.kind == TimelineKind.sell ? PnlText(amount: e.amount) : AmountText(e.amount),
+            for (final group in groupTimelineByMonth(events)) ...[
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.sm),
+                child: Text(DateFormat('MMMM yyyy', 'id').format(group.month), style: text.labelLarge),
               ),
+              AppCard(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
+                child: Column(
+                  children: [
+                    for (final (i, e) in group.events.indexed) ...[
+                      if (i > 0) const Divider(height: 1, color: AppColors.divider),
+                      _TimelineRow(event: e, kindLabel: _labels[e.kind]!),
+                    ],
+                  ],
+                ),
+              ),
+            ],
             _hint(
               context,
               'Beli = modal posisi saat ini (jumlah × harga rata-rata) pada tanggal beli pertama; jual = realized PnL; dividen = jumlah diterima.',
