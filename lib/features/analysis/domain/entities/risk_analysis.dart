@@ -95,6 +95,7 @@ class RiskAnalysis extends Equatable {
     this.portfolio,
     this.sectors = const [],
     this.currencies = const [],
+    this.priceHistoryAsOf,
   });
 
   /// `null` bila server belum mengirim (versi lama).
@@ -113,12 +114,24 @@ class RiskAnalysis extends Equatable {
   final List<ExposureSlice> sectors;
   final List<ExposureSlice> currencies;
 
+  /// Tanggal bar harga terbaru yang dipakai volatilitas & korelasi; `null` = belum ada histori.
+  final DateTime? priceHistoryAsOf;
+
   Money get totalValue => Money.idr(positions.fold(0.0, (s, p) => s + p.value.amount));
 
   RiskPosition? get largest => positions.isEmpty ? null : positions.reduce((a, b) => a.weight >= b.weight ? a : b);
 
   @override
-  List<Object?> get props => [positions, correlations, scenarios, historyDays, portfolio, sectors, currencies];
+  List<Object?> get props => [
+    positions,
+    correlations,
+    scenarios,
+    historyDays,
+    portfolio,
+    sectors,
+    currencies,
+    priceHistoryAsOf,
+  ];
 }
 
 /// Label tingkat sama dengan web (volLevel / ddLevel).

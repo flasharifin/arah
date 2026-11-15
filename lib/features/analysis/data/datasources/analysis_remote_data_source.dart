@@ -64,6 +64,10 @@ class AnalysisApiDataSource implements AnalysisRemoteDataSource {
       },
       sectors: _slices(exposure?['sectors']),
       currencies: _slices(exposure?['currencies']),
+      priceHistoryAsOf: switch (r['priceHistoryAsOf']) {
+        final String d => DateTime.parse(d),
+        _ => null,
+      },
     );
   }
 }

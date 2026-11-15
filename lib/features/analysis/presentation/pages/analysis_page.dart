@@ -141,6 +141,10 @@ class _SummaryTab extends StatelessWidget {
               gap,
               ModuleCard(
                 title: 'Risiko per posisi · 1 bulan',
+                trailing: switch (analysis.priceHistoryAsOf) {
+                  final d? => Text('s.d. ${Fmt.date(d)}', style: text.bodySmall),
+                  null => null,
+                },
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [

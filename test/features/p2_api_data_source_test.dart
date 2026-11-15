@@ -113,6 +113,7 @@ void main() {
             {'name': 'IDR', 'valueIDR': 15e6, 'weight': 100},
           ],
         },
+        'priceHistoryAsOf': '2026-10-30',
         'asOf': {'computedAt': '2026-10-31T00:00:00.000Z', 'usdToIdr': 16000},
       },
     });
@@ -125,6 +126,7 @@ void main() {
     expect(a.sectors.map((s) => s.name), ['Bank', 'Kripto']);
     expect(a.currencies.single.weight, 100);
     expect(a.totalValue.amount, 15e6);
+    expect(a.priceHistoryAsOf, DateTime(2026, 10, 30));
   });
 
   test('stress test: nilai × (1 + penurunan bursa)', () {
