@@ -64,7 +64,7 @@ class DcaPage extends StatelessWidget {
 void _openSheet(BuildContext context, Widget child) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
-  builder: (_) => BlocProvider.value(value: context.read<DcaCubit>(), child: child),
+  builder: (_) => withCashProviders(context, BlocProvider.value(value: context.read<DcaCubit>(), child: child)),
 );
 
 double? _parse(String v) => double.tryParse(v.trim().replaceAll(',', '.'));

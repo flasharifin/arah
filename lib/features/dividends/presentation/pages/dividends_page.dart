@@ -22,9 +22,12 @@ class DividendsPage extends StatelessWidget {
   static void _openForm(BuildContext context, [Dividend? dividend]) => showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => BlocProvider.value(
-      value: context.read<DividendsCubit>(),
-      child: _DividendForm(dividend: dividend),
+    builder: (_) => withCashProviders(
+      context,
+      BlocProvider.value(
+        value: context.read<DividendsCubit>(),
+        child: _DividendForm(dividend: dividend),
+      ),
     ),
   );
 

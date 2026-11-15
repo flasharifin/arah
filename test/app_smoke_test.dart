@@ -206,6 +206,26 @@ void main() {
     expect(find.text('Lihat semua 6 snapshot'), findsOneWidget); // ganti periode kembali ke 5 terbaru
   });
 
+  testWidgets('Catat (+) → Pembelian: isian Sumber dana tampil (sheet di navigator root)', (tester) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    tester.view.physicalSize = const Size(390, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(const ArahApp());
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).at(0), 'demo@arah.id');
+    await tester.enterText(find.byType(TextFormField).at(1), 'password123');
+    await tester.tap(find.text('Masuk'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Catat transaksi'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Pembelian'));
+    await tester.pumpAndSettle();
+    expect(find.text('Catat pembelian'), findsOneWidget);
+    expect(find.text('Sumber dana'), findsOneWidget);
+    expect(find.text('Tidak memotong kas'), findsOneWidget);
+  });
+
   testWidgets('back di layar utama: konfirmasi tutup app; back di sub-halaman kembali biasa', (tester) async {
     FlutterSecureStorage.setMockInitialValues({});
     tester.view.physicalSize = const Size(390, 844);

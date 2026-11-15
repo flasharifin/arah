@@ -19,6 +19,13 @@ List<CashAssetOption> cashAssetsOf(NetWorth? data) => [
       (id: a.id, name: a.name, value: Money(e.amount, e.currency == 'USD' ? Currency.usd : Currency.idr)),
 ];
 
+/// Sheet form dari tombol Catat dibuka di navigator root, di atas provider sesi shell: Kekayaan diteruskan
+/// dari konteks pemanggil supaya "Sumber dana" tetap menemukan aset kas.
+Widget withCashProviders(BuildContext context, Widget child) => switch (context.read<NetWorthCubit?>()) {
+  final netWorth? => BlocProvider.value(value: netWorth, child: child),
+  null => child,
+};
+
 /// Setelah transaksi yang memotong/menambah kas: saldo di Kekayaan & Arus kas dimuat ulang.
 /// Nullable lookup: form juga dipakai di test/layar tanpa kedua cubit ini.
 void refreshCash(BuildContext context) => cashRefresher(context)();

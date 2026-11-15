@@ -28,13 +28,16 @@ Future<void> showPurchaseForm(
   final saved = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => _PurchaseForm(
-      record: sl<RecordPurchase>(),
-      symbol: symbol,
-      exchange: exchange ?? Exchange.idx,
-      broker: broker,
-      quantity: quantity,
-      price: price,
+    builder: (_) => withCashProviders(
+      context,
+      _PurchaseForm(
+        record: sl<RecordPurchase>(),
+        symbol: symbol,
+        exchange: exchange ?? Exchange.idx,
+        broker: broker,
+        quantity: quantity,
+        price: price,
+      ),
     ),
   );
   if (saved != true || !context.mounted) return;

@@ -26,7 +26,7 @@ Future<bool> showSaleForm(BuildContext context, Position position) async {
   final sold = await showModalBottomSheet<double>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => _SaleForm(position: position, record: sl<RecordSale>()),
+    builder: (_) => withCashProviders(context, _SaleForm(position: position, record: sl<RecordSale>())),
   );
   if (sold == null || !context.mounted) return false;
   context.read<PortfolioBloc>().add(const PortfolioRequested());

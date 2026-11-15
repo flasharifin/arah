@@ -318,4 +318,46 @@ void main() {
     expect(find.text('Batal: Beli BBCA 2 lot'), findsOneWidget);
     expect(find.textContaining('dibatalkan'), findsOneWidget);
   });
+
+  testWidgets('form dari navigator root (seperti tombol Catat) tetap menampilkan Sumber dana', (tester) async {
+    final netWorth = _MockNetWorth();
+    when(() => netWorth.state).thenReturn(ViewState(data: _netWorth()));
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        // Provider sesi di bawah navigator, seperti shell: sheet di navigator root tidak melihatnya langsung.
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => PrivacyCubit()),
+            BlocProvider<NetWorthCubit>.value(value: netWorth),
+          ],
+          child: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => showModalBottomSheet<void>(
+                  context: context,
+                  useRootNavigator: true,
+                  isScrollControlled: true,
+                  builder: (_) => withCashProviders(
+                    context,
+                    BlocProvider.value(
+                      value: context.read<PrivacyCubit>(),
+                      child: Material(
+                        child: CashSourceField(currency: Currency.idr, onChanged: (_) {}),
+                      ),
+                    ),
+                  ),
+                ),
+                child: const Text('Buka'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Buka'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sumber dana'), findsOneWidget);
+    expect(find.text('Cash IDR'), findsOneWidget);
+  });
 }
