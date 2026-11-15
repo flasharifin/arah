@@ -171,16 +171,7 @@ class CashflowFixtureDataSource implements CashflowRemoteDataSource {
       m('m5', CashMovementKind.manual, 'Penyesuaian manual', 'Cash IDR', -8247150, 26200000, 0),
       m('m4', CashMovementKind.purchase, 'Beli BBCA 2 lot', 'Cash IDR', -1902850, 34447150, 3),
       if (_reversed.contains('m4'))
-        m(
-          'm4r',
-          CashMovementKind.purchase,
-          'Batal: Beli BBCA 2 lot',
-          'Cash IDR',
-          1902850,
-          36350000,
-          0,
-          reversal: true,
-        ),
+        m('m4r', CashMovementKind.purchase, 'Batal: Beli BBCA 2 lot', 'Cash IDR', 1902850, 36350000, 0, reversal: true),
       m('m3', CashMovementKind.dividend, 'Dividen TLKM', 'Saldo Flooq', 120000, 3200000, 5),
       m('m2', CashMovementKind.income, 'Gaji Oktober', 'Cash IDR', 15000000, 36350000, 6),
       m('m1', CashMovementKind.dca, 'DCA AAPL 0.2 unit', 'Cash USD', -32.4, 690.2, 16, c: Currency.usd),

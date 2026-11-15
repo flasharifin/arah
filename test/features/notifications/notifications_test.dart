@@ -51,6 +51,7 @@ class _FakePush implements PushNotificationService {
     if (openFails) throw Exception('plugin belum terpasang');
     opened++;
   }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -86,7 +87,15 @@ void main() {
 
     test('kode jenis dan cara kirim sama dengan backend; kode asing tidak merusak', () {
       expect(NotificationType.values.map((t) => t.code).toSet(), {
-        'price_alert', 'drawdown', 'milestone', 'briefing', 'daily_summary', 'signals', 'weekly', 'periodic', 'dca',
+        'price_alert',
+        'drawdown',
+        'milestone',
+        'briefing',
+        'daily_summary',
+        'signals',
+        'weekly',
+        'periodic',
+        'dca',
       });
       expect(NotificationType.fromCode('baru'), NotificationType.periodic);
       expect(NotificationMode.fromCode('combined'), NotificationMode.combined);
@@ -97,8 +106,24 @@ void main() {
   group('API', () {
     test('daftar dipetakan: readAt → sudah dibaca, jenis asing → tetap tampil', () async {
       final api = _FakeApi([
-        {'id': 'a', 'type': 'price_alert', 'title': 'T', 'body': 'B', 'route': '/portfolio', 'readAt': null, 'createdAt': '2026-11-02T01:00:00.000Z'},
-        {'id': 'b', 'type': 'lain', 'title': 'T', 'body': 'B', 'route': null, 'readAt': '2026-11-02T02:00:00.000Z', 'createdAt': '2026-11-02T01:00:00.000Z'},
+        {
+          'id': 'a',
+          'type': 'price_alert',
+          'title': 'T',
+          'body': 'B',
+          'route': '/portfolio',
+          'readAt': null,
+          'createdAt': '2026-11-02T01:00:00.000Z',
+        },
+        {
+          'id': 'b',
+          'type': 'lain',
+          'title': 'T',
+          'body': 'B',
+          'route': null,
+          'readAt': '2026-11-02T02:00:00.000Z',
+          'createdAt': '2026-11-02T01:00:00.000Z',
+        },
       ]);
       final items = await NotificationApiDataSource(api).list();
       expect(items[0].type, NotificationType.priceAlert);
@@ -113,16 +138,28 @@ void main() {
       final source = NotificationApiDataSource(api);
       await source.markRead('a');
       await source.markRead(null);
-      await source.savePrefs(const NotificationPrefs(mode: NotificationMode.combined, disabled: {NotificationType.dailySummary}));
+      await source.savePrefs(
+        const NotificationPrefs(mode: NotificationMode.combined, disabled: {NotificationType.dailySummary}),
+      );
       expect((api.writes[0].$1, api.writes[0].$2), ('PATCH', '/api/mobile/notifications'));
       expect(api.writes[0].$3, {'id': 'a'});
       expect(api.writes[1].$3, {'all': true});
       expect((api.writes[2].$1, api.writes[2].$2), ('PUT', '/api/mobile/notifications/preferences'));
-      expect(api.writes[2].$3, {'mode': 'combined', 'disabledTypes': ['daily_summary'], 'holdNight': false});
+      expect(api.writes[2].$3, {
+        'mode': 'combined',
+        'disabledTypes': ['daily_summary'],
+        'holdNight': false,
+      });
     });
 
     test('preferensi dari server: jenis asing diabaikan', () async {
-      final prefs = await NotificationApiDataSource(_FakeApi({'mode': 'combined', 'disabledTypes': ['signals', 'lain'], 'holdNight': true})).getPrefs();
+      final prefs = await NotificationApiDataSource(
+        _FakeApi({
+          'mode': 'combined',
+          'disabledTypes': ['signals', 'lain'],
+          'holdNight': true,
+        }),
+      ).getPrefs();
       expect(prefs.mode, NotificationMode.combined);
       expect(prefs.disabled, {NotificationType.signals});
       expect(prefs.holdNight, isTrue);
@@ -146,7 +183,10 @@ void main() {
           home: MultiBlocProvider(
             providers: [
               BlocProvider.value(value: unread),
-              BlocProvider(create: (_) => NotificationsCubit(get: GetNotifications(repo), mark: MarkNotificationRead(repo))..load()),
+              BlocProvider(
+                create: (_) =>
+                    NotificationsCubit(get: GetNotifications(repo), mark: MarkNotificationRead(repo))..load(),
+              ),
             ],
             child: const NotificationsPage(),
           ),
@@ -181,7 +221,9 @@ void main() {
       expect(unread.state, 0);
     });
 
-    testWidgets('drawdown: ambang tampil, Ubah ambang membuka Pengaturan, nilai baru terbaca saat kembali', (tester) async {
+    testWidgets('drawdown: ambang tampil, Ubah ambang membuka Pengaturan, nilai baru terbaca saat kembali', (
+      tester,
+    ) async {
       sl.allowReassignment = true;
       sl.registerSingleton<PushNotificationService>(_FakePush());
       addTearDown(sl.reset);
@@ -199,7 +241,8 @@ void main() {
               providers: [
                 BlocProvider(
                   create: (_) =>
-                      NotificationPrefsCubit(get: GetNotificationPrefs(repo), save: SaveNotificationPrefs(repo))..load(),
+                      NotificationPrefsCubit(get: GetNotificationPrefs(repo), save: SaveNotificationPrefs(repo))
+                        ..load(),
                 ),
                 BlocProvider(create: (_) => settingsCubit(source)..load()),
               ],
@@ -208,7 +251,8 @@ void main() {
             routes: [
               GoRoute(
                 path: 'account',
-                builder: (_, _) => BlocProvider(create: (_) => settingsCubit(source)..load(), child: const SettingsPage()),
+                builder: (_, _) =>
+                    BlocProvider(create: (_) => settingsCubit(source)..load(), child: const SettingsPage()),
               ),
             ],
           ),
@@ -216,7 +260,11 @@ void main() {
       );
       addTearDown(router.dispose);
       final auth = _MockAuthBloc();
-      whenListen(auth, const Stream<AuthState>.empty(), initialState: const AuthState(status: AuthStatus.authenticated));
+      whenListen(
+        auth,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthState(status: AuthStatus.authenticated),
+      );
       await tester.pumpWidget(
         MultiBlocProvider(
           providers: [

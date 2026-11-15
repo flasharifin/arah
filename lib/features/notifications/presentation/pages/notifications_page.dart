@@ -205,7 +205,12 @@ class _NotificationCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(n.body.replaceAll('\n', ' · '), maxLines: 2, overflow: TextOverflow.ellipsis, style: text.bodySmall),
+                Text(
+                  n.body.replaceAll('\n', ' · '),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.bodySmall,
+                ),
                 const SizedBox(height: AppSpacing.xs),
                 Row(
                   children: [

@@ -41,12 +41,8 @@ void main() {
   });
 
   group('groupByPeriod', () {
-    DailyPerformance row(DateTime date, double value, double pnl, double pct) => DailyPerformance(
-      date: date,
-      portfolioValue: Money.idr(value),
-      pnl: Money.idr(pnl),
-      pnlPercent: pct,
-    );
+    DailyPerformance row(DateTime date, double value, double pnl, double pct) =>
+        DailyPerformance(date: date, portfolioValue: Money.idr(value), pnl: Money.idr(pnl), pnlPercent: pct);
 
     final rows = [
       row(DateTime(2026, 9, 30), 100, 10, 10),
@@ -58,12 +54,7 @@ void main() {
 
     test('bulan: nilai akhir hari terakhir, PnL dijumlah, return majemuk', () {
       final r = groupByPeriod(rows, PerformanceGranularity.month);
-      expect([for (final p in r) p.start], [
-        DateTime(2026, 9),
-        DateTime(2026, 10),
-        DateTime(2026, 12),
-        DateTime(2027),
-      ]);
+      expect([for (final p in r) p.start], [DateTime(2026, 9), DateTime(2026, 10), DateTime(2026, 12), DateTime(2027)]);
       expect(r[1].endValue, const Money.idr(1100));
       expect(r[1].pnl, const Money.idr(-5));
     });
@@ -99,7 +90,11 @@ void main() {
       ihsgChange: ihsg,
       btcChange: btc,
     );
-    final p = groupByPeriod([day(1, 10, null), day(2, null, null), day(3, -10, null)], PerformanceGranularity.month).single;
+    final p = groupByPeriod([
+      day(1, 10, null),
+      day(2, null, null),
+      day(3, -10, null),
+    ], PerformanceGranularity.month).single;
     expect(p.ihsgReturn, closeTo(-1, 1e-9)); // 1,1 × 0,9
     expect(p.sp500Return, isNull);
     expect(p.btcReturn, isNull);
@@ -144,10 +139,7 @@ void main() {
       final r = totalReturns(
         const Portfolio(positions: [bbca, nvda]),
         [sale(const Money.idr(52000), const Money.idr(2000))],
-        [
-          dividend(const Money.idr(3000), DateTime(2026, 1, 15)),
-          dividend(const Money.usd(5), DateTime(2026, 2, 15)),
-        ],
+        [dividend(const Money.idr(3000), DateTime(2026, 1, 15)), dividend(const Money.usd(5), DateTime(2026, 2, 15))],
         now,
       );
       expect(r.map((t) => t.currency), [Currency.idr, Currency.usd]);
@@ -158,12 +150,10 @@ void main() {
     });
 
     test('dividen belum dibayar atau belum ada nominalnya tidak dihitung', () {
-      final r = totalReturns(
-        const Portfolio(positions: [bbca]),
-        const [],
-        [dividend(const Money.idr(9000), DateTime(2026, 12)), dividend(null, DateTime(2026, 1))],
-        now,
-      );
+      final r = totalReturns(const Portfolio(positions: [bbca]), const [], [
+        dividend(const Money.idr(9000), DateTime(2026, 12)),
+        dividend(null, DateTime(2026, 1)),
+      ], now);
       expect(r.single.dividends, const Money.idr(0));
     });
 

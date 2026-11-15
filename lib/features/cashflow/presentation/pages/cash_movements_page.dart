@@ -213,10 +213,7 @@ class _BalanceCard extends StatelessWidget {
             spacing: AppSpacing.sm,
             crossAxisAlignment: WrapCrossAlignment.end,
             children: [
-              AmountText(
-                Money(last, page.currency),
-                style: text.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-              ),
+              AmountText(Money(last, page.currency), style: text.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
               PnlText(amount: Money(last - first, page.currency)),
             ],
           ),

@@ -33,7 +33,8 @@ class NotificationApiDataSource implements NotificationRemoteDataSource {
       ((await _api.get('/api/mobile/notifications/unread-count') as Map<String, dynamic>)['count'] as num).toInt();
 
   @override
-  Future<void> markRead(String? id) => _api.patch('/api/mobile/notifications', body: id == null ? {'all': true} : {'id': id});
+  Future<void> markRead(String? id) =>
+      _api.patch('/api/mobile/notifications', body: id == null ? {'all': true} : {'id': id});
 
   @override
   Future<NotificationPrefs> getPrefs() async {
@@ -68,7 +69,8 @@ class NotificationFixtureDataSource implements NotificationRemoteDataSource {
         id: 'n1',
         type: NotificationType.briefing,
         title: 'Selamat Pagi!',
-        body: 'Pasar Kemarin:\nIHSG 7.250 (+0,42%)\nS&P500 5.800 (−0,18%)\nHari Ini Perhatikan:\nTLKM: RSI 28 (oversold), potensi rebound',
+        body:
+            'Pasar Kemarin:\nIHSG 7.250 (+0,42%)\nS&P500 5.800 (−0,18%)\nHari Ini Perhatikan:\nTLKM: RSI 28 (oversold), potensi rebound',
         route: '/home',
         createdAt: now,
       ),

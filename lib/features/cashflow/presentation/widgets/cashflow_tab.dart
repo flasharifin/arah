@@ -44,19 +44,13 @@ class CashflowTab extends StatelessWidget {
                   children: [
                     _MonthSwitcher(data: data),
                     const SizedBox(height: AppSpacing.sm),
-                    if (!data.settings.hasSalary) ...[
-                      const _SetupCard(),
-                      const SizedBox(height: AppSpacing.md),
-                    ],
+                    if (!data.settings.hasSalary) ...[const _SetupCard(), const SizedBox(height: AppSpacing.md)],
                     _Hero(data: data),
                     const SizedBox(height: AppSpacing.md),
                     _Waterfall(month: data.summary),
                     const SizedBox(height: AppSpacing.md),
                     _IncomeExpense(series: data.series),
-                    if (data.assets.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      _CashBalances(data: data),
-                    ],
+                    if (data.assets.isNotEmpty) ...[const SizedBox(height: AppSpacing.md), _CashBalances(data: data)],
                     const SizedBox(height: AppSpacing.md),
                     _EmergencyCard(fund: data.emergency),
                     const SizedBox(height: AppSpacing.md),
@@ -130,10 +124,7 @@ class _SetupCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Align(
             alignment: Alignment.centerLeft,
-            child: FilledButton(
-              onPressed: () => showCashflowSettings(context),
-              child: const Text('Atur sekarang'),
-            ),
+            child: FilledButton(onPressed: () => showCashflowSettings(context), child: const Text('Atur sekarang')),
           ),
         ],
       ),
@@ -181,24 +172,15 @@ class _Hero extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Ditabung & diinvestasikan',
-                    style: text.bodySmall?.copyWith(color: AppColors.heroMuted),
-                  ),
-                  AmountText(
-                    Money.idr(s.saved),
-                    style: AppTypography.amountLarge.copyWith(color: Colors.white),
-                  ),
+                  Text('Ditabung & diinvestasikan', style: text.bodySmall?.copyWith(color: AppColors.heroMuted)),
+                  AmountText(Money.idr(s.saved), style: AppTypography.amountLarge.copyWith(color: Colors.white)),
                 ],
               ),
               // Pemasukan sangat kecil → persen ekstrem (mis. −22.000%) yang tidak bermakna: tidak ditampilkan.
               if (s.savingsRatePercent case final r? when r >= -100 && r <= 100)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
+                  decoration: BoxDecoration(color: AppColors.accent, borderRadius: BorderRadius.circular(999)),
                   child: Text(
                     '${r.round()}% dari pemasukan',
                     style: text.labelMedium?.copyWith(color: AppColors.onAccent, fontWeight: FontWeight.w700),
@@ -286,8 +268,7 @@ class _Waterfall extends StatelessWidget {
                           ],
                           gridData: FlGridData(
                             drawVerticalLine: false,
-                            getDrawingHorizontalLine: (_) =>
-                                const FlLine(color: AppColors.border, strokeWidth: 1),
+                            getDrawingHorizontalLine: (_) => const FlLine(color: AppColors.border, strokeWidth: 1),
                           ),
                           borderData: FlBorderData(show: false),
                           titlesData: FlTitlesData(
@@ -311,11 +292,7 @@ class _Waterfall extends StatelessWidget {
                                 reservedSize: 32,
                                 getTitlesWidget: (v, meta) => SideTitleWidget(
                                   meta: meta,
-                                  child: Text(
-                                    steps[v.toInt()].label,
-                                    style: axis,
-                                    textAlign: TextAlign.center,
-                                  ),
+                                  child: Text(steps[v.toInt()].label, style: axis, textAlign: TextAlign.center),
                                 ),
                               ),
                             ),
@@ -340,9 +317,7 @@ class _Waterfall extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                const _Legend(
-                  items: [('Masuk', _income), ('Keluar', _expense), ('Sisa di kas', AppColors.primary)],
-                ),
+                const _Legend(items: [('Masuk', _income), ('Keluar', _expense), ('Sisa di kas', AppColors.primary)]),
               ],
             ),
     );
@@ -469,9 +444,7 @@ class _IncomeExpenseState extends State<_IncomeExpense> {
                         ),
                       ),
                     ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: true, getTitlesWidget: bottom),
-                    ),
+                    bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: bottom)),
                   ),
                   barTouchData: BarTouchData(
                     touchTooltipData: BarTouchTooltipData(
@@ -495,10 +468,7 @@ class _IncomeExpenseState extends State<_IncomeExpense> {
             children: [
               Expanded(child: Text('Tingkat tabungan', style: text.titleSmall)),
               if (avg.isNotEmpty)
-                Text(
-                  'rata-rata ${(avg.reduce((a, b) => a + b) / avg.length).round()}%',
-                  style: text.bodySmall,
-                ),
+                Text('rata-rata ${(avg.reduce((a, b) => a + b) / avg.length).round()}%', style: text.bodySmall),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -515,8 +485,7 @@ class _IncomeExpenseState extends State<_IncomeExpense> {
                     lineBarsData: [
                       LineChartBarData(
                         spots: [
-                          for (final (i, r) in rates.indexed)
-                            r == null ? FlSpot.nullSpot : FlSpot(i.toDouble(), r),
+                          for (final (i, r) in rates.indexed) r == null ? FlSpot.nullSpot : FlSpot(i.toDouble(), r),
                         ],
                         color: AppColors.primary,
                         barWidth: 2,
@@ -543,9 +512,7 @@ class _IncomeExpenseState extends State<_IncomeExpense> {
                           ),
                         ),
                       ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: true, getTitlesWidget: bottom),
-                      ),
+                      bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: bottom)),
                     ),
                     lineTouchData: LineTouchData(
                       touchTooltipData: LineTouchTooltipData(
@@ -611,10 +578,7 @@ class _CashBalances extends StatelessWidget {
             spacing: AppSpacing.sm,
             crossAxisAlignment: WrapCrossAlignment.end,
             children: [
-              AmountText(
-                Money.idr(data.totalCashIdr),
-                style: text.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-              ),
+              AmountText(Money.idr(data.totalCashIdr), style: text.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
               PnlText(amount: Money.idr(cashDelta)),
             ],
           ),
@@ -629,8 +593,7 @@ class _CashBalances extends StatelessWidget {
                     for (final l in lines)
                       LineChartBarData(
                         spots: [
-                          for (final (i, v) in l.values.indexed)
-                            v == null ? FlSpot.nullSpot : FlSpot(i.toDouble(), v),
+                          for (final (i, v) in l.values.indexed) v == null ? FlSpot.nullSpot : FlSpot(i.toDouble(), v),
                         ],
                         color: l.color,
                         barWidth: 2,
@@ -697,10 +660,7 @@ class _CashBalances extends StatelessWidget {
                   Container(
                     width: 10,
                     height: 10,
-                    decoration: BoxDecoration(
-                      color: AppColors.series[i],
-                      borderRadius: BorderRadius.circular(3),
-                    ),
+                    decoration: BoxDecoration(color: AppColors.series[i], borderRadius: BorderRadius.circular(3)),
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   Flexible(child: AmountText(a.value)),
@@ -712,10 +672,7 @@ class _CashBalances extends StatelessWidget {
               label: 'Lainnya (${rest.length} aset)',
               value: AmountText(Money.idr(rest.fold(0.0, (s, a) => s + a.valueIdr))),
             ),
-          Text(
-            '${months.length} bulan, setara rupiah — aset USD dengan kurs hari ini.',
-            style: text.bodySmall,
-          ),
+          Text('${months.length} bulan, setara rupiah — aset USD dengan kurs hari ini.', style: text.bodySmall),
         ],
       ),
     );

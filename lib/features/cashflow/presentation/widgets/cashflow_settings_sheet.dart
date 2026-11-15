@@ -22,9 +22,7 @@ Future<void> showCashflowSettings(BuildContext context) async {
     ),
   );
   if (saved == true && context.mounted) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Pengaturan arus kas tersimpan')));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pengaturan arus kas tersimpan')));
   }
 }
 
@@ -63,12 +61,7 @@ class _CashflowSettingsFormState extends State<_CashflowSettingsForm> {
     final result = await context.read<CashflowCubit>().saveSettings(
       clearSalary || income == null
           ? CashflowSettings(emergencyMonths: _months)
-          : CashflowSettings(
-              monthlyIncome: income,
-              incomeDay: _day,
-              incomeAssetId: _assetId,
-              emergencyMonths: _months,
-            ),
+          : CashflowSettings(monthlyIncome: income, incomeDay: _day, incomeAssetId: _assetId, emergencyMonths: _months),
     );
     if (!mounted) return;
     result.fold(
@@ -110,9 +103,7 @@ class _CashflowSettingsFormState extends State<_CashflowSettingsForm> {
                 keyboardType: TextInputType.number,
                 validator: (v) {
                   final n = double.tryParse((v ?? '').trim().replaceAll('.', '').replaceAll(',', '.'));
-                  return (v ?? '').trim().isEmpty || (n != null && n > 0)
-                      ? null
-                      : 'Masukkan angka lebih dari 0';
+                  return (v ?? '').trim().isEmpty || (n != null && n > 0) ? null : 'Masukkan angka lebih dari 0';
                 },
               ),
               const SizedBox(height: AppSpacing.md),

@@ -62,13 +62,7 @@ NetWorth _netWorth() => const NetWorth(
       name: 'Cash USD',
       category: WealthCategory.cash,
       value: Money.idr(1650000),
-      entry: ManualEntry(
-        kind: WealthKind.asset,
-        name: 'Cash USD',
-        category: 'cash',
-        amount: 100,
-        currency: 'USD',
-      ),
+      entry: ManualEntry(kind: WealthKind.asset, name: 'Cash USD', category: 'cash', amount: 100, currency: 'USD'),
     ),
     WealthItem(
       id: 'gold',
@@ -177,12 +171,7 @@ void main() {
 
     await ds.saveSettings(const CashflowSettings(emergencyMonths: 12));
     expect(api.calls.last.$2, '/api/settings');
-    expect(api.calls.last.$3, {
-      'monthlyIncome': null,
-      'incomeDay': null,
-      'incomeAssetId': null,
-      'emergencyMonths': 12,
-    });
+    expect(api.calls.last.$3, {'monthlyIncome': null, 'incomeDay': null, 'incomeAssetId': null, 'emergencyMonths': 12});
     await ds.reverse('m1');
     expect(api.calls.last.$2, '/api/cashflow/movements/m1/reverse');
   });
@@ -262,12 +251,10 @@ void main() {
         BlocProvider(create: (_) => PrivacyCubit()),
         BlocProvider<NetWorthCubit>.value(value: netWorth),
         BlocProvider(
-          create: (_) =>
-              CashflowCubit(get: GetCashflow(repo), saveSettings: SaveCashflowSettings(repo))..load(),
+          create: (_) => CashflowCubit(get: GetCashflow(repo), saveSettings: SaveCashflowSettings(repo))..load(),
         ),
         BlocProvider(
-          create: (_) =>
-              CashMovementsCubit(get: GetCashMovements(repo), reverse: ReverseCashMovement(repo))..load(),
+          create: (_) => CashMovementsCubit(get: GetCashMovements(repo), reverse: ReverseCashMovement(repo))..load(),
         ),
       ],
       child: MaterialApp(
@@ -302,9 +289,7 @@ void main() {
       expect(find.text('Tingkat tabungan'), findsOneWidget);
     });
 
-    testWidgets('Mutasi kas: grafik saldo, daftar per tanggal, tanpa overflow (teks $scale×)', (
-      tester,
-    ) async {
+    testWidgets('Mutasi kas: grafik saldo, daftar per tanggal, tanpa overflow (teks $scale×)', (tester) async {
       tester.view.physicalSize = const Size(390, 6000);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
@@ -317,9 +302,7 @@ void main() {
     });
   }
 
-  testWidgets('Mutasi kas: tekan mutasi → konfirmasi → dibatalkan (tercoret, ada baris pembatalan)', (
-    tester,
-  ) async {
+  testWidgets('Mutasi kas: tekan mutasi → konfirmasi → dibatalkan (tercoret, ada baris pembatalan)', (tester) async {
     tester.view.physicalSize = const Size(390, 6000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);

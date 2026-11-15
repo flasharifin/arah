@@ -545,7 +545,11 @@ class _TimelineRow extends StatelessWidget {
   static const _style = {
     TimelineKind.buy: (icon: Icons.north_east, background: AppColors.primarySoft, foreground: AppColors.primary),
     TimelineKind.sell: (icon: Icons.south_west, background: AppColors.warningSoft, foreground: AppColors.warning),
-    TimelineKind.dividend: (icon: Icons.payments_outlined, background: AppColors.accent, foreground: AppColors.onAccent),
+    TimelineKind.dividend: (
+      icon: Icons.payments_outlined,
+      background: AppColors.accent,
+      foreground: AppColors.onAccent,
+    ),
   };
   static const _amountLabel = {
     TimelineKind.buy: 'Modal',

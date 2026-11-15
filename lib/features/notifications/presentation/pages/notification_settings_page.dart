@@ -201,7 +201,9 @@ class _PushEstimate extends StatelessWidget {
     final base = prefs.mode == NotificationMode.combined
         ? 'push gabungan pagi di hari biasa'
         : 'push maksimal di hari biasa';
-    final importantOn = NotificationType.values.any((t) => t.group == NotificationGroup.important && prefs.isEnabled(t));
+    final importantOn = NotificationType.values.any(
+      (t) => t.group == NotificationGroup.important && prefs.isEnabled(t),
+    );
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(color: AppColors.accent, borderRadius: BorderRadius.circular(AppRadius.field)),
@@ -286,7 +288,9 @@ class _DrawdownRow extends StatelessWidget {
       children: [
         _SwitchRow(
           label: NotificationType.drawdown.label,
-          hint: threshold == null ? NotificationType.drawdown.hint : 'Saat porto turun ${_percent(threshold)}% dari puncak',
+          hint: threshold == null
+              ? NotificationType.drawdown.hint
+              : 'Saat porto turun ${_percent(threshold)}% dari puncak',
           value: value,
           onChanged: onChanged,
         ),
@@ -341,7 +345,9 @@ class _PermissionCardState extends State<_PermissionCard> {
     } on Exception catch (e) {
       debugPrint('[push] buka pengaturan gagal: $e');
       messenger.showSnackBar(
-        const SnackBar(content: Text('Tidak bisa membuka pengaturan. Buka manual: Pengaturan HP → Aplikasi → Arah → Notifikasi.')),
+        const SnackBar(
+          content: Text('Tidak bisa membuka pengaturan. Buka manual: Pengaturan HP → Aplikasi → Arah → Notifikasi.'),
+        ),
       );
     }
   }

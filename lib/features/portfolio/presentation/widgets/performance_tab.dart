@@ -64,7 +64,11 @@ class _PerformanceTabState extends State<PerformanceTab> {
           return RefreshIndicator(
             onRefresh: () async {
               context.read<PortfolioBloc>().add(const PortfolioRequested());
-              await Future.wait([cubit.load(), context.read<SalesCubit>().load(), context.read<DividendsCubit>().load()]);
+              await Future.wait([
+                cubit.load(),
+                context.read<SalesCubit>().load(),
+                context.read<DividendsCubit>().load(),
+              ]);
             },
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
@@ -134,7 +138,9 @@ class _PerformanceTabState extends State<PerformanceTab> {
                 const SizedBox(height: AppSpacing.lg),
                 PageBody(child: _PortfolioValue(rows: all)),
                 const SizedBox(height: AppSpacing.lg),
-                PageBody(child: _DailySummary(rows: rows, period: _period)),
+                PageBody(
+                  child: _DailySummary(rows: rows, period: _period),
+                ),
               ],
             ),
           );
@@ -351,7 +357,10 @@ class _TotalReturnCard extends StatelessWidget {
     } else {
       final totals = totalReturns(portfolio, sales, dividends, DateTime.now());
       final unpriced = portfolio.unpriced;
-      Widget line(String label, Money amount) => InfoRow(label: label, value: PnlText(amount: amount));
+      Widget line(String label, Money amount) => InfoRow(
+        label: label,
+        value: PnlText(amount: amount),
+      );
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -437,7 +446,9 @@ class _PerformanceSummary extends StatelessWidget {
                       '${s.streakDays} hari',
                       style: TextStyle(color: s.streakIsProfit ? AppColors.positive : AppColors.negative),
                     ),
-              caption: s.streakDays == 0 ? 'Belum ada pergerakan' : 'Berturut-turut ${s.streakIsProfit ? 'untung' : 'rugi'}',
+              caption: s.streakDays == 0
+                  ? 'Belum ada pergerakan'
+                  : 'Berturut-turut ${s.streakIsProfit ? 'untung' : 'rugi'}',
             ),
             StatTile(
               label: 'Hari untung',
@@ -492,9 +503,7 @@ class _PnlCalendarState extends State<_PnlCalendar> {
   }
 
   /// Tanda minus: untung/rugi tetap terbaca tanpa mengandalkan warna.
-  static Widget _lossMark(Color color) => Center(
-    child: Container(width: 8, height: 2, color: color),
-  );
+  static Widget _lossMark(Color color) => Center(child: Container(width: 8, height: 2, color: color));
 
   static Widget _swatch(Color color, {bool loss = false}) => Container(
     width: 14,
@@ -525,7 +534,9 @@ class _PnlCalendarState extends State<_PnlCalendar> {
                     ? Border.all(color: AppColors.text, width: 2)
                     : (r == null ? Border.all(color: AppColors.border) : null),
               ),
-              child: isLoss ? _lossMark(color == AppColors.negative ? AppColors.surface : AppColors.onNegativeSoft) : null,
+              child: isLoss
+                  ? _lossMark(color == AppColors.negative ? AppColors.surface : AppColors.onNegativeSoft)
+                  : null,
             ),
           ),
         ),
@@ -588,7 +599,10 @@ class _PnlCalendarState extends State<_PnlCalendar> {
                           child: i.isEven
                               ? Align(
                                   alignment: Alignment.centerLeft,
-                                  child: FittedBox(fit: BoxFit.scaleDown, child: Text(day, style: axis)),
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(day, style: axis),
+                                  ),
                                 )
                               : null,
                         ),
@@ -715,10 +729,7 @@ class _PortfolioValueState extends State<_PortfolioValue> {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Semantics(
-            header: true,
-            child: Text('PnL per ${_granularity.label.toLowerCase()}', style: text.titleSmall),
-          ),
+          Semantics(header: true, child: Text('PnL per ${_granularity.label.toLowerCase()}', style: text.titleSmall)),
           const SizedBox(height: AppSpacing.sm),
           ExcludeSemantics(
             child: _PeriodPnlBars(
@@ -820,12 +831,7 @@ class _ValueLine extends StatelessWidget {
           minY: low - pad,
           maxY: high + pad,
           lineBarsData: [
-            LineChartBarData(
-              spots: spots,
-              color: _portfolioColor,
-              barWidth: 2,
-              dotData: const FlDotData(show: false),
-            ),
+            LineChartBarData(spots: spots, color: _portfolioColor, barWidth: 2, dotData: const FlDotData(show: false)),
           ],
           gridData: FlGridData(
             drawVerticalLine: false,

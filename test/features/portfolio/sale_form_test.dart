@@ -78,95 +78,96 @@ void main() {
     expect(await lot(), isNull);
   });
 
-  testWidgets('dari detail: batas lot, jual sebagian, jual semua kembali ke daftar; dari tombol Catat bisa pilih posisi', (
-    tester,
-  ) async {
-    // Tombol yang tertutup snackbar harus menggagalkan tes, bukan hanya peringatan.
-    WidgetController.hitTestWarningShouldBeFatal = true;
-    addTearDown(() => WidgetController.hitTestWarningShouldBeFatal = false);
-    await initializeDateFormatting('id');
-    FlutterSecureStorage.setMockInitialValues({});
-    configureDependencies(useFixtures: true);
-    sl
-      ..unregister<PushNotificationService>()
-      ..registerSingleton<PushNotificationService>(_FakePush());
-    tester.view
-      ..devicePixelRatio = 1
-      ..physicalSize = const Size(360, 1400);
-    addTearDown(tester.view.reset);
+  testWidgets(
+    'dari detail: batas lot, jual sebagian, jual semua kembali ke daftar; dari tombol Catat bisa pilih posisi',
+    (tester) async {
+      // Tombol yang tertutup snackbar harus menggagalkan tes, bukan hanya peringatan.
+      WidgetController.hitTestWarningShouldBeFatal = true;
+      addTearDown(() => WidgetController.hitTestWarningShouldBeFatal = false);
+      await initializeDateFormatting('id');
+      FlutterSecureStorage.setMockInitialValues({});
+      configureDependencies(useFixtures: true);
+      sl
+        ..unregister<PushNotificationService>()
+        ..registerSingleton<PushNotificationService>(_FakePush());
+      tester.view
+        ..devicePixelRatio = 1
+        ..physicalSize = const Size(360, 1400);
+      addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(const ArahApp());
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextFormField).at(0), 'demo@arah.id');
-    await tester.enterText(find.byType(TextFormField).at(1), 'password123');
-    await tester.tap(find.text('Masuk'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Portofolio').last);
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(const ArahApp());
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextFormField).at(0), 'demo@arah.id');
+      await tester.enterText(find.byType(TextFormField).at(1), 'password123');
+      await tester.tap(find.text('Masuk'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Portofolio').last);
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('BBCA'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Catat penjualan'));
-    await tester.pumpAndSettle();
-    expect(find.text('Catat penjualan BBCA'), findsOneWidget);
-    // Harga terisi dari harga terakhir.
-    expect(find.widgetWithText(TextFormField, '9500'), findsOneWidget);
+      await tester.tap(find.text('BBCA'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Catat penjualan'));
+      await tester.pumpAndSettle();
+      expect(find.text('Catat penjualan BBCA'), findsOneWidget);
+      // Harga terisi dari harga terakhir.
+      expect(find.widgetWithText(TextFormField, '9500'), findsOneWidget);
 
-    final quantity = find.byType(TextFormField).first;
-    await tester.enterText(quantity, '101');
-    await tester.tap(find.text('Simpan penjualan'));
-    await tester.pumpAndSettle();
-    expect(find.text('Maksimal 100 lot'), findsOneWidget);
+      final quantity = find.byType(TextFormField).first;
+      await tester.enterText(quantity, '101');
+      await tester.tap(find.text('Simpan penjualan'));
+      await tester.pumpAndSettle();
+      expect(find.text('Maksimal 100 lot'), findsOneWidget);
 
-    await tester.enterText(quantity, '40');
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Simpan penjualan'));
-    await tester.pumpAndSettle();
-    expect(find.text('Penjualan tercatat'), findsOneWidget);
-    expect(find.text('60 lot'), findsOneWidget); // masih di detail, jumlah berkurang
+      await tester.enterText(quantity, '40');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Simpan penjualan'));
+      await tester.pumpAndSettle();
+      expect(find.text('Penjualan tercatat'), findsOneWidget);
+      expect(find.text('60 lot'), findsOneWidget); // masih di detail, jumlah berkurang
 
-    // Langsung buka lagi saat snackbar masih tampil: pesan hilang, tombol Simpan bisa ditekan.
-    await tester.tap(find.text('Catat penjualan'));
-    await tester.pumpAndSettle();
-    expect(find.text('Penjualan tercatat'), findsNothing);
+      // Langsung buka lagi saat snackbar masih tampil: pesan hilang, tombol Simpan bisa ditekan.
+      await tester.tap(find.text('Catat penjualan'));
+      await tester.pumpAndSettle();
+      expect(find.text('Penjualan tercatat'), findsNothing);
 
-    // Jual sebagian tadi tanpa dialog; jual semua minta konfirmasi, juga kalau angkanya diketik.
-    await tester.enterText(find.byType(TextFormField).first, '60');
-    await tester.tap(find.text('Simpan penjualan'));
-    await tester.pumpAndSettle();
-    expect(find.text('Jual semua BBCA?'), findsOneWidget);
-    expect(find.textContaining('Seluruh 60 lot di Stockbit'), findsOneWidget);
-    await tester.tap(find.text('Batal'));
-    await tester.pumpAndSettle();
-    expect(find.text('Catat penjualan BBCA'), findsOneWidget); // batal: form tetap terbuka, belum terjual
+      // Jual sebagian tadi tanpa dialog; jual semua minta konfirmasi, juga kalau angkanya diketik.
+      await tester.enterText(find.byType(TextFormField).first, '60');
+      await tester.tap(find.text('Simpan penjualan'));
+      await tester.pumpAndSettle();
+      expect(find.text('Jual semua BBCA?'), findsOneWidget);
+      expect(find.textContaining('Seluruh 60 lot di Stockbit'), findsOneWidget);
+      await tester.tap(find.text('Batal'));
+      await tester.pumpAndSettle();
+      expect(find.text('Catat penjualan BBCA'), findsOneWidget); // batal: form tetap terbuka, belum terjual
 
-    await tester.tap(find.text('Jual semua'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Simpan penjualan'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Ya, jual semua'));
-    await tester.pumpAndSettle();
-    expect(find.text('Kepemilikan'), findsNothing); // kembali ke daftar
-    expect(find.text('Posisi tidak ditemukan'), findsNothing);
-    expect(find.text('BBCA'), findsNothing);
+      await tester.tap(find.text('Jual semua'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Simpan penjualan'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ya, jual semua'));
+      await tester.pumpAndSettle();
+      expect(find.text('Kepemilikan'), findsNothing); // kembali ke daftar
+      expect(find.text('Posisi tidak ditemukan'), findsNothing);
+      expect(find.text('BBCA'), findsNothing);
 
-    await tester.tap(find.bySemanticsLabel('Catat transaksi'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Penjualan'));
-    await tester.pumpAndSettle();
-    expect(find.text('Pilih posisi yang dijual'), findsOneWidget);
-    await tester.tap(find.text('TLKM').last); // yang pertama ada di daftar di belakang sheet
-    await tester.pumpAndSettle();
-    expect(find.text('Catat penjualan TLKM'), findsOneWidget);
+      await tester.tap(find.bySemanticsLabel('Catat transaksi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Penjualan'));
+      await tester.pumpAndSettle();
+      expect(find.text('Pilih posisi yang dijual'), findsOneWidget);
+      await tester.tap(find.text('TLKM').last); // yang pertama ada di daftar di belakang sheet
+      await tester.pumpAndSettle();
+      expect(find.text('Catat penjualan TLKM'), findsOneWidget);
 
-    // Pembelian sama: snackbar tidak menutupi form yang baru dibuka.
-    await tester.tapAt(const Offset(180, 10)); // tutup sheet
-    await tester.pumpAndSettle();
-    await tester.tap(find.bySemanticsLabel('Catat transaksi'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Pembelian'));
-    await tester.pumpAndSettle();
-    expect(find.text('Catat pembelian'), findsWidgets);
-    expect(find.text('Penjualan tercatat'), findsNothing);
-  });
+      // Pembelian sama: snackbar tidak menutupi form yang baru dibuka.
+      await tester.tapAt(const Offset(180, 10)); // tutup sheet
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('Catat transaksi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Pembelian'));
+      await tester.pumpAndSettle();
+      expect(find.text('Catat pembelian'), findsWidgets);
+      expect(find.text('Penjualan tercatat'), findsNothing);
+    },
+  );
 }

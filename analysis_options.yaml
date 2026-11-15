@@ -8,4 +8,4 @@ linter:
     require_trailing_commas: true
 
 formatter:
-  page_width: 110
+  page_width: 120

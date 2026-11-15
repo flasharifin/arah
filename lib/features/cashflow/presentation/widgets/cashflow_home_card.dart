@@ -42,10 +42,7 @@ class CashflowHomeCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text('Ditabung & diinvestasikan', style: text.bodySmall),
-                    AmountText(
-                      Money.idr(s.saved),
-                      style: text.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-                    ),
+                    AmountText(Money.idr(s.saved), style: text.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                     if (rate != null) ...[
                       const SizedBox(height: AppSpacing.sm),
                       Row(

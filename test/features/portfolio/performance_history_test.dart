@@ -66,12 +66,8 @@ DateTime _daysAgo(int days) {
   return DateTime(now.year, now.month, now.day - days);
 }
 
-DailyPerformance _row(DateTime date, double pnl, double pct) => DailyPerformance(
-  date: date,
-  portfolioValue: const Money.idr(100000000),
-  pnl: Money.idr(pnl),
-  pnlPercent: pct,
-);
+DailyPerformance _row(DateTime date, double pnl, double pct) =>
+    DailyPerformance(date: date, portfolioValue: const Money.idr(100000000), pnl: Money.idr(pnl), pnlPercent: pct);
 
 void main() {
   setUpAll(() => initializeDateFormatting('id'));
@@ -153,7 +149,12 @@ void main() {
     );
 
     testWidgets('rupiah & dolar terpisah, nominal tersembunyi saat privasi', (tester) async {
-      final privacy = await pump(tester, rows, portfolio: const Portfolio(positions: [bbca, nvda]), dividends: [paid]);
+      final privacy = await pump(
+        tester,
+        rows,
+        portfolio: const Portfolio(positions: [bbca, nvda]),
+        dividends: [paid],
+      );
       expect(find.text('Rupiah'), findsOneWidget);
       expect(find.text('Dolar AS'), findsOneWidget);
       final idr = Fmt.money(const Money.idr(13000), signed: true); // 10.000 + 3.000
@@ -181,7 +182,14 @@ void main() {
         portfolio: const Portfolio(
           positions: [
             bbca,
-            Position(id: 'x', symbol: 'XXXX', exchange: Exchange.idx, broker: '', quantity: 1, avgPrice: Money.idr(1000)),
+            Position(
+              id: 'x',
+              symbol: 'XXXX',
+              exchange: Exchange.idx,
+              broker: '',
+              quantity: 1,
+              avgPrice: Money.idr(1000),
+            ),
           ],
         ),
       );
@@ -203,10 +211,16 @@ void main() {
     expect(find.text('vs IHSG ${Fmt.percent(1.5)} · BTC ${Fmt.percent(-1)}'), findsOneWidget);
   });
 
-  testWidgets('ringkasan: streak, hari untung, puncak, drawdown; hanya persen sehingga aman saat privasi', (tester) async {
+  testWidgets('ringkasan: streak, hari untung, puncak, drawdown; hanya persen sehingga aman saat privasi', (
+    tester,
+  ) async {
     final peak = _daysAgo(3);
     final trough = _daysAgo(2);
-    final privacy = await pump(tester, [_row(peak, 1000000, 10), _row(trough, -500000, -20), _row(_daysAgo(1), -100000, -1)]);
+    final privacy = await pump(tester, [
+      _row(peak, 1000000, 10),
+      _row(trough, -500000, -20),
+      _row(_daysAgo(1), -100000, -1),
+    ]);
 
     expect(find.text('Ringkasan kinerja'), findsOneWidget);
     expect(find.text('Berturut-turut rugi'), findsOneWidget);
@@ -232,11 +246,7 @@ void main() {
   testWidgets('kalender: hitung hari, default hari terbaru, ketuk kotak menampilkan detailnya', (tester) async {
     final semantics = tester.ensureSemantics();
     final loss = _daysAgo(3);
-    await pump(tester, [
-      _row(loss, -500000, -0.5),
-      _row(_daysAgo(2), 1000000, 1),
-      _row(_daysAgo(1), 0, 0),
-    ]);
+    await pump(tester, [_row(loss, -500000, -0.5), _row(_daysAgo(2), 1000000, 1), _row(_daysAgo(1), 0, 0)]);
 
     expect(find.text('Kalender PnL'), findsOneWidget);
     expect(find.text('Sejak ${Fmt.date(loss)} · 3 hari tercatat'), findsOneWidget);
@@ -252,9 +262,7 @@ void main() {
 
   testWidgets('nilai: ganti Bulan/Kuartal/Tahun, grafik 12 batang terakhir, daftar tetap lengkap', (tester) async {
     final last = _daysAgo(1);
-    final rows = [
-      for (var i = 13; i >= 0; i--) _row(DateTime(last.year, last.month - i, 1), 1000, 0.1),
-    ];
+    final rows = [for (var i = 13; i >= 0; i--) _row(DateTime(last.year, last.month - i, 1), 1000, 0.1)];
     await pump(tester, rows);
 
     BarChart chart() => tester.widget<BarChart>(find.byType(BarChart));
@@ -273,7 +281,8 @@ void main() {
 
   testWidgets('mode privasi menyembunyikan nominal di kartu nilai & detail kalender', (tester) async {
     final privacy = await pump(tester, [_row(_daysAgo(2), 1000000, 1), _row(_daysAgo(1), 1000000, 1)]);
-    bool lineAxis() => tester.widget<LineChart>(find.byType(LineChart).last).data.titlesData.leftTitles.sideTitles.showTitles;
+    bool lineAxis() =>
+        tester.widget<LineChart>(find.byType(LineChart).last).data.titlesData.leftTitles.sideTitles.showTitles;
     bool barAxis() => tester.widget<BarChart>(find.byType(BarChart)).data.titlesData.leftTitles.sideTitles.showTitles;
     expect(find.text(Fmt.money(const Money.idr(100000000))), findsWidgets);
     expect(lineAxis() && barAxis(), isTrue);
@@ -285,7 +294,9 @@ void main() {
     expect(find.textContaining(Fmt.hidden), findsWidgets);
   });
 
-  testWidgets('garis mengikuti tanggal & nilai harian; batang rugi merah ke bawah, untung hijau ke atas', (tester) async {
+  testWidgets('garis mengikuti tanggal & nilai harian; batang rugi merah ke bawah, untung hijau ke atas', (
+    tester,
+  ) async {
     final last = _daysAgo(1);
     final rows = [
       DailyPerformance(
@@ -329,10 +340,7 @@ void main() {
     await pump(tester, [_row(_daysAgo(2), 0, 0), _row(_daysAgo(1), 0, 0)]);
     expect(tester.takeException(), isNull);
 
-    await pump(tester, [
-      _row(_daysAgo(40), -1234567, -2.5),
-      _row(_daysAgo(1), 1234567, 2.5),
-    ], textScale: 2);
+    await pump(tester, [_row(_daysAgo(40), -1234567, -2.5), _row(_daysAgo(1), 1234567, 2.5)], textScale: 2);
     expect(tester.takeException(), isNull);
   });
 }

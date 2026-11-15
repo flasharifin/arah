@@ -80,9 +80,7 @@ class _CashSourceFieldState extends State<CashSourceField> {
 
   void _emit() {
     final typed = double.tryParse(_amount.text.trim().replaceAll('.', '').replaceAll(',', '.'));
-    widget.onChanged(
-      _assetId == null ? null : (assetId: _assetId!, amount: typed != null && typed > 0 ? typed : null),
-    );
+    widget.onChanged(_assetId == null ? null : (assetId: _assetId!, amount: typed != null && typed > 0 ? typed : null));
   }
 
   @override
@@ -125,9 +123,7 @@ class _CashSourceFieldState extends State<CashSourceField> {
                   value: o.id,
                   selected: _assetId == o.id,
                   title: o.name,
-                  subtitle: o.value.currency == widget.currency
-                      ? null
-                      : 'Beda mata uang · dikonversi kurs hari ini',
+                  subtitle: o.value.currency == widget.currency ? null : 'Beda mata uang · dikonversi kurs hari ini',
                   trailing: AmountText(o.value),
                 ),
               _SourceTile(
@@ -173,13 +169,7 @@ class _CashSourceFieldState extends State<CashSourceField> {
 }
 
 class _SourceTile extends StatelessWidget {
-  const _SourceTile({
-    required this.value,
-    required this.selected,
-    required this.title,
-    this.subtitle,
-    this.trailing,
-  });
+  const _SourceTile({required this.value, required this.selected, required this.title, this.subtitle, this.trailing});
   final String? value;
   final bool selected;
   final String title;
