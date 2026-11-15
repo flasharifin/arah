@@ -1,3 +1,4 @@
+import 'package:arah/features/cashflow/domain/entities/cashflow.dart';
 import 'package:arah/core/network/api_client.dart';
 import 'package:arah/features/dca/domain/entities/dca.dart';
 
@@ -64,6 +65,7 @@ class DcaApiDataSource implements DcaRemoteDataSource {
       'price': e.price,
       'buyDate': e.date.toIso8601String(),
       'requestId': e.requestId,
+      ...cashSourceBody(e.cashSource),
     },
   );
 

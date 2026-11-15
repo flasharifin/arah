@@ -10,6 +10,12 @@ import 'package:arah/features/assistant/presentation/bloc/chat_bloc.dart';
 import 'package:arah/features/assistant/domain/usecases/conversation_usecases.dart';
 import 'package:arah/features/assistant/presentation/bloc/conversation_history_cubit.dart';
 import 'package:arah/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:arah/features/cashflow/data/datasources/cashflow_remote_data_source.dart';
+import 'package:arah/features/cashflow/data/repositories/cashflow_repository_impl.dart';
+import 'package:arah/features/cashflow/domain/repositories/cashflow_repository.dart';
+import 'package:arah/features/cashflow/domain/usecases/cashflow_usecases.dart';
+import 'package:arah/features/cashflow/presentation/bloc/cash_movements_cubit.dart';
+import 'package:arah/features/cashflow/presentation/bloc/cashflow_cubit.dart';
 import 'package:arah/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:arah/features/auth/domain/repositories/auth_repository.dart';
 import 'package:arah/features/auth/domain/usecases/auth_usecases.dart';
@@ -193,10 +199,8 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
     ..registerLazySingleton<NotificationRepository>(() => NotificationRepositoryImpl(sl()))
     ..registerFactory(() => NotificationsCubit(get: GetNotifications(sl()), mark: MarkNotificationRead(sl())))
     ..registerFactory(
-      () => UnreadNotificationsCubit(
-        get: GetUnreadNotificationCount(sl()),
-        pushes: sl<PushNotificationService>().pushes,
-      ),
+      () =>
+          UnreadNotificationsCubit(get: GetUnreadNotificationCount(sl()), pushes: sl<PushNotificationService>().pushes),
     )
     ..registerFactory(() => NotificationPrefsCubit(get: GetNotificationPrefs(sl()), save: SaveNotificationPrefs(sl())))
     // Watchlist
@@ -267,5 +271,15 @@ void configureDependencies({bool useFixtures = _useFixtures}) {
     )
     ..registerLazySingleton<InsightsRepository>(() => InsightsRepositoryImpl(sl()))
     ..registerFactory(() => InvisibleCostCubit(GetInvisibleCost(sl())))
-    ..registerFactory(() => WealthTimelineCubit(GetWealthTimeline(sl())));
+    ..registerFactory(() => WealthTimelineCubit(GetWealthTimeline(sl())))
+    // Arus kas & mutasi kas
+    ..registerLazySingleton<CashflowRemoteDataSource>(
+      () => useFixtures ? CashflowFixtureDataSource() : CashflowApiDataSource(sl()),
+    )
+    ..registerLazySingleton<CashflowRepository>(() => CashflowRepositoryImpl(sl()))
+    ..registerFactory(() => CashflowCubit(get: GetCashflow(sl()), saveSettings: SaveCashflowSettings(sl())))
+    ..registerFactoryParam<CashMovementsCubit, String?, void>(
+      (assetId, _) =>
+          CashMovementsCubit(get: GetCashMovements(sl()), reverse: ReverseCashMovement(sl()), assetId: assetId),
+    );
 }

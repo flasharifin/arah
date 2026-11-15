@@ -1,3 +1,4 @@
+import 'package:arah/features/cashflow/domain/entities/cashflow.dart';
 import 'package:arah/core/domain/money.dart';
 import 'package:arah/core/network/api_client.dart';
 import 'package:arah/features/portfolio/data/models/position_model.dart';
@@ -46,6 +47,7 @@ class PortfolioApiDataSource implements PortfolioRemoteDataSource {
       'sector': ?p.sector,
       'note': ?p.note,
       'requestId': p.requestId,
+      ...cashSourceBody(p.cashSource),
     },
   );
 
@@ -60,6 +62,7 @@ class PortfolioApiDataSource implements PortfolioRemoteDataSource {
       'saleDate': s.date.toIso8601String(),
       'note': ?s.note,
       'requestId': s.requestId,
+      ...cashSourceBody(s.cashSource),
     },
   );
 }

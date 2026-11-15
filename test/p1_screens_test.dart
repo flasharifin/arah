@@ -103,7 +103,13 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.widgetWithText(TextFormField, 'Jumlah (lot untuk IDX, unit untuk US/Crypto)'), '3');
     await tester.enterText(find.widgetWithText(TextFormField, 'Harga beli'), '8900');
-    await tapVisible(tester, find.text('Simpan'));
+    // Form lebih panjang (Sumber dana): geser isi sheet sampai Simpan benar-benar bisa ditekan.
+    await tester.dragUntilVisible(
+      find.text('Simpan').hitTestable(),
+      find.descendant(of: find.byType(BottomSheet), matching: find.byType(SingleChildScrollView)),
+      const Offset(0, -200),
+    );
+    await tester.tap(find.text('Simpan'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Riwayat'));
     await tester.pumpAndSettle();
@@ -136,7 +142,12 @@ void main() {
     await tester.tap(find.byTooltip('Tambah dividen'));
     await tester.pumpAndSettle();
     await tester.enterText(find.widgetWithText(TextFormField, 'Dividen per saham (DPS)'), '200');
-    await tapVisible(tester, find.text('Simpan'));
+    await tester.dragUntilVisible(
+      find.text('Simpan').hitTestable(),
+      find.descendant(of: find.byType(BottomSheet), matching: find.byType(SingleChildScrollView)),
+      const Offset(0, -200),
+    );
+    await tester.tap(find.text('Simpan'));
     await tester.pumpAndSettle();
     expect(find.text('Rp 200'), findsOneWidget);
     expect(find.text('Belum dijadwalkan'), findsWidgets); // tanpa tanggal bayar

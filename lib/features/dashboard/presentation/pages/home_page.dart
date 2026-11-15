@@ -7,6 +7,7 @@ import 'package:arah/core/theme/app_spacing.dart';
 import 'package:arah/core/theme/app_typography.dart';
 import 'package:arah/core/widgets/widgets.dart';
 import 'package:arah/features/dashboard/domain/entities/dashboard_summary.dart';
+import 'package:arah/features/cashflow/presentation/widgets/cashflow_home_card.dart';
 import 'package:arah/features/dashboard/presentation/bloc/dashboard_cubit.dart';
 import 'package:arah/features/networth/domain/entities/net_worth.dart';
 import 'package:arah/features/networth/presentation/bloc/net_worth_cubit.dart';
@@ -116,6 +117,8 @@ class _HomeContent extends StatelessWidget {
             ],
           ],
         ),
+        gap,
+        const CashflowHomeCard(),
         if (data.goalTarget case final target?) ...[
           gap,
           _Goal(name: goal?.name, deadline: goal?.deadline, data: data, target: target),

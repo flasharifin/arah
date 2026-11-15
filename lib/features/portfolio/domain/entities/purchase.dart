@@ -1,3 +1,4 @@
+import 'package:arah/features/cashflow/domain/entities/cashflow.dart';
 import 'package:arah/features/portfolio/domain/entities/position.dart';
 
 /// Pencatatan pembelian yang SUDAH dilakukan di broker (S17), bukan order ke bursa.
@@ -13,6 +14,7 @@ class PositionPurchase {
     required this.requestId,
     this.sector,
     this.note,
+    this.cashSource,
   });
 
   final String symbol;
@@ -28,6 +30,9 @@ class PositionPurchase {
   final String requestId;
   final String? sector;
   final String? note;
+
+  /// Aset kas yang dipotong; `null` = kas tidak disentuh.
+  final CashSource? cashSource;
 
   double get total => quantity * exchange.unitsPerQuantity * price;
 }

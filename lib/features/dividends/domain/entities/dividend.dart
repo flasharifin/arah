@@ -59,6 +59,7 @@ class DividendDraft {
     this.exDate,
     this.paymentDate,
     this.note,
+    this.cashAssetId,
   });
 
   final String portfolioId;
@@ -69,4 +70,7 @@ class DividendDraft {
   final DateTime? exDate;
   final DateTime? paymentDate;
   final String? note;
+
+  /// Aset kas penerima (hanya saat mencatat baru): dikreditkan saat tanggal bayar tiba.
+  final String? cashAssetId;
 }

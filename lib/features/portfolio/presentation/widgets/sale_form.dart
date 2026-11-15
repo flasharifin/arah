@@ -4,8 +4,9 @@ import 'package:arah/core/format/formatters.dart';
 import 'package:arah/core/theme/app_spacing.dart';
 import 'package:arah/core/utils/uuid.dart';
 import 'package:arah/core/widgets/widgets.dart';
+import 'package:arah/features/cashflow/domain/entities/cashflow.dart';
+import 'package:arah/features/cashflow/presentation/widgets/cash_widgets.dart';
 import 'package:arah/features/dashboard/presentation/bloc/dashboard_cubit.dart';
-import 'package:arah/features/networth/presentation/bloc/net_worth_cubit.dart';
 import 'package:arah/features/portfolio/domain/entities/position.dart';
 import 'package:arah/features/portfolio/domain/entities/sale.dart';
 import 'package:arah/features/portfolio/domain/usecases/record_sale.dart';
@@ -30,7 +31,7 @@ Future<bool> showSaleForm(BuildContext context, Position position) async {
   if (sold == null || !context.mounted) return false;
   context.read<PortfolioBloc>().add(const PortfolioRequested());
   context.read<DashboardCubit>().load();
-  context.read<NetWorthCubit>().load();
+  refreshCash(context); // Kekayaan & Arus kas (hasil jual bisa masuk ke aset kas)
   context.read<SalesCubit>().load();
   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Penjualan tercatat')));
   return position.quantity - sold < _epsilon;
@@ -94,6 +95,7 @@ class _SaleFormState extends State<_SaleForm> {
   final _note = TextEditingController();
   DateTime _date = DateTime.now();
   final _requestId = uuidV4();
+  CashSource? _cash;
   bool _busy = false;
   String? _error;
 
@@ -178,6 +180,7 @@ class _SaleFormState extends State<_SaleForm> {
         date: _date,
         requestId: _requestId,
         note: note.isEmpty ? null : note,
+        cashSource: _cash,
       ),
     );
     if (!mounted) return;
@@ -264,6 +267,13 @@ class _SaleFormState extends State<_SaleForm> {
                     : const Text(Fmt.missing),
               ),
               Text('Belum termasuk biaya broker.', style: text.bodySmall),
+              const SizedBox(height: AppSpacing.md),
+              CashSourceField(
+                currency: p.currency,
+                amount: valid ? units * price : null,
+                incoming: true,
+                onChanged: (s) => _cash = s,
+              ),
               if (_error != null) ...[
                 const SizedBox(height: AppSpacing.md),
                 Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),

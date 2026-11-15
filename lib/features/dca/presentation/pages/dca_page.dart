@@ -5,9 +5,12 @@ import 'package:arah/core/state/view_state.dart';
 import 'package:arah/core/theme/app_spacing.dart';
 import 'package:arah/core/utils/uuid.dart';
 import 'package:arah/core/widgets/widgets.dart';
+import 'package:arah/features/cashflow/domain/entities/cashflow.dart';
+import 'package:arah/features/cashflow/presentation/widgets/cash_widgets.dart';
 import 'package:arah/features/dca/domain/entities/dca.dart';
 import 'package:arah/features/dca/presentation/bloc/dca_cubit.dart';
 import 'package:arah/features/portfolio/domain/entities/position.dart';
+import 'package:arah/features/portfolio/presentation/bloc/portfolio_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -233,7 +236,10 @@ class _Records extends StatelessWidget {
                         const SizedBox(height: AppSpacing.sm),
                         InfoRow(label: 'Jumlah', value: Text(Fmt.quantity(r.quantity))),
                         InfoRow(label: 'Harga', value: Text(Fmt.number(r.price))),
-                        InfoRow(label: 'Total', value: Text(Fmt.number(r.total), style: text.titleSmall)),
+                        InfoRow(
+                          label: 'Total',
+                          value: Text(Fmt.number(r.total), style: text.titleSmall),
+                        ),
                       ],
                     ),
                   ),
@@ -411,6 +417,14 @@ class _ExecutionFormState extends State<_ExecutionForm> with _Submitting {
   final _requestId = uuidV4();
 
   @override
+  void initState() {
+    super.initState();
+    for (final c in [_quantity, _price]) {
+      c.addListener(() => setState(() {})); // pratinjau saldo sumber dana
+    }
+  }
+
+  @override
   void dispose() {
     _quantity.dispose();
     _price.dispose();
@@ -427,6 +441,17 @@ class _ExecutionFormState extends State<_ExecutionForm> with _Submitting {
     if (picked != null) setState(() => _date = picked);
   }
 
+  CashSource? _cash;
+
+  Position? get _position => context
+      .read<PortfolioBloc?>()
+      ?.state
+      .data
+      .data
+      ?.positions
+      .where((p) => p.id == widget.plan.portfolioId)
+      .firstOrNull;
+
   void _save() {
     if (!_formKey.currentState!.validate()) return;
     final execution = DcaExecution(
@@ -435,8 +460,15 @@ class _ExecutionFormState extends State<_ExecutionForm> with _Submitting {
       price: _parse(_price.text)!,
       date: _date,
       requestId: _requestId,
+      cashSource: _cash,
     );
-    submit(() => context.read<DcaCubit>().record(execution));
+    final cubit = context.read<DcaCubit>();
+    final refresh = cashRefresher(context);
+    submit(() async {
+      final result = await cubit.record(execution);
+      if (result is Success<void> && _cash != null) refresh();
+      return result;
+    });
   }
 
   @override
@@ -471,6 +503,20 @@ class _ExecutionFormState extends State<_ExecutionForm> with _Submitting {
           onPressed: busy ? null : _pickDate,
           icon: const Icon(Icons.event_outlined),
           label: Text('Tanggal beli: ${Fmt.date(_date)}'),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Builder(
+          builder: (context) {
+            final p = _position;
+            final quantity = _parse(_quantity.text), price = _parse(_price.text);
+            return CashSourceField(
+              currency: p?.currency ?? Currency.idr,
+              amount: p == null || quantity == null || price == null
+                  ? null
+                  : quantity * p.exchange.unitsPerQuantity * price,
+              onChanged: (s) => _cash = s,
+            );
+          },
         ),
       ],
     );

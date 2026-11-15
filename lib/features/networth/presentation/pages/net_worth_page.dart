@@ -5,6 +5,7 @@ import 'package:arah/core/theme/app_colors.dart';
 import 'package:arah/core/theme/app_spacing.dart';
 import 'package:arah/core/theme/app_typography.dart';
 import 'package:arah/core/widgets/widgets.dart';
+import 'package:arah/features/cashflow/presentation/widgets/cashflow_tab.dart';
 import 'package:arah/features/networth/domain/entities/net_worth.dart';
 import 'package:arah/features/networth/presentation/bloc/net_worth_cubit.dart';
 import 'package:arah/features/networth/presentation/widgets/goal_form.dart';
@@ -13,51 +14,69 @@ import 'package:arah/features/portfolio/domain/entities/performance.dart' show P
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// S07 — Kekayaan sebagai modul bertumpuk (bukan tab): ringkasan → Aset → Utang → Target → Riwayat.
-/// Aset manual & utang bisa ditambah, diubah, dihapus; total dihitung server.
+/// S07 — Kekayaan: segmen Kekayaan (modul bertumpuk: ringkasan → Aset → Utang → Target → Riwayat) | Arus kas.
+/// Aset manual & utang bisa ditambah, diubah, dihapus; total dihitung server. [initialTab] dari `?tab=arus-kas`.
 class NetWorthPage extends StatelessWidget {
-  const NetWorthPage({super.key});
+  const NetWorthPage({super.key, this.initialTab});
+
+  final String? initialTab;
 
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<NetWorthCubit>();
     const gap = SizedBox(height: AppSpacing.md);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kekayaan'),
-        actions: const [
-          AskAiButton(compact: true),
-          SizedBox(width: AppSpacing.lg),
-        ],
-      ),
-      body: BlocBuilder<NetWorthCubit, ViewState<NetWorth>>(
-        builder: (context, state) => ViewStateBuilder<NetWorth>(
-          state: state,
-          onRetry: cubit.load,
-          builder: (context, data) => RefreshIndicator(
-            onRefresh: cubit.load,
-            child: ListView(
-              padding: const EdgeInsets.only(top: AppSpacing.xs, bottom: AppSpacing.xxl),
-              children: [
-                PageBody(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+    return DefaultTabController(
+      // key: `?tab=` baru dari luar (kartu Beranda) membuka tab itu walau halaman sudah hidup di shell.
+      key: ValueKey(initialTab),
+      length: 2,
+      initialIndex: initialTab == 'arus-kas' ? 1 : 0,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Kekayaan'),
+          actions: const [
+            AskAiButton(compact: true),
+            SizedBox(width: AppSpacing.lg),
+          ],
+          bottom: const SegmentedTabBar(tabs: ['Kekayaan', 'Arus kas']),
+        ),
+        body: TabBarView(
+          children: [
+            BlocBuilder<NetWorthCubit, ViewState<NetWorth>>(
+              builder: (context, state) => ViewStateBuilder<NetWorth>(
+                state: state,
+                onRetry: cubit.load,
+                builder: (context, data) => RefreshIndicator(
+                  onRefresh: cubit.load,
+                  child: ListView(
+                    padding: const EdgeInsets.only(top: AppSpacing.xs, bottom: AppSpacing.xxl),
                     children: [
-                      _Summary(data: data),
-                      gap,
-                      _Items(kind: WealthKind.asset, items: data.assets, total: data.totalAssets.amount),
-                      gap,
-                      _Items(kind: WealthKind.liability, items: data.liabilities, total: data.totalLiabilities.amount),
-                      gap,
-                      _Goal(goal: data.goal, data: data),
-                      gap,
-                      _Snapshots(snapshots: data.snapshots),
+                      PageBody(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _Summary(data: data),
+                            gap,
+                            _Items(kind: WealthKind.asset, items: data.assets, total: data.totalAssets.amount),
+                            gap,
+                            _Items(
+                              kind: WealthKind.liability,
+                              items: data.liabilities,
+                              total: data.totalLiabilities.amount,
+                            ),
+                            gap,
+                            _Goal(goal: data.goal, data: data),
+                            gap,
+                            _Snapshots(snapshots: data.snapshots),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+            const CashflowTab(),
+          ],
         ),
       ),
     );

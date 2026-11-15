@@ -1,4 +1,5 @@
 import 'package:arah/features/portfolio/domain/entities/position.dart';
+import 'package:arah/features/cashflow/domain/entities/cashflow.dart';
 import 'package:equatable/equatable.dart';
 
 /// Rencana beli berkala. Nominal dalam mata uang posisinya; API rencana tidak menyertakan
@@ -146,6 +147,7 @@ class DcaExecution {
     required this.price,
     required this.date,
     required this.requestId,
+    this.cashSource,
   });
 
   final DcaPlan plan;
@@ -153,4 +155,7 @@ class DcaExecution {
   final double price;
   final DateTime date;
   final String requestId;
+
+  /// Aset kas yang dipotong; `null` = kas tidak disentuh.
+  final CashSource? cashSource;
 }

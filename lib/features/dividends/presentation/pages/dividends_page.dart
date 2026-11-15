@@ -10,6 +10,8 @@ import 'package:arah/features/dividends/domain/entities/dividend.dart';
 import 'package:arah/features/dividends/presentation/bloc/dividends_cubit.dart';
 import 'package:arah/features/portfolio/domain/entities/position.dart';
 import 'package:arah/features/portfolio/presentation/bloc/portfolio_bloc.dart';
+import 'package:arah/features/cashflow/domain/entities/cashflow.dart';
+import 'package:arah/features/cashflow/presentation/widgets/cash_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -137,9 +139,13 @@ class _ReceivedSummary extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Row(
               children: [
-                Expanded(child: StatTile(label: 'Rupiah', value: AmountText(Money.idr(t.idr)), onHero: true)),
+                Expanded(
+                  child: StatTile(label: 'Rupiah', value: AmountText(Money.idr(t.idr)), onHero: true),
+                ),
                 const SizedBox(width: AppSpacing.sm),
-                Expanded(child: StatTile(label: 'Dolar AS', value: AmountText(Money.usd(t.usd)), onHero: true)),
+                Expanded(
+                  child: StatTile(label: 'Dolar AS', value: AmountText(Money.usd(t.usd)), onHero: true),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -292,6 +298,7 @@ class _DividendFormState extends State<_DividendForm> {
   late DateTime? _pay = widget.dividend?.paymentDate;
   bool _busy = false;
   String? _error;
+  CashSource? _cash;
 
   @override
   void dispose() {
@@ -308,7 +315,9 @@ class _DividendFormState extends State<_DividendForm> {
       _busy = true;
       _error = null;
     });
+    final refresh = cashRefresher(context);
     final result = await action();
+    if (result is Success<void>) refresh(); // dividen bisa menambah/menarik saldo aset kas
     if (!mounted) return;
     result.fold(
       (f) => setState(() {
@@ -331,6 +340,7 @@ class _DividendFormState extends State<_DividendForm> {
       exDate: _ex,
       paymentDate: _pay,
       note: _note.text.trim().isEmpty ? null : _note.text.trim(),
+      cashAssetId: d == null ? _cash?.assetId : null,
     );
     _run(() => context.read<DividendsCubit>().save(draft, id: d?.id));
   }
@@ -420,6 +430,17 @@ class _DividendFormState extends State<_DividendForm> {
               _DateField(label: 'Tanggal bayar', value: _pay, onChanged: (d) => setState(() => _pay = d)),
               const SizedBox(height: AppSpacing.md),
               AppTextField(label: 'Catatan (opsional)', controller: _note),
+              if (!editing && _position != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                CashSourceField(
+                  key: ValueKey(_position!.currency),
+                  currency: _position!.currency,
+                  incoming: true,
+                  allowAmount: false,
+                  note: 'Saldo bertambah saat tanggal bayar tiba (atau sekarang bila sudah lewat / kosong).',
+                  onChanged: (s) => _cash = s,
+                ),
+              ],
               if (_error != null) ...[
                 const SizedBox(height: AppSpacing.md),
                 Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),

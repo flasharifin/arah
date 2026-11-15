@@ -52,7 +52,13 @@ class DividendApiDataSource implements DividendRemoteDataSource {
     return id == null
         ? _api.post(
             '/api/dividends',
-            body: {...body, 'note': ?d.note, 'portfolioId': d.portfolioId, 'stockCode': d.symbol},
+            body: {
+              ...body,
+              'note': ?d.note,
+              'portfolioId': d.portfolioId,
+              'stockCode': d.symbol,
+              'cashAssetId': ?d.cashAssetId,
+            },
           )
         : _api.put('/api/dividends/$id', body: {...body, 'note': d.note});
   }

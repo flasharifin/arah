@@ -8,6 +8,9 @@ import 'package:arah/features/assistant/presentation/bloc/conversation_history_c
 import 'package:arah/features/assistant/presentation/pages/conversation_history_page.dart';
 import 'package:arah/features/assistant/presentation/pages/chat_page.dart';
 import 'package:arah/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:arah/features/cashflow/presentation/bloc/cash_movements_cubit.dart';
+import 'package:arah/features/cashflow/presentation/bloc/cashflow_cubit.dart';
+import 'package:arah/features/cashflow/presentation/pages/cash_movements_page.dart';
 import 'package:arah/features/auth/presentation/bloc/password_reset_cubit.dart';
 import 'package:arah/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:arah/features/auth/presentation/pages/login_page.dart';
@@ -101,6 +104,8 @@ GoRouter createRouter(AuthBloc auth) {
             BlocProvider(create: (_) => sl<NetWorthCubit>()..load()),
             BlocProvider(create: (_) => sl<UnreadNotificationsCubit>()..load()),
             BlocProvider(create: (_) => sl<SalesCubit>()..load()),
+            // Arus kas: kartu "Bulan ini" di Beranda & tab di Kekayaan memakai data yang sama.
+            BlocProvider(create: (_) => sl<CashflowCubit>()..load()),
           ],
           child: AppShell(shell: shell),
         ),
@@ -120,10 +125,8 @@ GoRouter createRouter(AuthBloc auth) {
                   GoRoute(path: 'journal', builder: (_, _) => _journal()),
                   GoRoute(
                     path: 'notifications',
-                    builder: (_, _) => BlocProvider(
-                      create: (_) => sl<NotificationsCubit>()..load(),
-                      child: const NotificationsPage(),
-                    ),
+                    builder: (_, _) =>
+                        BlocProvider(create: (_) => sl<NotificationsCubit>()..load(), child: const NotificationsPage()),
                     routes: [
                       GoRoute(
                         path: 'settings',
@@ -188,7 +191,21 @@ GoRouter createRouter(AuthBloc auth) {
             ],
           ),
           StatefulShellBranch(
-            routes: [GoRoute(path: '/wealth', builder: (_, _) => const NetWorthPage())],
+            routes: [
+              GoRoute(
+                path: '/wealth',
+                builder: (_, state) => NetWorthPage(initialTab: state.uri.queryParameters['tab']),
+                routes: [
+                  GoRoute(
+                    path: 'cash-movements',
+                    builder: (_, state) => BlocProvider(
+                      create: (_) => sl<CashMovementsCubit>(param1: state.uri.queryParameters['assetId'])..load(),
+                      child: const CashMovementsPage(),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           StatefulShellBranch(
             routes: [

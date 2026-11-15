@@ -4,6 +4,8 @@ import 'package:arah/core/format/formatters.dart';
 import 'package:arah/core/theme/app_spacing.dart';
 import 'package:arah/core/utils/uuid.dart';
 import 'package:arah/core/widgets/widgets.dart';
+import 'package:arah/features/cashflow/domain/entities/cashflow.dart';
+import 'package:arah/features/cashflow/presentation/widgets/cash_widgets.dart';
 import 'package:arah/features/dashboard/presentation/bloc/dashboard_cubit.dart';
 import 'package:arah/features/portfolio/domain/entities/position.dart';
 import 'package:arah/features/portfolio/domain/entities/purchase.dart';
@@ -38,6 +40,7 @@ Future<void> showPurchaseForm(
   if (saved != true || !context.mounted) return;
   context.read<PortfolioBloc>().add(const PortfolioRequested());
   context.read<DashboardCubit>().load();
+  refreshCash(context);
   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pembelian tercatat')));
 }
 
@@ -82,6 +85,7 @@ class _PurchaseFormState extends State<_PurchaseForm> {
   late Exchange _exchange = widget.exchange;
   DateTime _date = DateTime.now();
   final _requestId = uuidV4();
+  CashSource? _cash;
   bool _busy = false;
   String? _error;
 
@@ -122,6 +126,7 @@ class _PurchaseFormState extends State<_PurchaseForm> {
       requestId: _requestId,
       sector: _optional(_sector),
       note: _optional(_note),
+      cashSource: _cash,
     );
   }
 
@@ -216,6 +221,14 @@ class _PurchaseFormState extends State<_PurchaseForm> {
               AppTextField(label: 'Catatan (opsional)', controller: _note),
               const SizedBox(height: AppSpacing.lg),
               InfoRow(label: 'Nilai pembelian', value: AmountText(draft == null ? null : Money(draft.total, currency))),
+              const SizedBox(height: AppSpacing.md),
+              CashSourceField(
+                // Ganti bursa = mata uang lain: pilihan awal sumber dana ikut dihitung ulang.
+                key: ValueKey(currency),
+                currency: currency,
+                amount: draft?.total,
+                onChanged: (s) => _cash = s,
+              ),
               if (_error != null) ...[
                 const SizedBox(height: AppSpacing.md),
                 Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
