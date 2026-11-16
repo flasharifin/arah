@@ -696,7 +696,7 @@ class _EmergencyCard extends StatelessWidget {
         children: [
           covered == null
               ? Text(
-                  'Muncul setelah ada perkiraan pengeluaran (mutasi kas minimal sebulan). '
+                  'Belum cukup data — butuh 1 bulan penuh mutasi kas (bulan pertama hanya terekam sebagian). '
                   'Target ${fund.targetMonths} bulan pengeluaran.',
                   style: text.bodySmall,
                 )
