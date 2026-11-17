@@ -22,16 +22,47 @@ Future<Uint8List> buildWealthReport({
   required DateTime now,
   pw.Font? font,
   pw.Font? bold,
+  pw.ImageProvider? logo,
 }) {
   final doc = pw.Document(
     title: 'Laporan Kekayaan Arah',
     theme: font == null ? null : pw.ThemeData.withFont(base: font, bold: bold ?? font),
   );
-  final head = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold);
+  // Warna merek app (AppColors.primary / primarySoft).
+  const brand = PdfColor.fromInt(0xFF173F35);
+  const brandSoft = PdfColor.fromInt(0xFFE4F0E6);
+  const muted = PdfColors.grey700;
+  final head = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: brand);
   const cell = pw.TextStyle(fontSize: 8);
   pw.Widget section(String title) => pw.Padding(
-    padding: const pw.EdgeInsets.only(top: 14, bottom: 6),
-    child: pw.Text(title, style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold)),
+    padding: const pw.EdgeInsets.only(top: 16, bottom: 6),
+    child: pw.Row(
+      children: [
+        pw.Container(width: 3, height: 12, color: brand),
+        pw.SizedBox(width: 6),
+        pw.Text(
+          title,
+          style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: brand),
+        ),
+      ],
+    ),
+  );
+  pw.Widget stat(String label, Money value, {bool strong = false}) => pw.Expanded(
+    child: pw.Container(
+      padding: const pw.EdgeInsets.all(10),
+      decoration: pw.BoxDecoration(color: strong ? brand : brandSoft, borderRadius: pw.BorderRadius.circular(6)),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(label, style: pw.TextStyle(fontSize: 8, color: strong ? brandSoft : muted)),
+          pw.SizedBox(height: 4),
+          pw.Text(
+            Fmt.money(value),
+            style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, color: strong ? PdfColors.white : brand),
+          ),
+        ],
+      ),
+    ),
   );
   pw.Widget table(List<String> headers, List<List<String>> rows, {Set<int> left = const {0}}) =>
       pw.TableHelper.fromTextArray(
@@ -39,7 +70,7 @@ Future<Uint8List> buildWealthReport({
         data: rows,
         headerStyle: head,
         cellStyle: cell,
-        headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
+        headerDecoration: const pw.BoxDecoration(color: brandSoft),
         cellAlignment: pw.Alignment.centerRight,
         cellAlignments: {for (final i in left) i: pw.Alignment.centerLeft},
         headerAlignments: {
@@ -51,7 +82,7 @@ Future<Uint8List> buildWealthReport({
       );
   pw.Widget note(String text) => pw.Padding(
     padding: const pw.EdgeInsets.only(top: 4),
-    child: pw.Text(text, style: const pw.TextStyle(fontSize: 7.5, color: PdfColors.grey700)),
+    child: pw.Text(text, style: const pw.TextStyle(fontSize: 7.5, color: muted)),
   );
 
   String original(WealthItem i) => switch (i.entry) {
@@ -68,34 +99,76 @@ Future<Uint8List> buildWealthReport({
   doc.addPage(
     pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.all(32),
-      footer: (c) => pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-        children: [
-          pw.Text(
-            'Dokumen pribadi · dibuat dari app Arah',
-            style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600),
-          ),
-          pw.Text('${c.pageNumber}/${c.pagesCount}', style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600)),
-        ],
+      margin: const pw.EdgeInsets.fromLTRB(32, 28, 32, 24),
+      header: (c) => pw.Container(
+        margin: const pw.EdgeInsets.only(bottom: 14),
+        padding: const pw.EdgeInsets.only(bottom: 8),
+        decoration: const pw.BoxDecoration(
+          border: pw.Border(bottom: pw.BorderSide(color: brand, width: 1.5)),
+        ),
+        child: pw.Row(
+          children: [
+            if (logo != null) ...[
+              pw.ClipRRect(horizontalRadius: 6, verticalRadius: 6, child: pw.Image(logo, width: 28, height: 28)),
+              pw.SizedBox(width: 8),
+            ],
+            pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  'Arah',
+                  style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: brand),
+                ),
+                pw.Text('Laporan Kekayaan', style: const pw.TextStyle(fontSize: 8, color: muted)),
+              ],
+            ),
+            pw.Spacer(),
+            pw.Text(
+              DateFormat('d MMMM yyyy, HH.mm', 'id').format(now),
+              style: const pw.TextStyle(fontSize: 8, color: muted),
+            ),
+          ],
+        ),
+      ),
+      footer: (c) => pw.Container(
+        padding: const pw.EdgeInsets.only(top: 6),
+        decoration: const pw.BoxDecoration(
+          border: pw.Border(top: pw.BorderSide(color: PdfColors.grey300, width: 0.5)),
+        ),
+        child: pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            pw.Text(
+              'Rahasia · dokumen pribadi dari aplikasi Arah',
+              style: const pw.TextStyle(fontSize: 7, color: muted),
+            ),
+            pw.Text(
+              'Halaman ${c.pageNumber} dari ${c.pagesCount}',
+              style: const pw.TextStyle(fontSize: 7, color: muted),
+            ),
+          ],
+        ),
       ),
       build: (c) => [
-        pw.Text('Laporan Kekayaan', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
-        pw.SizedBox(height: 4),
-        pw.Text(
-          'Dibuat ${DateFormat('d MMMM yyyy, HH.mm', 'id').format(now)}'
-          '${p?.priceAsOf == null ? '' : ' · harga per ${Fmt.dateTime(p!.priceAsOf)}'}'
-          '${rate == null ? '' : ' · kurs US\$ 1 = ${Fmt.money(Money.idr(rate))}'}',
-          style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
-        ),
-
-        section('Ringkasan'),
-        table(
-          ['', 'Rupiah'],
-          [
-            ['Total aset', Fmt.money(netWorth.totalAssets)],
-            ['Total utang', Fmt.money(netWorth.totalLiabilities)],
-            ['Kekayaan bersih', Fmt.money(netWorth.netWorth)],
+        pw.Text('Ringkasan kekayaan', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+        if (p?.priceAsOf != null || rate != null) ...[
+          pw.SizedBox(height: 3),
+          pw.Text(
+            [
+              if (p?.priceAsOf != null) 'Harga per ${Fmt.dateTime(p!.priceAsOf)}',
+              if (rate != null) 'kurs US\$ 1 = ${Fmt.money(Money.idr(rate))}',
+            ].join(' · '),
+            style: const pw.TextStyle(fontSize: 8.5, color: muted),
+          ),
+        ],
+        pw.SizedBox(height: 10),
+        pw.Row(
+          children: [
+            stat('Total aset', netWorth.totalAssets),
+            pw.SizedBox(width: 8),
+            stat('Total utang', netWorth.totalLiabilities),
+            pw.SizedBox(width: 8),
+            stat('Kekayaan bersih', netWorth.netWorth, strong: true),
           ],
         ),
 
@@ -105,7 +178,7 @@ Future<Uint8List> buildWealthReport({
         else ...[
           for (final currency in p.currencies) ...[
             pw.Padding(
-              padding: const pw.EdgeInsets.only(top: 4, bottom: 4),
+              padding: const pw.EdgeInsets.only(top: 10, bottom: 4),
               child: pw.Text(currency == Currency.idr ? 'Rupiah' : 'Dolar AS', style: head),
             ),
             table(
@@ -189,9 +262,17 @@ Future<void> shareWealthReport(BuildContext context) async {
   try {
     // Font app di-embed: font bawaan PDF tidak punya huruf seperti "−" dan "—".
     final font = pw.Font.ttf(await rootBundle.load('assets/fonts/PlusJakartaSans-Regular.ttf'));
+    final logo = pw.MemoryImage((await rootBundle.load('assets/images/arah-mark.png')).buffer.asUint8List());
     final bold = pw.Font.ttf(await rootBundle.load('assets/fonts/PlusJakartaSans-Bold.ttf'));
     final now = DateTime.now();
-    final bytes = await buildWealthReport(netWorth: netWorth, portfolio: portfolio, now: now, font: font, bold: bold);
+    final bytes = await buildWealthReport(
+      netWorth: netWorth,
+      portfolio: portfolio,
+      now: now,
+      font: font,
+      bold: bold,
+      logo: logo,
+    );
     await Printing.sharePdf(bytes: bytes, filename: 'arah-kekayaan-${DateFormat('yyyy-MM-dd').format(now)}.pdf');
   } catch (e) {
     messenger.showSnackBar(SnackBar(content: Text('Gagal membuat PDF: $e')));

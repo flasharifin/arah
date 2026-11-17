@@ -78,12 +78,14 @@ void main() {
   test('satu PDF: font app, posisi tanpa harga, emas & dolar, tanpa utang/portofolio', () async {
     final font = pw.Font.ttf(await rootBundle.load('assets/fonts/PlusJakartaSans-Regular.ttf'));
     final bold = pw.Font.ttf(await rootBundle.load('assets/fonts/PlusJakartaSans-Bold.ttf'));
+    final logo = pw.MemoryImage((await rootBundle.load('assets/images/arah-mark.png')).buffer.asUint8List());
     final bytes = await buildWealthReport(
       netWorth: netWorth(),
       portfolio: portfolio,
       now: DateTime(2026, 11, 17, 20),
       font: font,
       bold: bold,
+      logo: logo,
     );
     expect(String.fromCharCodes(bytes.take(5)), '%PDF-');
     // WEALTH_REPORT_OUT=/path/file.pdf untuk melihat hasilnya.
