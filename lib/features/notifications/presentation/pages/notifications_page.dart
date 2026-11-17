@@ -160,6 +160,7 @@ IconData _iconOf(NotificationType type) => switch (type) {
   NotificationType.signals => Icons.show_chart,
   NotificationType.weekly || NotificationType.periodic => Icons.description_outlined,
   NotificationType.dca => Icons.autorenew,
+  NotificationType.cashflow => Icons.savings_outlined,
 };
 
 class _NotificationCard extends StatelessWidget {

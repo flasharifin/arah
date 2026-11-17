@@ -26,7 +26,8 @@ enum NotificationType {
   signals('signals', 'Sinyal teknikal', 'RSI, MACD, dan perubahan skor', NotificationGroup.daily, maxPerDay: 3),
   weekly('weekly', 'Laporan mingguan', 'Senin: digest, kinerja posisi, konsentrasi', NotificationGroup.report),
   periodic('periodic', 'Laporan berkala', 'Bulanan, kuartalan, dan tahunan', NotificationGroup.report),
-  dca('dca', 'Pengingat DCA', 'Awal bulan', NotificationGroup.report);
+  dca('dca', 'Pengingat DCA', 'Awal bulan', NotificationGroup.report),
+  cashflow('cashflow', 'Pengingat kas', 'Sehari sebelum gajian: samakan saldo kas', NotificationGroup.report);
 
   const NotificationType(this.code, this.label, this.hint, this.group, {this.maxPerDay = 0});
   final String code;

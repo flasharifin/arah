@@ -14,6 +14,7 @@ class Dividend extends Equatable {
     this.paymentDate,
     this.received,
     this.note,
+    this.cashAssetId,
   });
 
   final String id;
@@ -31,11 +32,26 @@ class Dividend extends Equatable {
   final Money? received;
   final String? note;
 
+  /// Aset kas penerima; `null` = tidak menambah kas.
+  final String? cashAssetId;
+
   /// Sudah dibayar = tanggal bayar sudah lewat.
   bool isPaid(DateTime now) => paymentDate != null && !paymentDate!.isAfter(now);
 
   @override
-  List<Object?> get props => [id, portfolioId, symbol, dps, taxPercent, cumDate, exDate, paymentDate, received, note];
+  List<Object?> get props => [
+    id,
+    portfolioId,
+    symbol,
+    dps,
+    taxPercent,
+    cumDate,
+    exDate,
+    paymentDate,
+    received,
+    note,
+    cashAssetId,
+  ];
 }
 
 /// Total per mata uang dan gabungannya dalam rupiah. [combinedIdr] null bila ada dolar tapi kurs belum tersedia,
@@ -60,6 +76,7 @@ class DividendDraft {
     this.paymentDate,
     this.note,
     this.cashAssetId,
+    this.setCash = false,
   });
 
   final String portfolioId;
@@ -71,6 +88,9 @@ class DividendDraft {
   final DateTime? paymentDate;
   final String? note;
 
-  /// Aset kas penerima (hanya saat mencatat baru): dikreditkan saat tanggal bayar tiba.
+  /// Aset kas penerima: dikreditkan saat tanggal bayar tiba.
   final String? cashAssetId;
+
+  /// Saat mengubah: kirim [cashAssetId] (termasuk `null` = berhenti menambah kas). `false` = aset penerima tetap.
+  final bool setCash;
 }

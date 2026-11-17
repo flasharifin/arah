@@ -36,6 +36,7 @@ class DividendApiDataSource implements DividendRemoteDataSource {
                 (d['portfolio'] as Map<String, dynamic>?)?['currency'] == 'USD' ? Currency.usd : Currency.idr,
               ),
         note: d['note'] as String?,
+        cashAssetId: d['cashAssetId'] as String?,
       ),
   ];
 
@@ -60,7 +61,7 @@ class DividendApiDataSource implements DividendRemoteDataSource {
               'cashAssetId': ?d.cashAssetId,
             },
           )
-        : _api.put('/api/dividends/$id', body: {...body, 'note': d.note});
+        : _api.put('/api/dividends/$id', body: {...body, 'note': d.note, if (d.setCash) 'cashAssetId': d.cashAssetId});
   }
 
   @override
@@ -105,6 +106,7 @@ class DividendFixtureDataSource implements DividendRemoteDataSource {
 
   @override
   Future<void> save(DividendDraft d, {String? id}) async {
+    final old = _items.where((x) => x.id == id).firstOrNull;
     final item = Dividend(
       id: id ?? 'd${_seq++}',
       portfolioId: d.portfolioId,
@@ -117,6 +119,7 @@ class DividendFixtureDataSource implements DividendRemoteDataSource {
       // fixture: 100 lot × 100 lembar, seperti posisi BBCA ilustrasi
       received: Money.idr(10000 * d.dps * (1 - d.taxPercent / 100)),
       note: d.note,
+      cashAssetId: old == null || d.setCash ? d.cashAssetId : old.cashAssetId,
     );
     final i = _items.indexWhere((x) => x.id == id);
     i < 0 ? _items.insert(0, item) : _items[i] = item;

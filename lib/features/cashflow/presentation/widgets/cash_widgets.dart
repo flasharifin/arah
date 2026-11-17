@@ -51,6 +51,7 @@ class CashSourceField extends StatefulWidget {
     this.incoming = false,
     this.allowAmount = true,
     this.note,
+    this.initial,
   });
 
   /// Mata uang transaksi (harga saham / dividen).
@@ -65,6 +66,9 @@ class CashSourceField extends StatefulWidget {
   /// Isian "jumlah terpotong/diterima"; dividen tidak memakainya (jumlah dihitung server dari lot & pajak).
   final bool allowAmount;
   final String? note;
+
+  /// Pilihan awal saat mengubah transaksi (`(id: null)` = tidak lewat kas); `null` = pilihan terakhir dipakai.
+  final ({String? id})? initial;
   final ValueChanged<CashSource?> onChanged;
 
   // shortcut: "terakhir dipakai" hanya selama app terbuka; simpan ke storage bila perlu bertahan setelah ditutup.
@@ -98,7 +102,9 @@ class _CashSourceFieldState extends State<CashSourceField> {
     if (!_initialized) {
       _initialized = true;
       final last = CashSourceField._lastUsed[widget.currency];
-      _assetId = options.any((o) => o.id == last)
+      _assetId = widget.initial != null
+          ? options.where((o) => o.id == widget.initial!.id).firstOrNull?.id
+          : options.any((o) => o.id == last)
           ? last
           : CashSourceField._lastUsed.containsKey(widget.currency)
           ? null // terakhir kali memilih "Tidak memotong kas"

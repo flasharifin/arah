@@ -302,6 +302,7 @@ class _DividendFormState extends State<_DividendForm> {
   bool _busy = false;
   String? _error;
   CashSource? _cash;
+  bool _cashChosen = false;
 
   @override
   void dispose() {
@@ -309,6 +310,14 @@ class _DividendFormState extends State<_DividendForm> {
       c.dispose();
     }
     super.dispose();
+  }
+
+  /// Mata uang dividen: posisi yang dipilih, atau saat mengubah, mata uang jumlah diterima / posisinya.
+  Currency? get _currency {
+    final d = widget.dividend;
+    if (d == null) return _position?.currency;
+    return d.received?.currency ??
+        context.read<DividendsCubit>().positions.where((p) => p.id == d.portfolioId).firstOrNull?.currency;
   }
 
   static double? _parse(String v) => double.tryParse(v.trim().replaceAll(',', '.'));
@@ -343,7 +352,9 @@ class _DividendFormState extends State<_DividendForm> {
       exDate: _ex,
       paymentDate: _pay,
       note: _note.text.trim().isEmpty ? null : _note.text.trim(),
-      cashAssetId: d == null ? _cash?.assetId : null,
+      cashAssetId: _cash?.assetId,
+      // Isian belum tampil (Kekayaan belum dimuat) → aset penerima lama tidak ikut terhapus.
+      setCash: d != null && _cashChosen,
     );
     _run(() => context.read<DividendsCubit>().save(draft, id: d?.id));
   }
@@ -433,15 +444,19 @@ class _DividendFormState extends State<_DividendForm> {
               _DateField(label: 'Tanggal bayar', value: _pay, onChanged: (d) => setState(() => _pay = d)),
               const SizedBox(height: AppSpacing.md),
               AppTextField(label: 'Catatan (opsional)', controller: _note),
-              if (!editing && _position != null) ...[
+              if (_currency case final currency?) ...[
                 const SizedBox(height: AppSpacing.md),
                 CashSourceField(
-                  key: ValueKey(_position!.currency),
-                  currency: _position!.currency,
+                  key: ValueKey(currency),
+                  currency: currency,
+                  initial: editing ? (id: widget.dividend!.cashAssetId) : null,
                   incoming: true,
                   allowAmount: false,
                   note: 'Saldo bertambah saat tanggal bayar tiba (atau sekarang bila sudah lewat / kosong).',
-                  onChanged: (s) => _cash = s,
+                  onChanged: (s) {
+                    _cash = s;
+                    _cashChosen = true;
+                  },
                 ),
               ],
               if (_error != null) ...[

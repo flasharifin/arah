@@ -96,6 +96,7 @@ void main() {
         'weekly',
         'periodic',
         'dca',
+        'cashflow',
       });
       expect(NotificationType.fromCode('baru'), NotificationType.periodic);
       expect(NotificationMode.fromCode('combined'), NotificationMode.combined);

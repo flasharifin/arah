@@ -198,7 +198,7 @@ void main() {
   });
 
   group('CashSourceField', () {
-    Future<List<CashSource?>> pump(WidgetTester tester, Currency currency) async {
+    Future<List<CashSource?>> pump(WidgetTester tester, Currency currency, {({String? id})? initial}) async {
       final emitted = <CashSource?>[];
       final netWorth = _MockNetWorth();
       when(() => netWorth.state).thenReturn(ViewState(data: _netWorth()));
@@ -212,7 +212,7 @@ void main() {
             theme: AppTheme.light,
             home: Scaffold(
               body: SingleChildScrollView(
-                child: CashSourceField(currency: currency, amount: 1900000, onChanged: emitted.add),
+                child: CashSourceField(currency: currency, amount: 1900000, initial: initial, onChanged: emitted.add),
               ),
             ),
           ),
@@ -238,6 +238,14 @@ void main() {
       await tester.enterText(find.byType(TextField), '20,5');
       await tester.pump();
       expect(emitted.last, (assetId: 'usd', amount: 20.5));
+    });
+
+    testWidgets('ubah dividen: pilihan awal = aset penerima tersimpan, bukan pilihan terakhir', (tester) async {
+      expect((await pump(tester, Currency.idr, initial: (id: 'usd'))).last?.assetId, 'usd');
+    });
+
+    testWidgets('ubah dividen tanpa aset penerima: tetap "Tidak menambah kas"', (tester) async {
+      expect((await pump(tester, Currency.usd, initial: (id: null))).last, isNull);
     });
   });
 
