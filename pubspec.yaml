@@ -21,9 +21,14 @@ dependencies:
   flutter_local_notifications: ^22.3.3
   flutter_secure_storage: ^11.2.0
   get_it: ^9.3.0
+  # shortcut: pdf 3.12 (terakhir untuk Dart 3.11) butuh archive <4.1, sedangkan image 4.11.0 memakai API archive 4.1+
+  # (bug upstream). Hapus batas ini saat Flutter naik ke Dart 3.12+ dan pdf bisa ke 3.13.
+  image: '>=4.9.0 <4.11.0'
   go_router: ^17.5.0
   intl: ^0.20.3
   local_auth: ^3.0.2
+  pdf: ^3.12.0
+  printing: ^5.14.3
 
 dev_dependencies:
   flutter_test:

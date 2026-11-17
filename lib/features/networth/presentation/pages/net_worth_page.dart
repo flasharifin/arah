@@ -10,6 +10,7 @@ import 'package:arah/features/networth/domain/entities/net_worth.dart';
 import 'package:arah/features/networth/presentation/bloc/net_worth_cubit.dart';
 import 'package:arah/features/networth/presentation/widgets/goal_form.dart';
 import 'package:arah/features/networth/presentation/widgets/wealth_entry_form.dart';
+import 'package:arah/features/networth/presentation/widgets/wealth_report.dart';
 import 'package:arah/features/portfolio/domain/entities/performance.dart' show PerformancePeriod;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -33,9 +34,14 @@ class NetWorthPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Kekayaan'),
-          actions: const [
-            AskAiButton(compact: true),
-            SizedBox(width: AppSpacing.lg),
+          actions: [
+            IconButton(
+              tooltip: 'Unduh laporan PDF',
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              onPressed: () => shareWealthReport(context),
+            ),
+            const AskAiButton(compact: true),
+            const SizedBox(width: AppSpacing.lg),
           ],
           bottom: const SegmentedTabBar(tabs: ['Kekayaan', 'Arus kas']),
         ),
